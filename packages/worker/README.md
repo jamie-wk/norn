@@ -41,6 +41,7 @@ await worker.run(); // resolves after a graceful shutdown; rejects if a worker f
 | `TEMPORAL_ADDRESS` | `address` | `localhost:7233` | Temporal frontend address. |
 | `TEMPORAL_NAMESPACE` | `namespace` | `default` | Namespace to poll. |
 | `TEMPORAL_API_KEY` | `apiKey` | none | API key; turns TLS on. |
+| `TEMPORAL_TLS` | `tls` | `false` | `true` turns TLS on without an API key. For mTLS, pass your own `connection`. |
 | `NORN_TASK_QUEUES` | `taskQueues` | every queue in the registry | Comma-separated subset to poll. |
 | `NORN_HEALTH_PORT` | `health.port` | off | Health server port; `0` picks a free one. |
 | `NORN_SHUTDOWN_GRACE` | `shutdownGraceTime` | `30s` | How long in-flight activities may run after shutdown starts. Any `Duration`. |

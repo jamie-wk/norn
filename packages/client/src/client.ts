@@ -177,14 +177,15 @@ function isExplicitTarget(target: unknown): target is { workflowId: string; runI
 /** Creates a typed Temporal client. Pass contracts from `.norn/contracts.ts` to `workflow()`. */
 export function createClient(options: ClientOptions = {}): NornClient {
   const env = process.env;
-  const apiKey = options.apiKey ?? env.TEMPORAL_API_KEY;
+  // Empty variables count as unset, as in the CLI and the worker.
+  const apiKey = options.apiKey ?? (env.TEMPORAL_API_KEY || undefined);
   const ownsConnection = options.connection === undefined && options.client === undefined;
   const connection =
     options.client?.connection ??
     options.connection ??
     Connection.lazy({
-      address: options.address ?? env.TEMPORAL_ADDRESS ?? 'localhost:7233',
-      ...(apiKey ? { apiKey, tls: options.tls ?? true } : options.tls !== undefined ? { tls: options.tls } : {}),
+      address: options.address ?? (env.TEMPORAL_ADDRESS || 'localhost:7233'),
+      ...(apiKey ? { apiKey, tls: options.tls ?? true } : { tls: options.tls ?? env.TEMPORAL_TLS === 'true' }),
       ...(options.connectTimeout !== undefined ? { connectTimeout: formatDuration(options.connectTimeout) } : {}),
     });
   const interceptors = [...(options.correlation === false ? [] : [correlationInterceptor()]), ...(options.interceptors ?? [])];
@@ -192,7 +193,7 @@ export function createClient(options: ClientOptions = {}): NornClient {
     options.client ??
     new Client({
     connection,
-    namespace: options.namespace ?? env.TEMPORAL_NAMESPACE ?? 'default',
+    namespace: options.namespace ?? (env.TEMPORAL_NAMESPACE || 'default'),
     dataConverter: options.dataConverter,
     interceptors: { workflow: interceptors },
   });

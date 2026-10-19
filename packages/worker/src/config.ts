@@ -73,7 +73,7 @@ export function resolveWorkerConfig(options: WorkerConfigOptions, env: Env = pro
   }
 
   const fromEnv = env.NORN_TASK_QUEUES?.split(',').map((q) => q.trim()).filter(Boolean);
-  const taskQueues = [...(options.taskQueues ?? fromEnv ?? registry.taskQueues)];
+  const taskQueues = [...(options.taskQueues ?? (fromEnv?.length ? fromEnv : registry.taskQueues))];
   if (taskQueues.length === 0) throw new NornConfigError('A worker needs at least one task queue');
   if (!options.allowUnknownTaskQueues) {
     for (const queue of taskQueues) {
@@ -112,17 +112,18 @@ export function resolveWorkerConfig(options: WorkerConfigOptions, env: Env = pro
   const healthPort =
     health !== undefined
       ? port(health.port, 'health.port')
-      : env.NORN_HEALTH_PORT !== undefined && options.health !== false
+      : env.NORN_HEALTH_PORT && options.health !== false
         ? port(env.NORN_HEALTH_PORT, 'NORN_HEALTH_PORT')
         : undefined;
 
   const apiKey = options.apiKey ?? (env.TEMPORAL_API_KEY || undefined);
   return {
     taskQueues,
-    address: options.address ?? env.TEMPORAL_ADDRESS ?? 'localhost:7233',
-    namespace: options.namespace ?? env.TEMPORAL_NAMESPACE ?? 'default',
+    // Empty variables count as unset (as in the CLI), e.g. from `${VAR:-}` in compose files.
+    address: options.address ?? (env.TEMPORAL_ADDRESS || 'localhost:7233'),
+    namespace: options.namespace ?? (env.TEMPORAL_NAMESPACE || 'default'),
     apiKey,
-    tls: options.tls ?? apiKey !== undefined,
+    tls: options.tls ?? (apiKey !== undefined || env.TEMPORAL_TLS === 'true'),
     deployment,
     healthPort,
     healthHost: (health && health.host) ?? '0.0.0.0',

@@ -15,9 +15,9 @@ const LEVELS: readonly LogLevel[] = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR'];
  * start, before creating a connection or worker.
  */
 export function installRuntime(options: InstallRuntimeOptions = {}, env: Record<string, string | undefined> = process.env): Runtime {
-  const level = (options.logLevel ?? env.NORN_LOG_LEVEL ?? 'INFO').toUpperCase() as LogLevel;
+  const level = (options.logLevel ?? (env.NORN_LOG_LEVEL || 'INFO')).toUpperCase() as LogLevel;
   if (!LEVELS.includes(level)) throw new NornConfigError(`Log level must be one of ${LEVELS.join(', ')}, got ${level}`);
-  const metricsAddress = options.metricsAddress ?? env.NORN_METRICS_ADDRESS;
+  const metricsAddress = options.metricsAddress ?? (env.NORN_METRICS_ADDRESS || undefined);
   if (metricsAddress !== undefined && !/^(\[[^\]]+\]|[^:]+):\d+$/.test(metricsAddress)) {
     throw new NornConfigError(`Metrics address must look like host:port or [ipv6]:port, got ${metricsAddress}`);
   }

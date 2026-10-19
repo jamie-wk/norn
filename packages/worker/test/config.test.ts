@@ -4,6 +4,16 @@ import { resolveWorkerConfig } from '../src/index.ts';
 import { registry } from './fixtures/registry.ts';
 
 describe('resolveWorkerConfig', () => {
+  it('treats empty environment variables as unset, like the CLI', () => {
+    const empty = { TEMPORAL_ADDRESS: '', TEMPORAL_NAMESPACE: '', TEMPORAL_API_KEY: '', NORN_TASK_QUEUES: '', NORN_HEALTH_PORT: '', NORN_SHUTDOWN_GRACE: '' };
+    const config = resolveWorkerConfig({ registry }, empty);
+    expect(config).toMatchObject({ address: 'localhost:7233', namespace: 'default', taskQueues: registry.taskQueues, healthPort: undefined, tls: false });
+  });
+
+  it('enables TLS with TEMPORAL_TLS=true, like the CLI', () => {
+    expect(resolveWorkerConfig({ registry }, { TEMPORAL_TLS: 'true' }).tls).toBe(true);
+  });
+
   it('defaults to every task queue in the registry', () => {
     const config = resolveWorkerConfig({ registry }, {});
     expect(config.taskQueues).toEqual(['w-main', 'w-reports']);
