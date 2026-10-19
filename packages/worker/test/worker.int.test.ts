@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { TestWorkflowEnvironment } from '@temporalio/testing';
-import { NativeConnection, Worker } from '@temporalio/worker';
+import { NativeConnection, Worker, type BundlerPlugin, type WorkerPlugin } from '@temporalio/worker';
 import { createServer } from 'node:net';
 import { createContainer } from '@norn/activity';
 import { createClient, runWithCorrelationId, type NornClient } from '@norn/client';
@@ -83,8 +83,11 @@ describe('createWorker', () => {
     expect(calls).toEqual([]);
   });
 
-  it('bundles the registry itself when no bundle is given', async () => {
-    const worker = await createWorker({ registry, connection: env.nativeConnection, handleSignals: false });
+  it('bundles the registry itself when no bundle is given, applying worker plugins', async () => {
+    // Real plugins (e.g. OpenTelemetry's) implement both interfaces.
+    const plugin: WorkerPlugin & BundlerPlugin = { name: 'spy', configureBundler: vi.fn((o) => o) };
+    const worker = await createWorker({ registry, connection: env.nativeConnection, handleSignals: false, plugins: [plugin] });
+    expect(plugin.configureBundler).toHaveBeenCalledOnce();
     const name = uid('self');
     expect(await withRunning(worker, () => norn.workflow(Greet).execute({ name }))).toMatchObject({ greeting: `Hello, ${name}` });
   });

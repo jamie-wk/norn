@@ -22,7 +22,7 @@ const invalid: unknown[] = [];
 
 beforeAll(async () => {
   port = await freePort();
-  invalid.push(...[() => installRuntime({ metricsAddress: 'nope' }), () => installRuntime({ logLevel: 'LOUD' as never })].map((fn) => {
+  invalid.push(...[() => installRuntime({ metricsAddress: 'nope' }), () => installRuntime({ metricsAddress: '::1:9464' }), () => installRuntime({ logLevel: 'LOUD' as never })].map((fn) => {
     try {
       fn();
       return undefined;
@@ -57,10 +57,15 @@ it('exposes Prometheus metrics for a running worker', async () => {
 });
 
 it('validates options before installing', () => {
-  expect(invalid).toHaveLength(2);
+  expect(invalid).toHaveLength(3);
   for (const error of invalid) expect(error).toBeInstanceOf(NornConfigError);
 });
 
-it('refuses to install the runtime twice', () => {
-  expect(() => installRuntime()).toThrow(/must run once/);
+it('refuses to install the runtime twice, keeping the original reason', () => {
+  expect(() => installRuntime()).toThrow(/failed: Runtime singleton has already been installed \(it must run once/);
+});
+
+it('accepts bracketed IPv6 metrics addresses', () => {
+  // Validation passes, so the error is the second install, not the address.
+  expect(() => installRuntime({ metricsAddress: '[::]:9464' })).toThrow(/already been installed/);
 });

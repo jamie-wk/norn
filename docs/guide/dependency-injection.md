@@ -136,7 +136,7 @@ Either make the service `@Service({ scope: 'activity' })`, or inject something s
 
 ### Cycles and missing providers
 
-Cycles are reported when the container is created, before anything is constructed, with the full path:
+Cycles and missing providers are reported when the container is created, before anything is constructed, including dependencies of activity-scoped values. Cycles show the full path:
 
 ```text
 NornConfigError: Dependency cycle: OrderService -> PricingService -> OrderService
@@ -145,7 +145,7 @@ NornConfigError: Dependency cycle: OrderService -> PricingService -> OrderServic
 A missing provider names the key and who needed it:
 
 ```text
-NornConfigError: No provider for Db, required by BankingService (path: TransferService -> BankingService -> Db). Register it with provide() or @Service
+NornConfigError: No provider for Db, required by BankingService. Register it with provide() or @Service
 ```
 
 ## Disposal

@@ -127,19 +127,15 @@ export async function createTestEnv(options: TestEnvOptions = {}): Promise<TestE
   const mode = options.mode ?? 'local';
   if (mode !== 'local' && mode !== 'time-skipping') throw new NornConfigError(`mode must be 'local' or 'time-skipping'`);
   const overrides = activityMap(options.activities);
-  if (options.registry) {
-    for (const name of Object.keys(overrides)) {
-      if (!options.registry.activities.includes(name)) {
-        throw new NornConfigError(`Cannot mock unknown activity ${name} (registered: ${options.registry.activities.join(', ') || 'none'})`);
-      }
-    }
-  }
 
   const searchAttributes = { ...options.registry?.searchAttributes, ...options.searchAttributes };
   let temporal: TestWorkflowEnvironment;
   if (mode === 'time-skipping') {
     const path = options.serverPath ?? process.env.NORN_TEMPORAL_TEST_SERVER_PATH;
-    temporal = await TestWorkflowEnvironment.createTimeSkipping(path ? { server: { executable: { type: 'existing-path', path } } } : {});
+    temporal = await TestWorkflowEnvironment.createTimeSkipping({
+      ...(path ? { server: { executable: { type: 'existing-path', path } } } : {}),
+      client: { dataConverter: options.clientDataConverter },
+    });
   } else {
     const path = options.serverPath ?? process.env.NORN_TEMPORAL_CLI_PATH;
     temporal = await TestWorkflowEnvironment.createLocal({

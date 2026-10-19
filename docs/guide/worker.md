@@ -31,7 +31,7 @@ Everything else is configured through options or environment variables, so the s
 | `NORN_DEPLOYMENT_NAME` | `versioning.deploymentName` | none | Worker deployment name. Set with `NORN_BUILD_ID` to enable [worker versioning](/guide/versioning). |
 | `NORN_BUILD_ID` | `versioning.buildId` | none | Build ID of this worker version, such as the git SHA. |
 | `NORN_WORKFLOW_BUNDLE` | `workflowBundle` | bundle at startup | Path of a prebuilt workflow bundle from `norn bundle` / `bundleWorkflows()`. |
-| `NORN_METRICS_ADDRESS` | `installRuntime({ metricsAddress })` | off | `host:port` for the Prometheus endpoint, such as `0.0.0.0:9464`. |
+| `NORN_METRICS_ADDRESS` | `installRuntime({ metricsAddress })` | off | `host:port` for the Prometheus endpoint, such as `0.0.0.0:9464` or `[::]:9464`. |
 | `NORN_LOG_LEVEL` | `installRuntime({ logLevel })` | `INFO` | `TRACE`, `DEBUG`, `INFO`, `WARN` or `ERROR`. |
 
 Options passed to `createWorker()` win over environment variables. Setting only one of `NORN_DEPLOYMENT_NAME` and `NORN_BUILD_ID` is a startup error, as are malformed ports and durations: a misconfigured worker fails at boot with a `NornConfigError`, not later. `NORN_DEV_CONDITIONS` (comma-separated export conditions for the workflow bundler) is useful in monorepos that resolve workspace packages to source.
@@ -52,11 +52,9 @@ Options passed to `createWorker()` win over environment variables. Setting only 
 | `container` | `{ overrides, errors }` for the dependency container. See [Errors](/guide/errors#activity-errors). |
 | `workflowBundle` | `{ code }` or `{ codePath }` from `bundleWorkflows()`. |
 | `dataConverter` | Such as `createDataConverter()` from [`@norn/codec`](/guide/encryption). |
-| `plugins` | Temporal worker plugins, such as the [OpenTelemetry plugin](/guide/observability#opentelemetry). |
-| `activityInterceptors` | Extra activity interceptor factories, after Norn's correlation interceptor. |
+| `plugins` | Temporal worker plugins, such as the [OpenTelemetry plugin](/guide/observability#opentelemetry). Also applied when bundling at startup. |
 | `activityOverrides` | Replace registered activities by name, typically in tests. Unknown names are rejected. |
-| `extraActivities` | Register activities that aren't `@Activities` classes. |
-| `workerOptions` | Passed through to every `Worker.create()`: concurrency limits, sticky cache size, pollers, workflow interceptors. Norn sets connection, namespace, task queue, activities, bundle, data converter, plugins, `shutdownGraceTime` and `workerDeploymentOptions` itself (use `createWorker()`'s own options for those). |
+| `workerOptions` | Passed through to every `Worker.create()`: concurrency limits, sticky cache size, pollers, interceptors (activity interceptors run after Norn's correlation interceptor). Norn sets connection, namespace, task queue, activities, bundle, bundler options, data converter, plugins, `shutdownGraceTime` and `workerDeploymentOptions` itself (use `createWorker()`'s own options for those). |
 
 ### mTLS with client certificates
 

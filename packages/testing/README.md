@@ -85,7 +85,7 @@ it('refunds when cancelled during the window', async () => {
 | `taskQueues` | Poll a subset of the registry's queues. |
 | `worker` | `false` to skip the worker. |
 | `dataConverter` | Worker data converter, e.g. `createDataConverter()` from `@norn/codec`. |
-| `clientDataConverter` | Client data converter, e.g. `clientDataConverter()` from `@norn/codec` (local mode; time-skipping mode uses the test server's client). |
+| `clientDataConverter` | Client data converter, e.g. `clientDataConverter()` from `@norn/codec`. |
 | `serverPath` | An existing `temporal` CLI (local) or test server (time-skipping) binary. Defaults to `NORN_TEMPORAL_CLI_PATH` / `NORN_TEMPORAL_TEST_SERVER_PATH`, otherwise the SDK downloads one. |
 | `logLevel` | SDK log level. Default `WARN`, or `NORN_TEST_LOG_LEVEL`. |
 
@@ -136,7 +136,6 @@ describe('DailyReportWorkflow', () => {
 
 - `mockActivities(ref, impls)`: as above, but every mock is a `vi.fn()`, so `toHaveBeenCalledWith` and friends work.
 - `useTestEnv(options?)`: one environment per test file, created in `beforeAll` (120 s timeout) and torn down in `afterAll`. Access it only inside tests and hooks. Give each test its own workflow IDs, and `vi.clearAllMocks()` between tests if you assert on counts.
-- `createTestEnv` and `createFakeClient` are re-exported for convenience.
 
 ## Activity tests
 
@@ -182,7 +181,7 @@ expect((await app.request('/orders/o-1/items', { method: 'POST', body: '{"sku":"
 | Member | Description |
 | --- | --- |
 | `calls` | Every call in order: `{ op, workflow, workflowId, name?, args?, input?, options? }`. `op` is `'start'`, `'signal'`, `'query'`, `'update'`, `'cancel'`, `'terminate'`, `'signalWithStart'` or `'updateWithStart'`. |
-| `started(contract)` | Inputs of every start (including with-start) of a contract. |
+| `started(contract)` | Inputs of every new execution of a contract, including with-start. Rejected, failed and reused starts are not counted. |
 | `stub(contract, { signals?, queries?, updates?, onStart? })` | Handler implementations, typed from the contract. Queries and updates without a stub throw; signals without one are recorded and accepted. |
 | `complete(workflowId, result)` | Completes the latest run, so `result()` resolves. |
 | `fail(workflowId, failureType, message?)` | Fails the latest run, so `result()` throws `WorkflowFailedError`. |

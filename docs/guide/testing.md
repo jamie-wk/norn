@@ -61,7 +61,7 @@ it('refunds when the customer cancels inside the window', async () => {
 ### Modes
 
 - **`'local'`** (default): a real Temporal dev server (`temporal server start-dev`). Timers take real time. Search attributes from the registry (plus `searchAttributes`) are registered for you, so visibility queries work. Use it for search-attribute and `list()` tests, and anything where real time is fine.
-- **`'time-skipping'`**: Temporal's test server. While the test waits on a workflow result, the server skips ahead to the next timer, so a workflow that sleeps for 14 days finishes in milliseconds. Use it for timers, reminders, expiries and SLAs. Search attributes are registered here too. The client is the test server's own (it unlocks time while waiting for results), so `clientDataConverter` is not used in this mode.
+- **`'time-skipping'`**: Temporal's test server. While the test waits on a workflow result, the server skips ahead to the next timer, so a workflow that sleeps for 14 days finishes in milliseconds. Use it for timers, reminders, expiries and SLAs. Search attributes are registered here too.
 
 `env.sleep(duration)` advances time explicitly: it skips on the time-skipping server and sleeps for real on the dev server. Use it to observe a workflow mid-way:
 
@@ -203,7 +203,7 @@ it('maps a rejected cancel to 422', async () => {
 | Fake API | Description |
 | --- | --- |
 | `calls` | Every call, in order: `{ op, workflow, workflowId, name?, args?, input?, options? }`. |
-| `started(contract)` | Inputs of every start (including with-start) of a contract. |
+| `started(contract)` | Inputs of every new execution of a contract, including with-start. Rejected, failed and reused starts are not counted. |
 | `stub(contract, { signals, queries, updates, onStart })` | Implementations for handlers. Queries and updates without a stub throw; signals without one are accepted and recorded. |
 | `complete(workflowId, result)` / `fail(workflowId, failureType, message?)` | Finish the latest run, so `result()` resolves or throws `WorkflowFailedError`. |
 | `failNext(error)` | Make the next call reject, for example with `TemporalUnavailableError`. |

@@ -52,6 +52,3 @@ export function useTestEnv(options: TestEnvOptions = {}): TestEnv {
     [Symbol.asyncDispose]: () => current().teardown(),
   };
 }
-
-export { createTestEnv, type TestEnv, type TestEnvOptions } from './env.js';
-export { createFakeClient, type FakeNornClient } from './fake-client.js';

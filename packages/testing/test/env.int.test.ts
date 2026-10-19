@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineSearchAttributeKey } from '@temporalio/common';
+import { defineSearchAttributeKey, type Payload } from '@temporalio/common';
 import { historyToJSON } from '@temporalio/common/lib/proto-utils.js';
 import { assertReplays, createTestEnv, loadHistories, mockActivities } from '../src/index.ts';
 import { Reminders, Waits } from './fixtures/contracts.ts';
@@ -64,6 +64,15 @@ describe('createTestEnv', () => {
     expect(env.worker).toBeUndefined();
     const handle = await env.workflow(Waits).start(undefined, { workflowId: uid('w') });
     expect((await handle.describe()).status).toBe('RUNNING');
+    await handle.terminate('cleanup');
+  });
+
+  it('uses clientDataConverter in time-skipping mode', async () => {
+    const encoded: Payload[] = [];
+    const payloadCodecs = [{ encode: async (p: Payload[]) => (encoded.push(...p), p), decode: async (p: Payload[]) => p }];
+    await using env = await createTestEnv({ registry, mode: 'time-skipping', worker: false, clientDataConverter: { payloadCodecs } });
+    const handle = await env.workflow(Reminders).start({ userId: uid('codec'), email: 'x@y.z' });
+    expect(encoded.length).toBeGreaterThan(0);
     await handle.terminate('cleanup');
   });
 

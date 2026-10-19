@@ -4,7 +4,6 @@ import {
   Worker,
   type WorkerOptions,
   type WorkerPlugin,
-  type ActivityInterceptorsFactory,
 } from '@temporalio/worker';
 import { NornConfigError, TemporalUnavailableError } from '@norn/core';
 import type { Container } from '@norn/activity';
@@ -29,19 +28,12 @@ export interface CreateWorkerOptions extends WorkerConfigOptions {
   /** E.g. `createDataConverter()` from `@norn/codec`. */
   dataConverter?: WorkerOptions['dataConverter'];
   plugins?: WorkerPlugin[];
-  /**
-   * Replace registered activities by name, typically with mocks in tests. Names must exist in the
-   * registry; use `extraActivities` for new ones.
-   */
+  /** Replace registered activities by name, typically with mocks in tests. Names must exist in the registry. */
   activityOverrides?: Record<string, (...args: any[]) => unknown>;
-  /** Additional activities not declared with `@Activities`. */
-  extraActivities?: Record<string, (...args: any[]) => unknown>;
-  /** Extra activity interceptors, after Norn's correlation interceptor. */
-  activityInterceptors?: ActivityInterceptorsFactory[];
   /** Passed through to every Temporal `Worker.create()` call. */
   workerOptions?: Omit<
     Partial<WorkerOptions>,
-    'connection' | 'namespace' | 'taskQueue' | 'activities' | 'workflowBundle' | 'workflowsPath' | 'dataConverter' | 'plugins'
+    'connection' | 'namespace' | 'taskQueue' | 'activities' | 'workflowBundle' | 'workflowsPath' | 'dataConverter' | 'plugins' | 'bundlerOptions'
   >;
 }
 
@@ -106,7 +98,7 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
         throw new NornConfigError(`Cannot override unknown activity ${name} (registered: ${registry.activities.join(', ') || 'none'})`);
       }
     }
-    const activities = { ...(await container.activities()), ...options.extraActivities, ...options.activityOverrides };
+    const activities = { ...(await container.activities()), ...options.activityOverrides };
     if (options.connection) {
       connection = options.connection;
     } else {
@@ -126,7 +118,7 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
     const payloadConverterPath = (options.dataConverter as { payloadConverterPath?: string } | undefined)?.payloadConverterPath;
     const workflowBundle =
       options.workflowBundle ??
-      (process.env.NORN_WORKFLOW_BUNDLE ? { codePath: process.env.NORN_WORKFLOW_BUNDLE } : await bundleWorkflows(registry, { payloadConverterPath }));
+      (process.env.NORN_WORKFLOW_BUNDLE ? { codePath: process.env.NORN_WORKFLOW_BUNDLE } : await bundleWorkflows(registry, { payloadConverterPath, plugins: options.plugins }));
 
     const create = (taskQueue: string) =>
       Worker.create({
@@ -142,7 +134,7 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
         ...(config.deployment ? { workerDeploymentOptions: config.deployment } : {}),
         interceptors: {
           ...options.workerOptions?.interceptors,
-          activity: [correlationActivityInterceptor, ...(options.activityInterceptors ?? []), ...(options.workerOptions?.interceptors?.activity ?? [])],
+          activity: [correlationActivityInterceptor, ...(options.workerOptions?.interceptors?.activity ?? [])],
         },
       });
     try {
