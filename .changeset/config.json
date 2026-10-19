@@ -1,11 +1,36 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3/schema.json",
-  "changelog": ["@changesets/changelog-github", { "repo": "jamie-wk/norn" }],
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "jamie-wk/norn"
+    }
+  ],
   "commit": false,
-  "fixed": [["@norn/*"]],
+  "fixed": [
+    [
+      "@norn/activity",
+      "@norn/cli",
+      "@norn/client",
+      "@norn/codec",
+      "@norn/core",
+      "@norn/eslint-plugin",
+      "@norn/hono",
+      "@norn/testing",
+      "@norn/worker",
+      "@norn/workflow"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@norn/example-*", "@norn/e2e", "@norn/docs"]
+  "ignore": [
+    "@norn/example-orders-worker",
+    "@norn/example-orders-api",
+    "@norn/example-orders-contracts",
+    "@norn/example-orders-provider",
+    "@norn/e2e",
+    "@norn/docs"
+  ]
 }
