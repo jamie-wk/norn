@@ -61,9 +61,10 @@
     "@temporalio/common": "^1.24.0"
   },
   "devDependencies": {
-    "@temporalio/common": "1.24.0",
     "@temporalio/client": "1.24.0",
+    "@temporalio/common": "1.24.0",
+    "@temporalio/testing": "1.24.0",
     "@temporalio/worker": "1.24.0",
-    "@temporalio/testing": "1.24.0"
+    "@temporalio/workflow": "1.24.0"
   }
 }

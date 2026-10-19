@@ -72,7 +72,7 @@ const SEARCH_ATTRIBUTE_POLL_MS = 100;
  * Waits until the server lists every search attribute. `temporal server start-dev` registers its
  * `--search-attribute`s about a second after it starts serving, and until then starts that use them fail.
  */
-async function waitForSearchAttributes(temporal: TestWorkflowEnvironment, names: readonly string[]): Promise<void> {
+export async function waitForSearchAttributes(temporal: TestWorkflowEnvironment, names: readonly string[]): Promise<void> {
   if (names.length === 0) return;
   const deadline = Date.now() + SEARCH_ATTRIBUTE_TIMEOUT_MS;
   let missing = names;
@@ -95,7 +95,7 @@ async function addSearchAttributes(temporal: TestWorkflowEnvironment, searchAttr
 }
 
 let runtimeChecked = false;
-function quietRuntime(level: LogLevel | undefined): void {
+export function quietRuntime(level: LogLevel | undefined): void {
   if (runtimeChecked) return;
   runtimeChecked = true;
   try {
