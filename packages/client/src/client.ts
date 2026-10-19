@@ -245,9 +245,9 @@ export function createClient(options: ClientOptions = {}): NornClient {
     const visibility = (query?: string) => (query ? `${typeQuery} AND (${query})` : typeQuery);
 
     const start = async (input: unknown, opts: StartOptions<C> = {}) => {
-      const options = startOptions(contract, input, opts);
-      const ctx = { workflowId: options.workflowId, workflowType: contract.name };
-      const handle = await call(ctx, () => temporal.workflow.start(contract.name, options as never), opts.correlationId);
+      const startOpts = startOptions(contract, input, opts);
+      const ctx = { workflowId: startOpts.workflowId, workflowType: contract.name };
+      const handle = await call(ctx, () => temporal.workflow.start(contract.name, startOpts as never), opts.correlationId);
       return wrap(contract, handle, handle.firstExecutionRunId);
     };
 
@@ -261,13 +261,13 @@ export function createClient(options: ClientOptions = {}): NornClient {
         return wrap(contract, temporal.workflow.getHandle(workflowId, runId), runId);
       },
       async signalWithStart(input, operation, opts = {}) {
-        const options = startOptions(contract, input, opts);
-        const ctx = { workflowId: options.workflowId, workflowType: contract.name };
+        const startOpts = startOptions(contract, input, opts);
+        const ctx = { workflowId: startOpts.workflowId, workflowType: contract.name };
         const handle = await call(
           ctx,
           () =>
             temporal.workflow.signalWithStart(contract.name, {
-              ...options,
+              ...startOpts,
               signal: nameOf(contract.signals, operation.signal),
               signalArgs: operation.args as unknown[],
             } as never),
@@ -276,10 +276,10 @@ export function createClient(options: ClientOptions = {}): NornClient {
         return wrap(contract, handle, handle.signaledRunId);
       },
       async updateWithStart(input, operation, opts = {}) {
-        const options = startOptions(contract, input, { ifRunning: 'useExisting', ...opts });
+        const startOpts = startOptions(contract, input, { ifRunning: 'useExisting', ...opts });
         const update = nameOf(contract.updates, operation.update);
-        const ctx = { workflowId: options.workflowId, workflowType: contract.name, update };
-        const startWorkflowOperation = new WithStartWorkflowOperation(contract.name, options as never);
+        const ctx = { workflowId: startOpts.workflowId, workflowType: contract.name, update };
+        const startWorkflowOperation = new WithStartWorkflowOperation(contract.name, startOpts as never);
         const result = await call(
           ctx,
           () => temporal.workflow.executeUpdateWithStart(update, { args: operation.args as unknown[], startWorkflowOperation }),
