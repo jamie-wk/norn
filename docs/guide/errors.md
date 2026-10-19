@@ -48,7 +48,8 @@ export class InsufficientFundsError extends Error {
 async submit(transfer: TransferRequest) {
   const balance = await this.ledger.available(transfer.sourceAccountId);
   if (balance < transfer.amountCents) throw new InsufficientFundsError(`balance ${balance} < ${transfer.amountCents}`);
-  return this.transfers.send(transfer); // network errors here are retried
+  // network errors here are retried
+  return this.transfers.send(transfer);
 }
 ```
 
@@ -100,8 +101,10 @@ try {
   const charge = await this.payments.charge(this.orderId, total, input.card);
   this.chargeId = charge.chargeId;
 } catch (error) {
-  const declined = asFailure(error, PaymentDeclinedError); // or asFailure(error, 'PaymentDeclinedError')
-  if (!declined) throw error; // anything else fails the workflow
+  // or asFailure(error, 'PaymentDeclinedError')
+  const declined = asFailure(error, PaymentDeclinedError);
+  // anything else fails the workflow
+  if (!declined) throw error;
   this.failure = declined.message;
   await this.inventory.release(this.orderId);
   return this.finish('payment_failed');

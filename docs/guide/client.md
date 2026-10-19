@@ -19,9 +19,12 @@ const final = await order.result();
 
 ```ts
 const norn = createClient({
-  address: 'my-ns.a1b2c.tmprl.cloud:7233', // default TEMPORAL_ADDRESS, then localhost:7233
-  namespace: 'my-ns.a1b2c',                // default TEMPORAL_NAMESPACE, then 'default'
-  apiKey: process.env.TEMPORAL_API_KEY,    // default TEMPORAL_API_KEY; turns TLS on
+  // default TEMPORAL_ADDRESS, then localhost:7233
+  address: 'my-ns.a1b2c.tmprl.cloud:7233',
+  // default TEMPORAL_NAMESPACE, then 'default'
+  namespace: 'my-ns.a1b2c',
+  // default TEMPORAL_API_KEY; turns TLS on
+  apiKey: process.env.TEMPORAL_API_KEY,
 });
 ```
 
@@ -47,8 +50,10 @@ Create one client per process and share it. With Hono, the [`temporal()` middlew
 ```ts
 const payments = norn.workflow(PaymentWorkflow);
 
-const handle = await payments.start({ paymentId: 'p_1', amountCents: 50_000 }); // resolves when started
-const result = await payments.execute({ paymentId: 'p_2', amountCents: 10_000 }); // resolves with the result
+// resolves when started
+const handle = await payments.start({ paymentId: 'p_1', amountCents: 50_000 });
+// resolves with the result
+const result = await payments.execute({ paymentId: 'p_2', amountCents: 10_000 });
 ```
 
 The workflow ID comes from the contract's ID template and the input. Pass `workflowId` to override it, which is required for workflows without a template. A workflow whose `run()` takes no input is started with `start()`.
@@ -99,9 +104,12 @@ A handle without a run ID targets the latest run, so it keeps working across con
 Handler names are **method names** from the workflow class; the contract maps them to registered names. Misspelled names, wrong argument types and missing arguments are compile errors:
 
 ```ts
-await order.signal('cancel', 'why');   // ok
-await order.signal('cancel');          // error: expected 2 arguments
-await order.signal('checkout');        // error: not a signal of OrderWorkflow
+// ok
+await order.signal('cancel', 'why');
+// error: expected 2 arguments
+await order.signal('cancel');
+// error: not a signal of OrderWorkflow
+await order.signal('checkout');
 ```
 
 ## With-start operations
@@ -110,7 +118,8 @@ await order.signal('checkout');        // error: not a signal of OrderWorkflow
 
 ```ts
 await norn.workflow(LoyaltyWorkflow).signalWithStart(
-  { customerId: 'c-7' },                                         // input, used only if it starts
+  // input, used only if it starts
+  { customerId: 'c-7' },
   { signal: 'orderCompleted', args: [{ orderId: 'o-42', cents: 1999 }] },
 );
 ```
@@ -148,7 +157,8 @@ Search attributes declared in `@Workflow({ searchAttributes })` are part of the 
 ```ts
 await norn.workflow(OrderWorkflow).start(
   { orderId: 'o-42', customerId: 'c-7' },
-  { searchAttributes: { CustomerId: 'c-7' } }, // CustomerId: string; an undeclared name or a number is a compile error
+  // CustomerId: string; an undeclared name or a number is a compile error
+  { searchAttributes: { CustomerId: 'c-7' } },
 );
 ```
 
@@ -187,7 +197,8 @@ For a workflow that isn't defined in this codebase (implemented by another team,
 import { defineWorkflow, query, signal, type, update } from '@norn/core';
 
 export const Fulfilment = defineWorkflow({
-  name: 'FulfilmentWorkflow',       // the workflow type the other side registers
+  // the workflow type the other side registers
+  name: 'FulfilmentWorkflow',
   taskQueue: 'fulfilment',
   id: 'fulfilment-{orderId}',
   input: type<{ orderId: string; warehouse: string }>(),

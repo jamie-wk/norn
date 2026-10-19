@@ -12,7 +12,8 @@ import { hmacSha256Verifier, nornErrorHandler, signalAction, temporal, temporalW
 import { PaymentWorkflow } from '../.norn/contracts.js';
 
 const app = new Hono<NornEnv>();
-app.use(temporal({})); // client from TEMPORAL_ADDRESS / TEMPORAL_NAMESPACE / TEMPORAL_API_KEY
+// client from TEMPORAL_ADDRESS / TEMPORAL_NAMESPACE / TEMPORAL_API_KEY
+app.use(temporal({}));
 app.onError(nornErrorHandler());
 
 app.post('/payments', async (c) => {
@@ -48,7 +49,8 @@ app.use(temporal({ client: norn }));
 // or
 const middleware = temporal({ address: process.env.TEMPORAL_ADDRESS, namespace: 'payments' });
 app.use(middleware);
-process.on('SIGTERM', () => void middleware.close()); // closes a client the middleware created
+// closes a client the middleware created
+process.on('SIGTERM', () => void middleware.close());
 ```
 
 `middleware.client` returns the client (creating it if needed), so other code can share it. `close()` only closes a client the middleware created, never one you passed in.
@@ -110,7 +112,8 @@ app.post(
     verify: hmacSha256Verifier({ secret: env.TRANSFER_WEBHOOK_SECRET, header: 'x-signature', encoding: 'hex' }),
     map: (event: TransferWebhook) => {
       const paymentId = event.data.metadata?.paymentId;
-      if (!paymentId) return null; // not ours: 202 { accepted: 0, ignored: 'unmapped' }
+      // not ours: 202 { accepted: 0, ignored: 'unmapped' }
+      if (!paymentId) return null;
       return signalAction(PaymentWorkflow, { paymentId }, 'transferEvent', {
         eventId: event.eventId,
         type: event.type,
@@ -159,7 +162,8 @@ import { hmacSha256, timingSafeEqual } from '@norn/hono';
 
 const verify = async (c: Context, rawBody: string) => {
   const timestamp = c.req.header('x-timestamp') ?? '';
-  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false; // replay window
+  // replay window
+  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
   const expected = await hmacSha256(env.SECRET, `${timestamp}.${rawBody}`);
   const given = Uint8Array.from(Buffer.from(c.req.header('x-signature') ?? '', 'hex'));
   return timingSafeEqual(expected, given);

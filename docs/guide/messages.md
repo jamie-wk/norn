@@ -57,9 +57,11 @@ From a client, you call handlers by **method name**, with typed arguments and re
 
 ```ts
 const order = norn.workflow(OrderWorkflow).get({ orderId: 'o-1' });
-const count = await order.update('addItem', { sku: 'sku-mug', qty: 2 }); // number
+// number
+const count = await order.update('addItem', { sku: 'sku-mug', qty: 2 });
 await order.signal('cancel', 'customer request');
-const view = await order.query('view'); // typed from the method's return type
+// typed from the method's return type
+const view = await order.query('view');
 ```
 
 JSDoc comments on handler methods become their descriptions in the Temporal UI (`norn gen` passes them to `implement()`), or set `description` explicitly in the options.
@@ -83,9 +85,12 @@ A signal is a fire-and-forget message. The caller returns as soon as the server 
 
 ```ts
 @Signal({
-  name: 'payment-event',            // registered name; defaults to the method name
-  description: 'Provider webhooks', // shown in the Temporal UI
-  unfinishedPolicy: 'abandon',      // see "Unfinished handlers"
+  // registered name; defaults to the method name
+  name: 'payment-event',
+  // shown in the Temporal UI
+  description: 'Provider webhooks',
+  // see "Unfinished handlers"
+  unfinishedPolicy: 'abandon',
   dedupeBy: (event: PaymentEvent) => event.eventId,
 })
 paymentEvent(event: PaymentEvent) { /* ... */ }
@@ -171,7 +176,8 @@ Clients can run an update and start the workflow in one call, if it isn't runnin
 
 ```ts
 const { handle, result } = await norn.workflow(CartWorkflow).updateWithStart(
-  { cartId: 'c-9' },            // input, used only if the workflow has to start
+  // input, used only if the workflow has to start
+  { cartId: 'c-9' },
   { update: 'add', args: ['sku-mug'] },
 );
 ```

@@ -63,7 +63,8 @@ export class MoovTransferService implements TransferService {
 ```ts
 @Activities({ prefix: 'payments.' })
 export class PaymentActivities {
-  constructor(private readonly transfers: TransferService) {} // gets MoovTransferService
+  // gets MoovTransferService
+  constructor(private readonly transfers: TransferService) {}
 }
 ```
 
@@ -161,7 +162,8 @@ TC39 standard decorators have no parameter decorators, and Norn doesn't use `emi
 ```ts
 @Activities({ prefix: 'loyalty.', inject: [TemporalClient] })
 export class LoyaltyActivities {
-  constructor(private readonly client: NornClient) {} // NornClient is a type, TemporalClient the token
+  // NornClient is a type, TemporalClient the token
+  constructor(private readonly client: NornClient) {}
 }
 
 @Service({ inject: [Db, AppConfig] })
@@ -185,7 +187,8 @@ await using env = await createTestEnv({
 
 // Or just the activities, without Temporal:
 await using container = registry.createContainer({ overrides: [[TransferService, fakeTransfers]] });
-const activities = await container.activities(); // { 'payments.submit': fn, ... }
+// { 'payments.submit': fn, ... }
+const activities = await container.activities();
 ```
 
 See [Testing](/guide/testing#testing-activities) for running those functions inside a mock activity context.

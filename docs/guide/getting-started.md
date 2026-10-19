@@ -239,7 +239,8 @@ import { createWorker } from '@norn/worker';
 import { registry } from '../.norn/registry.js';
 
 const worker = await createWorker({ registry });
-await worker.run(); // until SIGTERM / SIGINT, then drains gracefully
+// until SIGTERM / SIGINT, then drains gracefully
+await worker.run();
 ```
 
 `createWorker()` connects to `TEMPORAL_ADDRESS` (default `localhost:7233`), builds the activities through the container, bundles the workflows, and polls every task queue in the registry. Build and run it:
@@ -261,8 +262,10 @@ import { nornErrorHandler, temporal, type NornEnv } from '@norn/hono';
 import { OrderWorkflow } from '../.norn/contracts.js';
 
 const app = new Hono<NornEnv>();
-app.use(temporal({})); // a Norn client on c.var.norn, plus correlation IDs
-app.onError(nornErrorHandler()); // NornErrors become JSON responses with the right status
+// a Norn client on c.var.norn, plus correlation IDs
+app.use(temporal({}));
+// NornErrors become JSON responses with the right status
+app.onError(nornErrorHandler());
 
 app.post('/orders', async (c) => {
   const input = await c.req.json<{ orderId: string; cents: number }>();
@@ -291,9 +294,11 @@ Without Hono, use the client directly in any framework:
 import { createClient } from '@norn/client';
 import { OrderWorkflow } from '../.norn/contracts.js';
 
-const norn = createClient(); // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
+// TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
+const norn = createClient();
 const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-1', cents: 1999 });
-console.log(await order.result()); // 'paid' after an hour, or 'refunded'
+// 'paid' after an hour, or 'refunded'
+console.log(await order.result());
 ```
 
 ## 10. Test it
@@ -329,7 +334,8 @@ const env = useTestEnv({ registry, mode: 'time-skipping', activities: pay });
 
 it('keeps the charge when nobody cancels', async () => {
   const order = await env.workflow(OrderWorkflow).start({ orderId: 'o-1', cents: 500 });
-  expect(await order.result()).toBe('paid'); // the 1 hour timer is skipped
+  // the 1 hour timer is skipped
+  expect(await order.result()).toBe('paid');
   expect(pay.refund).not.toHaveBeenCalled();
 });
 

@@ -93,7 +93,8 @@ Matching is done on the specifier string, loosely normalised (`.` and `..` segme
 ```ts
 // Reported
 import { readFileSync } from 'node:fs';
-import { PaymentActivities } from '../activities/payment.activities.js'; // use .norn/activities.js
+// use .norn/activities.js
+import { PaymentActivities } from '../activities/payment.activities.js';
 import { Connection } from '@temporalio/client';
 
 // Fine

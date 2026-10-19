@@ -41,7 +41,8 @@ export class OrderWorkflow {
 
 ```ts
 const child = await this.shipment.start({ orderId: input.orderId });
-await child.signal('expedite', 2); // if ShipmentWorkflow has @Signal() expedite(level: number)
+// if ShipmentWorkflow has @Signal() expedite(level: number)
+await child.signal('expedite', 2);
 const result = await child.result();
 ```
 

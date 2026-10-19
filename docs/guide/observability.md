@@ -74,7 +74,8 @@ Call `installRuntime()` once at worker startup, before creating the worker:
 ```ts
 import { createWorker, installRuntime } from '@norn/worker';
 
-installRuntime({ metricsAddress: '0.0.0.0:9464' }); // or NORN_METRICS_ADDRESS
+// or NORN_METRICS_ADDRESS
+installRuntime({ metricsAddress: '0.0.0.0:9464' });
 const worker = await createWorker({ registry });
 ```
 

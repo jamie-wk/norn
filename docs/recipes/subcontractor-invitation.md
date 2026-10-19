@@ -17,10 +17,12 @@ Shared types and errors live in a workflow-safe module, with no I/O, so both the
 import type { Duration } from '@norn/core';
 
 export interface InvitationTerms {
-  scope: string; // "Electrical rough-in, building B"
+  // "Electrical rough-in, building B"
+  scope: string;
   rateCents: number;
   rateUnit: 'hour' | 'fixed';
-  startDate: string; // YYYY-MM-DD
+  // YYYY-MM-DD
+  startDate: string;
   retainagePercent: number;
 }
 
@@ -167,7 +169,8 @@ export interface InvitationEmail {
 }
 
 @Activities({ prefix: 'invitations.' })
-@NonRetryable([InvalidRecipientError]) // a bad address won't get better with retries
+// a bad address won't get better with retries
+@NonRetryable([InvalidRecipientError])
 export class InvitationActivities {
   constructor(
     private readonly mailer: Mailer,
@@ -418,7 +421,8 @@ invitations.patch('/invitations/:invitationId/terms', async (c) => {
 
 invitations.post('/invitations/:invitationId/accept', async (c) => {
   const { termsVersion } = await c.req.json<{ termsVersion: number }>();
-  const user = await currentUser(c); // authorise: the user must be the invited subcontractor
+  // authorise: the user must be the invited subcontractor
+  const user = await currentUser(c);
   await flow(c).get({ invitationId: c.req.param('invitationId') }).signal('accept', { userId: user.id, termsVersion });
   return c.body(null, 202);
 });
@@ -492,7 +496,8 @@ describe('SubcontractorInvitationWorkflow', () => {
     const { termsVersion } = await invite.update('changeTerms', { expectedVersion: 1, changes: { rateCents: 9_500 } });
     expect(termsVersion).toBe(2);
 
-    await invite.signal('accept', { userId: 'u-sub', termsVersion: 1 }); // stale: ignored
+    // stale: ignored
+    await invite.signal('accept', { userId: 'u-sub', termsVersion: 1 });
     await invite.signal('accept', { userId: 'u-sub', termsVersion: 2 });
     const view = await invite.result();
 

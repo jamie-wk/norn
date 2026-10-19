@@ -20,7 +20,8 @@ Keys are 32 random bytes, base64-encoded; anything else is rejected at startup. 
 
 ```ts
 // src/codec.ts
-export const keys = JSON.parse(process.env.NORN_ENCRYPTION_KEYS ?? '{}') as Record<string, string>; // {"2026-10":"<base64>"}
+// {"2026-10":"<base64>"}
+export const keys = JSON.parse(process.env.NORN_ENCRYPTION_KEYS ?? '{}') as Record<string, string>;
 export const currentKeyId = process.env.NORN_ENCRYPTION_KEY_ID ?? '2026-10';
 ```
 
@@ -99,7 +100,8 @@ app.route(
   '/codec',
   codecServer({
     codec: createEncryptionCodec({ keys, currentKeyId }),
-    auth: async (c) => verifyStaffToken(c.req.header('authorization')), // required
+    // required
+    auth: async (c) => verifyStaffToken(c.req.header('authorization')),
     cors: { origins: ['https://temporal.internal.example.com'] },
     namespaces: ['production'],
   }),

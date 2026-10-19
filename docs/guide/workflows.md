@@ -54,7 +54,8 @@ export class CartWorkflow {
   private readonly items: string[];
 
   constructor(input: { cartId: string; seed?: string[] }) {
-    this.items = [...(input.seed ?? [])]; // ready before the first update runs
+    // ready before the first update runs
+    this.items = [...(input.seed ?? [])];
   }
 
   @Update() add(sku: string) {
@@ -95,8 +96,10 @@ export class PaymentWorkflow {
 }
 
 // Client side:
-await norn.workflow(PaymentWorkflow).start({ paymentId: 'p_123', amountCents: 5_000 }); // ID "payment-p_123"
-norn.workflow(PaymentWorkflow).get({ paymentId: 'p_123' }); // same ID, no string building
+// ID "payment-p_123"
+await norn.workflow(PaymentWorkflow).start({ paymentId: 'p_123', amountCents: 5_000 });
+// same ID, no string building
+norn.workflow(PaymentWorkflow).get({ paymentId: 'p_123' });
 ```
 
 Templates are **checked at compile time**. If a placeholder is not a field of `run()`'s input, the decorator itself fails to type-check:
@@ -123,7 +126,8 @@ export class InvalidOrderError extends Error {
 @Workflow({ taskQueue: 'orders', failOn: [InvalidOrderError] })
 export class StrictOrderWorkflow {
   async run(input: { cents: number }) {
-    if (input.cents <= 0) throw new InvalidOrderError('cents must be positive'); // fails the workflow
+    // fails the workflow
+    if (input.cents <= 0) throw new InvalidOrderError('cents must be positive');
     // ...
   }
 }
@@ -155,9 +159,12 @@ Use the SDK's primitives directly; Norn doesn't wrap them:
 ```ts
 import { condition, sleep } from '@temporalio/workflow';
 
-await sleep('3 days'); // a durable timer: survives worker restarts and deploys
-const approved = await condition(() => this.approved, '48 hours'); // true if approved, false on timeout
-await condition(() => this.items.length > 0); // wait with no timeout
+// a durable timer: survives worker restarts and deploys
+await sleep('3 days');
+// true if approved, false on timeout
+const approved = await condition(() => this.approved, '48 hours');
+// wait with no timeout
+await condition(() => this.items.length > 0);
 ```
 
 `sleep()` and `condition()` take milliseconds or the SDK's duration strings (`'90s'`, `'2 hours'`, `'3 days'`). Norn's own options accept the [`Duration`](https://github.com/jamie-wk/norn/tree/main/packages/core#durations) type, which also allows ISO 8601 (`'PT15M'`) and compound forms (`'1h30m'`); when you receive a Norn `Duration` in workflow input, convert it with `toMs()` from `@norn/core`:
@@ -215,7 +222,8 @@ export class Pausable {
 @Workflow({ taskQueue: 'jobs' })
 export class ImportJobWorkflow extends Pausable {
   override resume() {
-    super.resume(); // still the 'resume' signal
+    // still the 'resume' signal
+    super.resume();
   }
   async run() {
     await condition(() => !this.paused);
@@ -246,7 +254,8 @@ private readonly status = transitions(
 );
 
 @Signal() settled() {
-  this.status.move('settled'); // returns false (and does nothing) unless the current state is 'submitted'
+  // returns false (and does nothing) unless the current state is 'submitted'
+  this.status.move('settled');
 }
 ```
 

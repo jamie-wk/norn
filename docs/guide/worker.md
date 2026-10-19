@@ -7,13 +7,16 @@
 import { createWorker, installRuntime } from '@norn/worker';
 import { registry } from '../.norn/registry.js';
 
-installRuntime(); // log level and Prometheus metrics from the environment; optional
+// log level and Prometheus metrics from the environment; optional
+installRuntime();
 
 const worker = await createWorker({
   registry,
-  container: { errors: { http: true } }, // 4xx from providers are final, 5xx retried
+  // 4xx from providers are final, 5xx retried
+  container: { errors: { http: true } },
 });
-await worker.run(); // resolves after a graceful shutdown; rejects if a worker fails
+// resolves after a graceful shutdown; rejects if a worker fails
+await worker.run();
 ```
 
 Everything else is configured through options or environment variables, so the same image runs in every environment.
@@ -135,7 +138,8 @@ If you'd rather script it, `bundleWorkflows()` does the same thing:
 ```ts
 // scripts/bundle.ts
 import { bundleWorkflows } from '@norn/worker';
-import { resolvePayloadConverterPath } from '@norn/codec'; // only if you use @norn/codec
+// only if you use @norn/codec
+import { resolvePayloadConverterPath } from '@norn/codec';
 import { registry } from '../dist/.norn/registry.js';
 
 await bundleWorkflows(registry, {
@@ -188,7 +192,8 @@ Use a Debian-based image such as `node:24-slim`: the Temporal SDK includes a nat
 `installRuntime()` installs the Temporal runtime once per process, **before** any connection or worker is created (calling it later throws). It sets the SDK log level (`NORN_LOG_LEVEL`) and, with `NORN_METRICS_ADDRESS`, serves Prometheus metrics for the SDK and Temporal core at `http://<address>/metrics`:
 
 ```ts
-installRuntime({ metricsAddress: '0.0.0.0:9464', logLevel: 'INFO' }); // or from the environment
+// or from the environment
+installRuntime({ metricsAddress: '0.0.0.0:9464', logLevel: 'INFO' });
 ```
 
 The metrics are the standard Temporal SDK metrics. The schedule-to-start latencies for workflow and activity tasks tell you whether you are short of workers; activity and workflow failure counters tell you whether something is broken. See [Observability](/guide/observability).

@@ -64,9 +64,12 @@ export class OrderWorkflow {
 Temporal's default retry policy retries **forever**, with exponential backoff from 1 second up to 100 seconds. That is often what you want for flaky dependencies, but it means a broken activity keeps retrying until someone notices. `retries` is the simple, explicit knob:
 
 ```ts
-@Activity({ timeout: '30s', retries: 5 }) // up to 6 attempts, default backoff
-@Activity({ timeout: '30s', retries: 5, retry: { initialInterval: '200ms', maximumInterval: '5s' } }) // tuned backoff
-@Activity({ timeout: '30s', retry: { maximumAttempts: 6, backoffCoefficient: 3 } }) // the same count, Temporal-style
+// up to 6 attempts, default backoff
+@Activity({ timeout: '30s', retries: 5 })
+// tuned backoff
+@Activity({ timeout: '30s', retries: 5, retry: { initialInterval: '200ms', maximumInterval: '5s' } })
+// the same count, Temporal-style
+@Activity({ timeout: '30s', retry: { maximumAttempts: 6, backoffCoefficient: 3 } })
 ```
 
 Use either `retries` or `retry.maximumAttempts`, not both; the combination is rejected. Without either, retries are unlimited and bounded only by `scheduleToClose`, if you set it.
@@ -77,13 +80,15 @@ Some errors will never succeed on retry: a declined card, an invalid address, a 
 
 ```ts
 @Activities({ prefix: 'inventory.' })
-@NonRetryable([OutOfStockError]) // for every method in the class
+// for every method in the class
+@NonRetryable([OutOfStockError])
 export class InventoryActivities {
   @Activity({ timeout: '5s', local: true })
   async reserve(skus: string[]) { /* ... */ }
 
   @Activity()
-  @NonRetryable() // nothing in release() is worth retrying
+  // nothing in release() is worth retrying
+  @NonRetryable()
   async release(skus: string[]) { /* ... */ }
 }
 ```
@@ -151,7 +156,8 @@ All of them throw a `NornConfigError` when called outside a running activity, so
 ```ts
 @Activity({ timeout: '2 hours', heartbeat: '30s', retries: 5 })
 async importRows(fileId: string) {
-  let offset = lastHeartbeat<number>() ?? 0; // resume after a crash or retry
+  // resume after a crash or retry
+  let offset = lastHeartbeat<number>() ?? 0;
   const signal = cancellationSignal();
   for await (const batch of this.files.read(fileId, { offset, signal })) {
     await this.db.insert(batch);

@@ -67,9 +67,12 @@ import { createClient } from '@norn/client';
 import { OrderWorkflow } from '../.norn/contracts.js';
 
 const norn = createClient();
-const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-42', cents: 1999 }); // ID: order-o-42
-await order.signal('cancel', 'changed my mind'); // typed: signal names and arguments are checked
-const status = await order.query('getStatus'); // 'pending' | 'paid' | 'refunded'
+// ID: order-o-42
+const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-42', cents: 1999 });
+// typed: signal names and arguments are checked
+await order.signal('cancel', 'changed my mind');
+// 'pending' | 'paid' | 'refunded'
+const status = await order.query('getStatus');
 ```
 
 ## Why Norn

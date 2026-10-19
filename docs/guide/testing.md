@@ -21,8 +21,10 @@ import { standardDecorators } from '@norn/testing/vite';
 export default defineConfig({
   plugins: [standardDecorators()],
   test: {
-    testTimeout: 60_000, // workflow tests talk to a real server
-    hookTimeout: 120_000, // the first run downloads it
+    // workflow tests talk to a real server
+    testTimeout: 60_000,
+    // the first run downloads it
+    hookTimeout: 120_000,
   },
 });
 ```
@@ -175,7 +177,8 @@ import { PaymentWorkflow } from '../.norn/contracts.js';
 
 it('starts a payment and rejects a duplicate', async () => {
   const fake = createFakeClient();
-  const app = buildApp(fake); // e.g. app.use(temporal({ client: fake }))
+  // e.g. app.use(temporal({ client: fake }))
+  const app = buildApp(fake);
 
   const first = await app.request('/payments', { method: 'POST', body: JSON.stringify({ paymentId: 'p1', amountCents: 500 }) });
   expect(first.status).toBe(201);

@@ -69,7 +69,8 @@ Everything you need must be in the next run's input, because the new run starts 
 
   ```ts
   constructor(input: SubscriptionInput) {
-    this.status = transitions(TABLE, input.status ?? 'trialing'); // a state name or a snapshot
+    // a state name or a snapshot
+    this.status = transitions(TABLE, input.status ?? 'trialing');
   }
   // ...
   return continueAsNew(() => ({ ...input, status: this.status.snapshot() }));
