@@ -24,6 +24,7 @@ export type OrderStatus =
   | 'shipping'
   | 'completed'
   | 'payment_failed'
+  | 'rejected'
   | 'canceled'
   | 'refunded'
   | 'expired'
@@ -46,6 +47,13 @@ export const PRICES: Readonly<Record<string, number>> = Object.freeze({
   'sku-shirt': 2_400,
   'sku-sticker': 200,
 });
+
+/** Why an item can't be ordered, or undefined when it can. */
+export function itemError(item: LineItem | undefined): string | undefined {
+  if (!item || typeof item.sku !== 'string' || !Object.hasOwn(PRICES, item.sku)) return `Unknown SKU ${String(item?.sku)}`;
+  if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > 100) return 'qty must be a whole number from 1 to 100';
+  return undefined;
+}
 
 export class InvalidItemError extends Error {
   override name = 'InvalidItemError';

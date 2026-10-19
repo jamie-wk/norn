@@ -1,7 +1,7 @@
 import { condition } from '@temporalio/workflow';
 import { Query, Signal, Update, Validate, Workflow, asFailure, setSearchAttributes, transitions, useActivities, useChild } from '@norn/workflow';
 import { InventoryActivities, LoyaltyActivities, NotificationActivities, PaymentActivities } from '../../.norn/activities.ts';
-import { InvalidItemError, OrderStateError, PRICES, PaymentDeclinedError, type LineItem, type OrderInput, type OrderStatus, type OrderView } from '../domain.ts';
+import { InvalidItemError, OrderStateError, OutOfStockError, PaymentDeclinedError, itemError, type LineItem, type OrderInput, type OrderStatus, type OrderView } from '../domain.ts';
 import { ShipmentWorkflow } from './shipment.workflow.ts';
 
 export interface PaymentEvent {
@@ -29,12 +29,13 @@ export class OrderWorkflow {
 
   private readonly status = transitions(
     {
-      open: ['charging', 'canceled', 'expired'],
-      charging: ['paid', 'payment_failed'],
+      open: ['charging', 'canceled', 'expired', 'rejected'],
+      charging: ['paid', 'payment_failed', 'rejected'],
       paid: ['shipping', 'refunded', 'charged_back'],
       shipping: ['completed'],
       completed: [],
       payment_failed: [],
+      rejected: [],
       canceled: [],
       refunded: [],
       expired: [],
@@ -72,8 +73,8 @@ export class OrderWorkflow {
 
   @Validate('addItem') checkItem(item: LineItem) {
     if (!this.status.is('open') || this.submitted) throw new OrderStateError(`Cannot add items to a ${this.status.current} order`);
-    if (!item || typeof item.sku !== 'string' || !(item.sku in PRICES)) throw new InvalidItemError(`Unknown SKU ${String(item?.sku)}`);
-    if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > 100) throw new InvalidItemError('qty must be a whole number from 1 to 100');
+    const error = itemError(item);
+    if (error) throw new InvalidItemError(error);
   }
 
   /** Adds an item to an open order and returns the updated view. */
@@ -108,27 +109,36 @@ export class OrderWorkflow {
 
   async run(input: OrderInput): Promise<OrderView> {
     setSearchAttributes({ CustomerId: input.customerId, OrderStatus: 'open' });
+    // Starting items skip the addItem validator, so check them here before anything is charged.
+    this.failure = this.items.map(itemError).find(Boolean);
+    if (this.failure) return this.finish('rejected');
 
     const ready = await condition(() => this.submitted || this.cancelReason !== undefined, '7 days');
     if (!ready) return this.finish('expired');
     if (this.cancelReason !== undefined && !this.submitted) return this.finish('canceled');
 
     this.move('charging');
-    const { totalCents } = await this.inventory.reserve(this.orderId, this.items);
-    this.totalCents = totalCents;
     try {
-      const charge = await this.payments.charge(this.orderId, totalCents, input.card);
+      this.totalCents = (await this.inventory.reserve(this.orderId, this.items)).totalCents;
+    } catch (error) {
+      const outOfStock = asFailure(error, OutOfStockError);
+      if (!outOfStock) throw error;
+      this.failure = outOfStock.message;
+      return this.finish('rejected');
+    }
+    try {
+      const charge = await this.payments.charge(this.orderId, this.totalCents, input.card);
       this.chargeId = charge.chargeId;
     } catch (error) {
+      await this.inventory.release(this.orderId);
       const declined = asFailure(error, PaymentDeclinedError);
       if (!declined) throw error;
       this.failure = declined.message;
-      await this.inventory.release(this.orderId);
       await this.notify.email(input.email, 'payment_failed', { orderId: this.orderId, reason: declined.message });
       return this.finish('payment_failed');
     }
     this.move('paid');
-    await this.notify.email(input.email, 'order_paid', { orderId: this.orderId, totalCents });
+    await this.notify.email(input.email, 'order_paid', { orderId: this.orderId, totalCents: this.totalCents });
 
     // The customer may cancel for a while after paying; a dispute stops fulfilment.
     await condition(() => this.cancelReason !== undefined || this.disputed, input.cancelWindow ?? '1 hour');
@@ -146,10 +156,9 @@ export class OrderWorkflow {
     this.move('shipping');
     const { trackingNumber } = await this.shipment.execute({ orderId: this.orderId });
     this.trackingNumber = trackingNumber;
-    this.move('completed');
     await this.notify.email(input.email, 'order_shipped', { orderId: this.orderId, trackingNumber });
-    await this.loyalty.credit(input.customerId, this.orderId, totalCents);
-    return this.view();
+    await this.loyalty.credit(input.customerId, this.orderId, this.totalCents);
+    return this.finish('completed');
   }
 
   private move(next: OrderStatus) {

@@ -37,7 +37,7 @@ temporal server start-dev --search-attribute CustomerId=Keyword --search-attribu
 
 pnpm --filter @norn/example-orders-provider start          # :4010
 pnpm --filter @norn/example-orders-worker start            # polls the "orders" and "shipping" queues
-pnpm --filter @norn/example-orders-api start               # :3000
+WEBHOOK_SECRET=dev-secret pnpm --filter @norn/example-orders-api start   # :3000; the secret verifies payment webhooks
 ```
 
 ```sh
@@ -49,7 +49,8 @@ curl -s localhost:3000/orders/o-1          # status: charging → paid → shipp
 curl -s localhost:3000/orders/o-1/cancel -H 'content-type: application/json' -d '{"reason":"oops"}'
 ```
 
-Try `"card": "card_declined"` for a declined payment, or script provider failures:
+Try `"card": "card_declined"` for a declined payment (`payment_failed`), a bad SKU for `rejected`, or
+script provider failures:
 
 ```sh
 curl -s localhost:4010/__script -H 'content-type: application/json' -d '{"route":"charges","status":503,"times":2}'

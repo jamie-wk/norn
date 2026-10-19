@@ -20,11 +20,6 @@ services:
       timeout: 5s
       retries: 60
 
-  temporal-admin-tools:
-    image: temporalio/temporal:1.9.1
-    entrypoint: ['sleep', 'infinity']
-    depends_on: { temporal: { condition: service_healthy } }
-
   provider:
     build: { context: .., dockerfile: examples/orders/Dockerfile, target: provider }
     ports: ['4010:4010']

@@ -20,9 +20,7 @@ describe('happy paths', () => {
     expect(created.body).toMatchObject({ orderId: order.orderId, workflowId: `order-${order.orderId}` });
 
     const done = await waitForStatus(stack, order.orderId, 'completed');
-    expect(done).toMatchObject({ totalCents: 3_900, items: order.items });
-    // The order reads 'completed' before the workflow sends the last email and credits loyalty, so wait for the run to end.
-    await expect.poll(async () => (await stack.api(`/orders/${order.orderId}`)).body.workflowStatus, { timeout: 20_000 }).toBe('COMPLETED');
+    expect(done).toMatchObject({ totalCents: 3_900, items: order.items, workflowStatus: 'COMPLETED' });
     expect(done.chargeId).toMatch(/^ch_/);
     expect(done.trackingNumber).toMatch(/^TRK/);
 
@@ -120,9 +118,14 @@ describe('sad paths', () => {
     const unknown = await stack.api(`/orders/${cartId}/items`, { body: { sku: 'sku-nope', qty: 1 } });
     expect(unknown.status).toBe(422);
     expect(unknown.body.error).toMatchObject({ code: 'UPDATE_REJECTED', details: { failureType: 'InvalidItemError', update: 'addItem' } });
-    const qty = await stack.api(`/orders/${cartId}/items`, { body: { sku: 'sku-book', qty: 0 } });
-    expect(qty.status).toBe(422);
+    expect((await stack.api(`/orders/${cartId}/items`, { body: { sku: 'sku-book', qty: 0 } })).status).toBe(400);
     expect((await stack.api('/orders', { body: { orderId: uid('o') } })).status).toBe(400);
+    expect((await stack.api('/orders', { body: newOrder({ items: [{ sku: 'sku-book', qty: -2 }] }) })).status).toBe(400);
+    // Starting items skip the addItem validator; the workflow rejects them before charging.
+    const bad = newOrder({ items: [{ sku: 'sku-nope', qty: 1 }] });
+    expect((await stack.api('/orders', { body: bad })).status).toBe(201);
+    expect(await waitForStatus(stack, bad.orderId, 'rejected')).toMatchObject({ failure: 'Unknown SKU sku-nope', totalCents: 0 });
+    expect((await stack.providerCalls('charges')).some((c) => c.body.orderId === bad.orderId)).toBe(false);
     expect((await stack.api(`/orders/${cartId}`)).body.items).toEqual([{ sku: 'sku-book', qty: 1 }]);
     // An empty cart can't be submitted either.
     const empty = uid('cart');

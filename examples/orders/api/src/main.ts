@@ -6,10 +6,13 @@ import { createApp } from './app.ts';
 const keys = process.env.NORN_ENCRYPTION_KEYS ? (JSON.parse(process.env.NORN_ENCRYPTION_KEYS) as Record<string, string>) : undefined;
 const currentKeyId = process.env.NORN_ENCRYPTION_KEY_ID ?? Object.keys(keys ?? {})[0] ?? '';
 
+const webhookSecret = process.env.WEBHOOK_SECRET;
+if (!webhookSecret) throw new Error('WEBHOOK_SECRET is required (the shared secret that signs payment webhooks)');
+
 const client = createClient({ dataConverter: keys ? clientDataConverter({ keys, currentKeyId }) : undefined });
 const app = createApp({
   client,
-  webhookSecret: process.env.WEBHOOK_SECRET ?? 'dev-secret',
+  webhookSecret,
   codec: keys && process.env.CODEC_TOKEN ? { codec: createEncryptionCodec({ keys, currentKeyId }), token: process.env.CODEC_TOKEN } : undefined,
 });
 
