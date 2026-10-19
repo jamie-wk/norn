@@ -27,6 +27,11 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./codec-server": {
+      "@norn/source": "./src/codec-server.ts",
+      "types": "./dist/codec-server.d.ts",
+      "default": "./dist/codec-server.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
@@ -55,6 +60,7 @@
   },
   "peerDependencies": {
     "hono": "^4.6.0",
+    "@temporalio/client": "^1.24.0",
     "@temporalio/common": "^1.24.0"
   },
   "devDependencies": {

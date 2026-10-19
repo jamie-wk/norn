@@ -32,6 +32,11 @@
       "types": "./dist/payload-converter.d.ts",
       "default": "./dist/payload-converter.js"
     },
+    "./encryption": {
+      "@norn/source": "./src/encryption.ts",
+      "types": "./dist/encryption.d.ts",
+      "default": "./dist/encryption.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
