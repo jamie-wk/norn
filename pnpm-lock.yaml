@@ -253,6 +253,9 @@ importers:
       '@norn/client':
         specifier: workspace:^
         version: link:../client
+      '@norn/codec':
+        specifier: workspace:^
+        version: link:../codec
       '@norn/testing':
         specifier: workspace:^
         version: link:../testing

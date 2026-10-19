@@ -77,6 +77,7 @@
     "@norn/client": "workspace:^",
     "@norn/testing": "workspace:^",
     "@opentelemetry/api": "1.9.1",
-    "@opentelemetry/sdk-trace-base": "2.12.0"
+    "@opentelemetry/sdk-trace-base": "2.12.0",
+    "@norn/codec": "workspace:^"
   }
 }
