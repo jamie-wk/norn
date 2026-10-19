@@ -111,7 +111,7 @@ Primitive values can't be injected by type (`constructor(private readonly url: s
 
 **Singleton** (the default): created on first use and shared by every activity execution. Database pools, HTTP clients, SDK clients and configuration are singletons. `createWorker()` creates every singleton **at startup**, so a missing provider or a factory that can't connect fails the deploy, not the first payment.
 
-**Activity**: created for one activity execution and disposed when it finishes, whatever the outcome. Use it for per-execution state: a request-scoped logger carrying the activity ID, a unit of work, a transaction.
+**Activity**: created for one activity execution and disposed when it finishes, whatever the outcome. Use it for per-execution state: a request-scoped logger carrying the activity ID, a unit of work, a transaction. Commit inside the activity, not in `dispose`: `dispose` runs whatever the outcome, and its errors are only logged.
 
 ```ts
 export const RequestLog = token<Logger>('RequestLog');
@@ -150,7 +150,7 @@ NornConfigError: No provider for Db, required by BankingService (path: TransferS
 
 ## Disposal
 
-When the worker shuts down (after draining in-flight activities), the container disposes every singleton it created **in reverse creation order**, so a service is disposed before the pool it uses. Activity-scoped values are disposed in reverse order at the end of each execution. Disposal uses the provider's `dispose` function, or the value's `Symbol.asyncDispose` / `Symbol.dispose`. If several disposals fail, you get an `AggregateError` listing them; the rest still run.
+When the worker shuts down (after draining in-flight activities), the container disposes every singleton it created **in reverse creation order**, so a service is disposed before the pool it uses. Activity-scoped values are disposed in reverse order at the end of each execution. Disposal uses the provider's `dispose` function, or the value's `Symbol.asyncDispose` / `Symbol.dispose`. A failed disposal never stops the others. At worker shutdown, several failures are thrown together as one `AggregateError`. At the end of an activity they are logged as a warning instead, so a cleanup problem can't turn a finished activity into a retry.
 
 Values you pass as test overrides are owned by you and are never disposed.
 

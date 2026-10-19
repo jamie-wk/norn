@@ -201,7 +201,7 @@ The container checks the graph before creating anything:
 - **Captive dependencies**: a singleton that depends on an activity-scoped value is refused. An activity class that depends on one becomes activity-scoped itself, automatically.
 - **Constructor arity**: a class taking more constructor arguments than it has known dependencies fails with a hint to run `norn gen` or add `inject`.
 
-`activities()` creates every singleton up front, so a bad provider fails the worker at startup rather than the first activity. A failed creation is retried on the next attempt. Each activity execution gets its own scope; its activity-scoped values are disposed in reverse creation order when it finishes, whatever the outcome. Disposing the container (`await using`, or `container[Symbol.asyncDispose]()`) disposes singletons in reverse creation order; several failures are thrown as one `AggregateError`.
+`activities()` creates every singleton up front, so a bad provider fails the worker at startup rather than the first activity. A failed creation is retried on the next attempt. Each activity execution gets its own scope; its activity-scoped values are disposed in reverse creation order when it finishes, whatever the outcome; their dispose errors are logged as a warning, not thrown, so commit work inside the activity rather than in `dispose`. Disposing the container (`await using`, or `container[Symbol.asyncDispose]()`) disposes singletons in reverse creation order; several failures are thrown as one `AggregateError`.
 
 ## Error mapping
 

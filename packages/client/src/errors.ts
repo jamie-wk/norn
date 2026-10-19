@@ -33,10 +33,10 @@ export interface ErrorContext {
 
 const GRPC = { DEADLINE_EXCEEDED: 4, NOT_FOUND: 5, RESOURCE_EXHAUSTED: 8, UNAVAILABLE: 14 } as const;
 
-function grpcCode(error: unknown): number | undefined {
+/** The first error in the cause chain that carries a gRPC status code. */
+function grpcError(error: unknown): { code: number; message?: string } | undefined {
   for (let e: unknown = error, depth = 0; e && depth < 5; e = (e as { cause?: unknown }).cause, depth++) {
-    const code = (e as { code?: unknown }).code;
-    if (typeof code === 'number') return code;
+    if (typeof (e as { code?: unknown }).code === 'number') return e as { code: number; message?: string };
   }
   return undefined;
 }
@@ -88,9 +88,11 @@ export function toNornError(error: unknown, ctx: ErrorContext): unknown {
   if (error instanceof QueryNotRegisteredError || error instanceof QueryRejectedError) {
     return new QueryFailedError({ workflowId: ctx.workflowId, query: ctx.query ?? 'unknown', message: error.message, cause: error });
   }
-  const code = grpcCode(error);
-  // RESOURCE_EXHAUSTED is rate limiting (e.g. Temporal Cloud namespace limits): retryable, like unavailability.
-  if (code === GRPC.UNAVAILABLE || code === GRPC.DEADLINE_EXCEEDED || code === GRPC.RESOURCE_EXHAUSTED) {
+  const grpc = grpcError(error);
+  const code = grpc?.code;
+  // RESOURCE_EXHAUSTED is usually rate limiting (retryable), but gRPC also uses it for oversized messages, which never succeed.
+  const rateLimited = code === GRPC.RESOURCE_EXHAUSTED && !/larger than max/i.test(grpc?.message ?? '');
+  if (code === GRPC.UNAVAILABLE || code === GRPC.DEADLINE_EXCEEDED || rateLimited) {
     return new TemporalUnavailableError({ message: `Temporal is unavailable: ${(error as Error).message}`, cause: error });
   }
   if (code === GRPC.NOT_FOUND && (error instanceof ServiceError || (error as { metadata?: unknown }).metadata !== undefined)) {

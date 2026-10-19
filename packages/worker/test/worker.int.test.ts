@@ -1,9 +1,9 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { TestWorkflowEnvironment } from '@temporalio/testing';
-import { NativeConnection } from '@temporalio/worker';
+import { NativeConnection, Worker } from '@temporalio/worker';
 import { createServer } from 'node:net';
 import { createContainer } from '@norn/activity';
 import { createClient, runWithCorrelationId, type NornClient } from '@norn/client';
@@ -181,6 +181,23 @@ describe('startup failures', () => {
       await expect(connection.close()).resolves.toBeUndefined();
     } finally {
       taken.close();
+    }
+  });
+
+  it('releases the Temporal workers it did create when another task queue fails', async () => {
+    const create = Worker.create.bind(Worker);
+    let main: Promise<Worker> | undefined;
+    const spy = vi.spyOn(Worker, 'create').mockImplementation(async (opts) => {
+      if (opts.taskQueue !== 'w-reports') return (main = create(opts));
+      await main; // fail only once the other worker exists and holds the connection
+      throw new Error('w-reports could not be created');
+    });
+    const connection = await ownConnection();
+    try {
+      await expect(createWorker({ registry, ...base(), connection })).rejects.toThrow(/w-reports could not be created/);
+      await expect(connection.close()).resolves.toBeUndefined();
+    } finally {
+      spy.mockRestore();
     }
   });
 

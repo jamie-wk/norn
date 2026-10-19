@@ -73,6 +73,12 @@ describe('toNornError', () => {
     expect(toNornError(grpc(code), ctx)).toBeInstanceOf(TemporalUnavailableError);
   });
 
+  it('leaves an oversized message alone: retrying it can never succeed', () => {
+    const tooBig = grpc(status.RESOURCE_EXHAUSTED, 'Received message larger than max (5242880 vs. 4194304)');
+    const wrapped = new ServiceError('Failed to start Workflow', { cause: tooBig });
+    expect(toNornError(wrapped, ctx)).toBe(wrapped);
+  });
+
   it('maps a gRPC NOT_FOUND to WorkflowNotFoundError', () => {
     expect(toNornError(new ServiceError('x', { cause: grpc(status.NOT_FOUND) }), ctx)).toBeInstanceOf(WorkflowNotFoundError);
   });

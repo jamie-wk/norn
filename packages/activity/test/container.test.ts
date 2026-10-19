@@ -162,20 +162,26 @@ describe('createContainer', () => {
     expect(disposed).toEqual(['a1-1', 'a1-2']);
   });
 
-  it("keeps the activity's result when disposing a scoped value fails", async () => {
+  it("keeps the activity's result when disposing scoped values fails, and logs every failure", async () => {
+    const Conn = token<string>('Conn');
+    const fail = (message: string) => () => {
+      throw new Error(message);
+    };
     await using container = createContainer({
       providers: [
-        provide(RequestLog, () => ({ id: 'r', lines: [] }), {
-          scope: 'activity',
-          dispose: () => {
-            throw new Error('pool release failed');
-          },
-        }),
+        provide(Conn, () => 'conn', { scope: 'activity', dispose: fail('conn release failed') }),
+        provide(RequestLog, () => ({ id: 'r', lines: [] }), { scope: 'activity', deps: [Conn], dispose: fail('log flush failed') }),
       ],
       activities: [{ cls: AuditActivities }],
     });
     const acts = await container.activities();
-    expect(await new MockActivityEnvironment().run(acts['audit.record']!, 'one')).toEqual({ id: 'r', lines: ['one'] });
+    const warn = vi.fn();
+    const logger = { log: vi.fn(), trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn, error: vi.fn() };
+    expect(await new MockActivityEnvironment(undefined, { logger }).run(acts['audit.record']!, 'one')).toEqual({ id: 'r', lines: ['one'] });
+    expect(warn).toHaveBeenCalledWith(
+      'Disposing activity-scoped values failed',
+      expect.objectContaining({ errors: ['Error: log flush failed', 'Error: conn release failed'] }),
+    );
   });
 
   it('rejects cycles through ctx.resolve instead of hanging', async () => {

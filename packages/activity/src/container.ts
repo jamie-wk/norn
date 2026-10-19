@@ -325,7 +325,8 @@ export function createContainer(options: ContainerOptions = {}): Container {
                 await disposeAll(scope.created);
               } catch (error) {
                 // The activity already ran: a failed cleanup must not turn its outcome into a retry.
-                Context.current().log.warn('Disposing activity-scoped values failed', { activityType: info.activityType, error: String(error) });
+                const errors = error instanceof AggregateError ? error.errors.map(String) : [String(error)];
+                Context.current().log.warn('Disposing activity-scoped values failed', { activityType: info.activityType, errors });
               }
             }
           });
