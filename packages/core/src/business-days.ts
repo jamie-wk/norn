@@ -18,7 +18,6 @@ export interface BusinessCalendar {
 }
 
 const DAY = 86_400_000;
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * A deterministic business-day calendar for timers counted in banking days, such as ACH windows.
@@ -27,12 +26,15 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 export function businessCalendar(options: BusinessCalendarOptions = {}): BusinessCalendar {
   const weekend = new Set(options.weekend ?? [0, 6]);
   const offset = (options.utcOffsetMinutes ?? 0) * 60_000;
+  if (!Number.isFinite(offset)) throw new NornConfigError('Business calendar: utcOffsetMinutes must be a finite number');
   if (weekend.size >= 7 || [...weekend].some((d) => !Number.isInteger(d) || d < 0 || d > 6)) {
     throw new NornConfigError('Business calendar: weekend must list fewer than 7 days between 0 and 6');
   }
   const holidays = new Set<string>();
   for (const h of options.holidays ?? []) {
-    if (!DATE.test(h) || Number.isNaN(Date.parse(`${h}T00:00:00Z`))) {
+    // Round-trip so rolled-over dates such as 2026-02-30 are rejected instead of never matching.
+    const day = new Date(`${h}T00:00:00Z`);
+    if (Number.isNaN(day.getTime()) || day.toISOString().slice(0, 10) !== h) {
       throw new NornConfigError(`Business calendar: holiday "${h}" must be a YYYY-MM-DD date`);
     }
     holidays.add(h);

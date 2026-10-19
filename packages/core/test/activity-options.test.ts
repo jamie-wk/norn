@@ -56,14 +56,19 @@ describe('toActivityOptions', () => {
     });
   });
 
-  it('applies per-call overrides last', () => {
-    expect(toActivityOptions({ timeout: '1m', retries: 2 }, { timeout: '5s' })).toEqual({
-      startToCloseTimeout: '5000ms',
-      retry: { maximumAttempts: 3 },
-    });
-  });
-
-  it.each([{ retries: -1 }, { retries: 1.5 }, { timeout: 'soon' }, { retry: { backoffCoefficient: 0.5 } }])(
+  it.each([
+    { retries: -1 },
+    { retries: 1.5 },
+    { timeout: 'soon' },
+    { retry: { backoffCoefficient: 0.5 } },
+    { timeout: 0 },
+    { timeout: '0s' },
+    { scheduleToClose: 0 },
+    { timeout: '1s', scheduleToClose: '0ms' },
+    { retry: { maximumAttempts: 0 } },
+    { retry: { initialInterval: 0 } },
+    { retry: { maximumInterval: '0s' } },
+  ])(
     'rejects invalid options %j',
     (opts) => {
       expect(() => toActivityOptions(opts as never)).toThrow(NornConfigError);

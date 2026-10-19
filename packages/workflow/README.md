@@ -124,7 +124,6 @@ function Workflow<const O extends WorkflowOptions>(options: O): ClassDecorator;
 | `searchAttributes` | `Record<string, SearchAttributeType>` | `{}` | Custom search attributes this workflow sets: `'text'`, `'keyword'`, `'int'`, `'double'`, `'bool'`, `'datetime'`, `'keywordList'`. |
 | `failOn` | error classes | `[]` | Errors that fail the workflow (or the update they are thrown from) instead of failing and retrying the workflow task. |
 | `drainHandlers` | `boolean` | `true` | Wait for in-flight signal and update handlers before completing. |
-| `description` | `string` | none | Short description for docs and tooling. |
 
 The class needs a `run()` method. Options must be literals, because `norn gen` reads them from the source.
 
@@ -163,7 +162,7 @@ Registers a synchronous validator for the update method `update`. Validators run
 function Schedule<C extends WorkflowClass>(cron: string | string[], options?: ScheduleOptions<WorkflowInput<C>>): ClassDecorator;
 ```
 
-Declares a Temporal schedule for the workflow. It only records metadata: `norn gen` writes it to `.norn/schedules.json` and `norn schedules sync` creates, updates and removes the matching schedules. A workflow may have several.
+Declares a Temporal schedule for the workflow. It does nothing at runtime: `norn gen` reads it from the source, writes it to `.norn/schedules.json` and `norn schedules sync` creates, updates and removes the matching schedules. A workflow may have several.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -191,7 +190,7 @@ function useActivities<R extends ActivitiesRef<any, any>>(ref: R, overrides?: Ac
 
 Returns one async function per registered activity method, typed from the activity class (`this.payments.charge(orderId, cents, card)` returns `Promise<Awaited<ReturnType<charge>>>`). Methods that are not `@Activity` methods are not on the proxy. Call it as a class field or in the constructor.
 
-The second argument overrides the options declared with `@Activity`: shared options for every method, then per-method options under `methods`. Each option replaces the declared value as a whole (`retry` is replaced, not merged):
+The second argument overrides the options declared with `@Activity`: shared options for every method, then per-method options under `methods`. Each option replaces the declared value as a whole (`retry` is replaced, not merged), and an override of `retries` or `retry.maximumAttempts` replaces a declared count in either form:
 
 ```ts
 private readonly importer = useActivities(ImportActivities, {
@@ -314,7 +313,7 @@ try {
 function setSearchAttributes(values: Record<string, string | number | boolean | Date | string[] | null>): void;
 ```
 
-Upserts custom search attributes declared in `@Workflow({ searchAttributes })`, converting them to Temporal's typed search attributes. `null` clears one. A name the workflow does not declare throws `NornConfigError`. Search attributes must exist on the namespace first (`norn gen` lists them in `.norn/search-attributes.json`).
+Upserts custom search attributes declared in `@Workflow({ searchAttributes })`, converting them to Temporal's typed search attributes. `null` clears one. A name the workflow does not declare, or a value that doesn't match the declared type (an integer for `int`, a `Date` for `datetime`, ...), throws `NornConfigError`. Search attributes must exist on the namespace first (`norn gen` lists them in `.norn/search-attributes.json`).
 
 ### `transitions()` and `businessCalendar()`
 
@@ -326,7 +325,6 @@ Re-exported from `@norn/core`: a deterministic state machine that ignores illega
 
 - `implement(cls, options?)`: returns the workflow function Temporal runs (with a `workflowType` property). It applies `versioning` and `failOn` through `setWorkflowOptions`. `options.descriptions` maps method names to handler descriptions.
 - `describeWorkflow(cls)`: the validated `WorkflowDefinition`: name, task queue, ID template, search attributes, handlers with their registered names and validators. Throws `NornConfigError` for duplicate handler names and invalid validators.
-- `definitionFor(workflowType)`: the definition registered with `implement()` in this bundle.
 - `isWorkflowClass(value)`: whether a class is decorated with `@Workflow`.
 
 Handlers are inherited: a base class can declare signals and queries, and subclasses can override the methods and keep the registrations. Only the concrete class is decorated with `@Workflow`.
@@ -338,7 +336,7 @@ Handlers are inherited: a base class can declare signals and queries, and subcla
 | `Workflow(options)`, `WorkflowOptions` | Class decorator |
 | `Signal(options?)`, `Query(options?)`, `Update(options?)`, `HandlerOptions`, `SignalOptions`, `UpdateOptions`, `UnfinishedPolicy` | Handler decorators |
 | `Validate(update)` | Update validator decorator |
-| `Schedule(cron, options?)`, `ScheduleOptions`, `ScheduleTag` | Schedule decorator |
+| `Schedule(cron, options?)`, `ScheduleOptions` | Schedule decorator |
 | `useActivities(ref, overrides?)`, `ActivityProxy<R>`, `ActivityOverrides<R>` | Activity proxies |
 | `defineActivities<T>()(def)`, `activityName(ref, method)`, `ActivitiesRef`, `ActivityMethodKey<T>` | Activity references |
 | `useChild(target, defaults?)`, `ChildRef`, `ChildHandle`, `ChildOptions` | Child workflows |
@@ -346,7 +344,7 @@ Handlers are inherited: a base class can declare signals and queries, and subcla
 | `continueAsNew(input, options?)`, `continueAsNewSuggested()`, `ContinueAsNewOptions` | Continue-as-new |
 | `asFailure(error, type)`, `isFailure(error, type)` | Failure matching |
 | `setSearchAttributes(values)`, `SearchAttributeInput` | Search attributes |
-| `implement(cls, options?)`, `definitionFor(workflowType)`, `ImplementOptions`, `WorkflowFunction<C>`, `RunArgs<C>` | Workflow functions (generated code) |
+| `implement(cls, options?)`, `ImplementOptions`, `WorkflowFunction<C>`, `RunArgs<C>` | Workflow functions (generated code) |
 | `describeWorkflow(cls)`, `isWorkflowClass(value)`, `WorkflowDefinition`, `HandlerDefinition`, `VersioningBehavior` | Introspection |
 | `transitions`, `businessCalendar`, `Transitions`, `TransitionTable`, `BusinessCalendar`, `ActivityOptions`, `Duration` | Re-exported from `@norn/core` |
 

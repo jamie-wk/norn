@@ -46,7 +46,7 @@ export class ReportWorkflow {
 }
 ```
 
-`@Schedule` only records metadata; it changes nothing at runtime. `norn gen` validates the expressions and options and writes them to `.norn/schedules.json`:
+`@Schedule` does nothing at runtime. `norn gen` reads it from the source, validates the expressions and options and writes them to `.norn/schedules.json`:
 
 ```json
 [

@@ -61,6 +61,14 @@ export function activityName(ref: ActivitiesRef, method: string): string {
   return `${ref.prefix}${options.name ?? method}`;
 }
 
+/** Applies an override layer; its `retries` replaces an inherited `retry.maximumAttempts`, and vice versa. */
+function override(options: ActivityOptions, layer: ActivityOptions): ActivityOptions {
+  const next = { ...options, ...layer };
+  if (layer.retries !== undefined && !layer.retry && options.retry) next.retry = { ...options.retry, maximumAttempts: undefined };
+  if (layer.retry?.maximumAttempts !== undefined && layer.retries === undefined) delete next.retries;
+  return next;
+}
+
 /**
  * Returns typed functions that schedule the referenced activities. Call it from workflow code,
  * typically as a class field: `private pay = useActivities(activities.payments)`.
@@ -74,7 +82,7 @@ export function useActivities<R extends ActivitiesRef<any, any>>(ref: R, overrid
   };
   const proxy: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
   for (const [method, base] of Object.entries(ref.methods as Record<string, ActivityOptions>)) {
-    const options = { ...base, ...shared, ...perMethod?.[method] };
+    const options = override(override(base, shared), perMethod?.[method] ?? {});
     const temporalOptions = toActivityOptions(options);
     const type = activityName(ref, method);
     const scheduled = options.local

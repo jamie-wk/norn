@@ -136,23 +136,11 @@ export interface ScheduleOptions<Input = unknown> {
   note?: string;
 }
 
-export interface ScheduleTag {
-  cron: string[];
-  options: ScheduleOptions;
-}
-
 /**
- * Declares a schedule for a workflow. `norn gen` records it, and `norn schedules sync` creates,
- * updates or removes the matching Temporal schedules.
+ * Declares a schedule for a workflow. `norn gen` reads it from the source and `norn schedules sync`
+ * creates, updates or removes the matching Temporal schedules. It does nothing at runtime; its
+ * types check `input` against `run()`.
  */
-export function Schedule<C extends WorkflowClass>(cron: string | string[], options: ScheduleOptions<WorkflowInput<C>> = {}) {
-  const expressions = Array.isArray(cron) ? cron : [cron];
-  if (expressions.length === 0 || expressions.some((c) => typeof c !== 'string' || c.trim().split(/\s+/).length < 5)) {
-    throw new NornConfigError(`@Schedule: "${String(cron)}" is not a cron expression`);
-  }
-  return (target: C, context: ClassDecoratorContext<C>): void => {
-    const existing = classTag<ScheduleTag[]>(target, NORN.schedule) ?? [];
-    setClassTag(target, NORN.schedule, [...existing, { cron: expressions, options } satisfies ScheduleTag]);
-    void context;
-  };
+export function Schedule<C extends WorkflowClass>(_cron: string | string[], _options?: ScheduleOptions<WorkflowInput<C>>) {
+  return (_target: C, _context: ClassDecoratorContext<C>): void => {};
 }

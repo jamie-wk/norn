@@ -89,7 +89,6 @@ function parseUnits(value: string): number {
   if (!text) invalid(value, 'empty string');
   let total = 0;
   let index = 0;
-  PART.lastIndex = 0;
   while (index < text.length) {
     while (text[index] === ' ') index++;
     if (index >= text.length) break;

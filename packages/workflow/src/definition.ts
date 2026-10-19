@@ -26,8 +26,6 @@ export interface WorkflowOptions<Id extends string = string> {
   failOn?: readonly (abstract new (...args: any[]) => Error)[];
   /** Wait for in-flight signal and update handlers before completing. Defaults to true. */
   drainHandlers?: boolean;
-  /** Short description for docs and tooling. */
-  description?: string;
 }
 
 export interface HandlerOptions {
@@ -77,7 +75,6 @@ export interface WorkflowDefinition {
   searchAttributes: Readonly<Record<string, SearchAttributeType>>;
   failOn: readonly (abstract new (...args: any[]) => Error)[];
   drainHandlers: boolean;
-  description?: string;
   signals: HandlerDefinition[];
   queries: HandlerDefinition[];
   updates: HandlerDefinition[];
@@ -193,7 +190,6 @@ export function describeWorkflow(cls: Function): WorkflowDefinition {
   };
   if (options.id !== undefined) definition.idTemplate = options.id;
   if (options.versioning !== undefined) definition.versioning = options.versioning;
-  if (options.description !== undefined) definition.description = options.description;
   cache.set(cls, definition);
   return definition;
 }

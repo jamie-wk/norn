@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NORN, NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn/core';
 import { Workflow, defineActivities, implement, activityName } from '../src/index.ts';
 
 class BadInput extends Error {}
@@ -26,7 +26,6 @@ describe('implement', () => {
     const fn = implement(PinnedWorkflow);
     expect(fn.name).toBe('Renamed');
     expect(fn.workflowType).toBe('Renamed');
-    expect((fn as unknown as Record<symbol, { taskQueue: string }>)[NORN.workflow]?.taskQueue).toBe('q');
   });
 
   it('attaches versioning behavior and failure types as Temporal workflow options', () => {

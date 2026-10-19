@@ -32,6 +32,7 @@ export function transitions<const T extends Record<string, readonly string[]>, S
   table: T & { readonly [K in keyof T]: readonly (keyof T & string)[] },
   initial: NoInfer<S> | TransitionSnapshot<NoInfer<S>>,
 ): Transitions<S> {
+  const moves = table as unknown as TransitionTable<S>;
   const states = Object.keys(table) as S[];
   for (const [from, targets] of Object.entries(table) as [S, readonly S[]][]) {
     for (const to of targets) {
@@ -45,6 +46,7 @@ export function transitions<const T extends Record<string, readonly string[]>, S
   if (!states.includes(current)) {
     throw new NornConfigError(`Transition table has no state "${current}"`);
   }
+  const can = (next: S) => next !== current && moves[current].includes(next);
 
   return {
     get current() {
@@ -54,13 +56,11 @@ export function transitions<const T extends Record<string, readonly string[]>, S
       return version;
     },
     get isTerminal() {
-      return (table as unknown as TransitionTable<S>)[current].length === 0;
+      return moves[current].length === 0;
     },
-    can(next) {
-      return next !== current && (table as unknown as TransitionTable<S>)[current].includes(next);
-    },
+    can,
     move(next) {
-      if (next === current || !(table as unknown as TransitionTable<S>)[current].includes(next)) return false;
+      if (!can(next)) return false;
       current = next;
       version++;
       return true;
