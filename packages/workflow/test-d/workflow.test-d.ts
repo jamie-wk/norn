@@ -1,5 +1,6 @@
 import { expectTypeOf } from 'vitest';
 import {
+  Schedule,
   Signal,
   Update,
   Validate,
@@ -121,3 +122,19 @@ async function _continueAsNewInput(count: number) {
   // @ts-expect-error the thunk must return the declared input
   await continueAsNew<{ count: number }>(() => ({ count: 'x' }));
 }
+
+// ---- @Schedule's input is checked against run()'s input ----
+@Schedule('0 9 * * *', { input: { region: 'eu' } })
+@Workflow({ taskQueue: 'reports' })
+class Scheduled {
+  async run(_input: { region: string }) {}
+}
+
+// @ts-expect-error input does not match run()'s input
+@Schedule('0 9 * * *', { input: { region: 1 } })
+@Workflow({ taskQueue: 'reports' })
+class BadSchedule {
+  async run(_input: { region: string }) {}
+}
+
+export { Scheduled, BadSchedule };

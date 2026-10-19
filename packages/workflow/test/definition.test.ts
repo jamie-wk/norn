@@ -10,7 +10,6 @@ class InvalidItemError extends Error {}
   versioning: 'auto-upgrade',
   searchAttributes: { CustomerId: 'keyword' },
   failOn: [InvalidItemError],
-  description: 'Takes an order from payment to shipping',
 })
 class OrderWorkflow {
   status = 'pending';
@@ -45,7 +44,6 @@ describe('describeWorkflow', () => {
       searchAttributes: { CustomerId: 'keyword' },
       failOn: [InvalidItemError],
       drainHandlers: true,
-      description: 'Takes an order from payment to shipping',
     });
     expect(isWorkflowClass(OrderWorkflow)).toBe(true);
   });

@@ -1,4 +1,4 @@
-import { formatDuration, type Duration } from './duration.js';
+import { formatDuration, toMs, type Duration } from './duration.js';
 import { NornConfigError } from './errors.js';
 
 export interface RetryOptions {
@@ -59,14 +59,18 @@ function check(condition: boolean, message: string): asserts condition {
   if (!condition) throw new NornConfigError(`Activity options: ${message}`);
 }
 
-/** Translates Norn activity options (plus optional per-call overrides) into Temporal SDK options. */
-export function toActivityOptions(base: ActivityOptions, overrides: ActivityOptions = {}): TemporalActivityOptions {
-  const o: ActivityOptions = { ...base, ...overrides };
-  if (base.retry || overrides.retry) o.retry = { ...base.retry, ...overrides.retry };
+/** Temporal treats zero as unset (timeouts) or rejects it (retry intervals), so these must be positive. */
+function positive(duration: Duration, field: string): `${number}ms` {
+  check(toMs(duration) > 0, `${field} must be greater than zero`);
+  return formatDuration(duration);
+}
+
+/** Translates Norn activity options into Temporal SDK options. */
+export function toActivityOptions(o: ActivityOptions): TemporalActivityOptions {
   const out: TemporalActivityOptions = {};
 
-  if (o.timeout !== undefined) out.startToCloseTimeout = formatDuration(o.timeout);
-  if (o.scheduleToClose !== undefined) out.scheduleToCloseTimeout = formatDuration(o.scheduleToClose);
+  if (o.timeout !== undefined) out.startToCloseTimeout = positive(o.timeout, 'timeout');
+  if (o.scheduleToClose !== undefined) out.scheduleToCloseTimeout = positive(o.scheduleToClose, 'scheduleToClose');
   if (out.startToCloseTimeout === undefined && out.scheduleToCloseTimeout === undefined) {
     out.startToCloseTimeout = `${DEFAULT_ACTIVITY_TIMEOUT}ms`;
   }
@@ -80,14 +84,14 @@ export function toActivityOptions(base: ActivityOptions, overrides: ActivityOpti
   const retry: NonNullable<TemporalActivityOptions['retry']> = {};
   if (o.retry) {
     const r = o.retry;
-    if (r.initialInterval !== undefined) retry.initialInterval = formatDuration(r.initialInterval);
+    if (r.initialInterval !== undefined) retry.initialInterval = positive(r.initialInterval, 'retry.initialInterval');
     if (r.backoffCoefficient !== undefined) {
       check(r.backoffCoefficient >= 1, `retry.backoffCoefficient must be at least 1, got ${r.backoffCoefficient}`);
       retry.backoffCoefficient = r.backoffCoefficient;
     }
-    if (r.maximumInterval !== undefined) retry.maximumInterval = formatDuration(r.maximumInterval);
+    if (r.maximumInterval !== undefined) retry.maximumInterval = positive(r.maximumInterval, 'retry.maximumInterval');
     if (r.maximumAttempts !== undefined) {
-      check(Number.isInteger(r.maximumAttempts) && r.maximumAttempts >= 0, 'retry.maximumAttempts must be a non-negative integer');
+      check(Number.isInteger(r.maximumAttempts) && r.maximumAttempts > 0, 'retry.maximumAttempts must be a positive integer');
       retry.maximumAttempts = r.maximumAttempts;
     }
   }

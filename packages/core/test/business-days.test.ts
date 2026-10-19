@@ -46,6 +46,12 @@ describe('businessCalendar', () => {
 
   it('rejects malformed holidays and negative day counts', () => {
     expect(() => businessCalendar({ holidays: ['11/26/2026'] })).toThrow(NornConfigError);
+    expect(() => businessCalendar({ holidays: ['2026-02-30'] })).toThrow(NornConfigError);
+    expect(() => businessCalendar({ holidays: ['2026-13-01'] })).toThrow(NornConfigError);
+    expect(() => businessCalendar({ holidays: ['2027-02-29'] })).toThrow(NornConfigError);
+    expect(() => businessCalendar({ utcOffsetMinutes: Number.NaN })).toThrow(NornConfigError);
+    expect(() => businessCalendar({ utcOffsetMinutes: Infinity })).toThrow(NornConfigError);
+    expect(businessCalendar({ holidays: ['2028-02-29'] }).isBusinessDay(at('2028-02-29T12:00:00Z'))).toBe(false);
     expect(() => cal.addBusinessDays(at('2026-10-19T00:00:00Z'), -1)).toThrow(NornConfigError);
     expect(() => businessCalendar({ weekend: [0, 1, 2, 3, 4, 5, 6] })).toThrow(NornConfigError);
   });

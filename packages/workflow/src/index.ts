@@ -1,4 +1,4 @@
-export { Workflow, Signal, Query, Update, Validate, Schedule, type ScheduleOptions, type ScheduleTag } from './decorators.js';
+export { Workflow, Signal, Query, Update, Validate, Schedule, type ScheduleOptions } from './decorators.js';
 export {
   describeWorkflow,
   isWorkflowClass,
@@ -11,7 +11,7 @@ export {
   type VersioningBehavior,
   type UnfinishedPolicy,
 } from './definition.js';
-export { implement, definitionFor, type ImplementOptions, type WorkflowFunction, type RunArgs } from './implement.js';
+export { implement, type ImplementOptions, type WorkflowFunction, type RunArgs } from './implement.js';
 export {
   defineActivities,
   useActivities,

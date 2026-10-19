@@ -199,14 +199,13 @@ export type ManualContract<D extends ManualWorkflowDef> = WorkflowContract<
 export function defineWorkflow<const D extends ManualWorkflowDef>(
   def: D & CheckId<D['id'], ManualInput<D>>,
 ): ManualContract<D> {
-  const toName = (key: string, spec: { name: string | undefined }) => spec.name ?? key;
   return buildContract({
     name: def.name,
     taskQueue: def.taskQueue,
     id: def.id,
-    signals: mapNames(def.signals, toName),
-    queries: mapNames(def.queries, toName),
-    updates: mapNames(def.updates, toName),
+    signals: mapNames(def.signals),
+    queries: mapNames(def.queries),
+    updates: mapNames(def.updates),
     searchAttributes: def.searchAttributes,
   }) as unknown as ManualContract<D>;
 }
@@ -288,12 +287,9 @@ export function contract<C extends WorkflowClass>() {
 // Runtime construction shared by both forms
 // ---------------------------------------------------------------------------------------------
 
-function mapNames<S extends { name: string | undefined }>(
-  specs: Record<string, S> | undefined,
-  toName: (key: string, spec: S) => string,
-): Record<string, string> | undefined {
+function mapNames(specs: Record<string, { name: string | undefined }> | undefined): Record<string, string> | undefined {
   if (!specs) return undefined;
-  return Object.fromEntries(Object.entries(specs).map(([key, spec]) => [key, toName(key, spec)]));
+  return Object.fromEntries(Object.entries(specs).map(([key, spec]) => [key, spec.name ?? key]));
 }
 
 interface ContractParts {

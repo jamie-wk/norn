@@ -46,8 +46,8 @@ export class OrderWorkflow {
 | Option | Type | Description |
 | --- | --- | --- |
 | `name` | `string` | Registered name without the prefix. Default: the method name. |
-| `timeout` | `Duration` | **Start-to-close**: how long a single attempt may run. Default **1 minute** when neither `timeout` nor `scheduleToClose` is set. |
-| `scheduleToClose` | `Duration` | Total time allowed across all attempts, including retries and backoff. |
+| `timeout` | `Duration` | **Start-to-close**: how long a single attempt may run. Default **1 minute** when neither `timeout` nor `scheduleToClose` is set. Must be greater than zero. |
+| `scheduleToClose` | `Duration` | Total time allowed across all attempts, including retries and backoff. Must be greater than zero. |
 | `scheduleToStart` | `Duration` | How long the task may wait in the queue before a worker picks it up. |
 | `heartbeat` | `Duration` | Heartbeat timeout. An attempt that doesn't heartbeat this often is considered lost and retried. |
 | `retries` | `number` | **Retries after the first attempt.** `0` means a single attempt; `3` means up to four attempts. |
@@ -117,7 +117,7 @@ private readonly importer = useActivities(ImportActivities, {
 });
 ```
 
-Precedence is: the activity's own options, then the shared overrides, then the per-method overrides. Each option replaces the declared value as a whole; `retry` in particular is replaced, not merged, so pass the complete policy you want. If the activity declares `retries`, override the count with `retries` rather than `retry.maximumAttempts`.
+Precedence is: the activity's own options, then the shared overrides, then the per-method overrides. Each option replaces the declared value as a whole; `retry` in particular is replaced, not merged, so pass the complete policy you want. Overriding the attempt count with either `retries` or `retry.maximumAttempts` replaces the declared count, whichever form it used.
 
 ## Local activities
 

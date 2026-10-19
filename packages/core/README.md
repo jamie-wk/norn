@@ -1,6 +1,6 @@
 # @norn/core
 
-Workflow-safe building blocks shared by every [Norn](https://jamie-wk.github.io/norn/) package: typed workflow contracts, durations, ID templates, the error classes with codes and HTTP statuses, a small state machine, a business-day calendar, a redaction helper and the activity option translation.
+Workflow-safe building blocks shared by every [Norn](https://jamie-wk.github.io/norn/) package: typed workflow contracts, durations, ID templates, the error classes with codes and HTTP statuses, a small state machine, a business-day calendar and the activity option translation.
 
 - **Contracts**: `contract<typeof MyWorkflow>()({...})` (what `norn gen` writes into `.norn/contracts.ts`) and `defineWorkflow({...})` for workflows implemented elsewhere. Clients, child workflows, the fake client and webhooks all take them.
 - **Errors**: `NornError` and its subclasses, each with a stable `code`, an HTTP `status`, `details` and the SDK error as `cause`.
@@ -197,17 +197,9 @@ await condition(() => this.settled, calendar.msUntilBusinessDays(Date.now(), 3))
 
 The calendar has `isBusinessDay(at)`, `addBusinessDays(from, days)` (keeps the time of day; `0` rolls forward to a business day) and `msUntilBusinessDays(from, days)`. Dates are `number` (epoch ms) or `Date`.
 
-## `redact(value, extraKeys?)`
-
-Returns a deep copy with sensitive values replaced by `'[REDACTED]'`, for logging configuration and errors. Keys are matched case-insensitively, ignoring `-`, `_` and spaces; `DEFAULT_REDACT_KEYS` covers API keys, tokens, passwords, secrets, TLS material, cookies and payloads. It never mutates the input, handles cycles (`'[Circular]'`) and summarizes binary data (`'[Binary 32 bytes]'`).
-
-```ts
-logger.info(redact(config, ['dsn']));
-```
-
 ## Activity options
 
-`ActivityOptions` is the shape of `@Activity()` options (see `@norn/activity`). `toActivityOptions(base, overrides?)` turns them into Temporal SDK options: `timeout` → `startToCloseTimeout` (default `DEFAULT_ACTIVITY_TIMEOUT`, 60 000 ms, when neither `timeout` nor `scheduleToClose` is set), `retries: n` → `retry.maximumAttempts: n + 1`, `nonRetryable` → `retry.nonRetryableErrorTypes`, and options that don't apply to local activities are dropped. It throws `NornConfigError` for invalid durations, a `backoffCoefficient` below 1, non-integer counts, or `retries` combined with `retry.maximumAttempts`. `@norn/workflow`'s `useActivities()` calls it for you.
+`ActivityOptions` is the shape of `@Activity()` options (see `@norn/activity`). `toActivityOptions(options)` turns them into Temporal SDK options: `timeout` → `startToCloseTimeout` (default `DEFAULT_ACTIVITY_TIMEOUT`, 60 000 ms, when neither `timeout` nor `scheduleToClose` is set), `retries: n` → `retry.maximumAttempts: n + 1`, `nonRetryable` → `retry.nonRetryableErrorTypes`, and options that don't apply to local activities are dropped. It throws `NornConfigError` for invalid durations, a zero `timeout`, `scheduleToClose` or retry interval, a `backoffCoefficient` below 1, non-integer counts, `retry.maximumAttempts` below 1, or `retries` combined with `retry.maximumAttempts`. `@norn/workflow`'s `useActivities()` calls it for you.
 
 ## Decorator metadata
 
@@ -231,8 +223,7 @@ The workflow sandbox freezes `Symbol`, so Norn cannot use `Symbol.metadata`. Dec
 | `isNornError(value)`, `errorTypeOf(error)` | Error helpers |
 | `transitions(table, initial)`, `Transitions`, `TransitionTable`, `TransitionSnapshot` | State machine |
 | `businessCalendar(options?)`, `BusinessCalendar`, `BusinessCalendarOptions` | Business days |
-| `redact(value, extraKeys?)`, `REDACTED`, `DEFAULT_REDACT_KEYS` | Redaction |
-| `ActivityOptions`, `RetryOptions`, `TemporalActivityOptions`, `toActivityOptions(base, overrides?)`, `DEFAULT_ACTIVITY_TIMEOUT` | Activity options |
+| `ActivityOptions`, `RetryOptions`, `TemporalActivityOptions`, `toActivityOptions(options)`, `DEFAULT_ACTIVITY_TIMEOUT` | Activity options |
 | `NORN`, `tagMethod`, `readMethodTag`, `setClassTag`, `classTag`, `methodTags`, `MethodTag` | Decorator metadata |
 | `CORRELATION_HEADER` | `'norn-correlation-id'`, the Temporal header that carries correlation IDs |
 

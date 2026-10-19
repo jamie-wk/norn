@@ -62,20 +62,33 @@ const TEMPORAL_SA: Record<SearchAttributeType, TemporalSAType> = {
   keywordList: 'KEYWORD_LIST',
 };
 
+const VALID: Record<SearchAttributeType, (value: unknown) => boolean> = {
+  text: (v) => typeof v === 'string',
+  keyword: (v) => typeof v === 'string',
+  int: Number.isInteger,
+  double: Number.isFinite,
+  bool: (v) => typeof v === 'boolean',
+  datetime: (v) => v instanceof Date && !Number.isNaN(v.getTime()),
+  keywordList: (v) => Array.isArray(v) && v.every((s) => typeof s === 'string'),
+};
+
 export type SearchAttributeInput = string | number | boolean | Date | string[] | null;
 
 /**
  * Sets custom search attributes declared in `@Workflow({ searchAttributes })`. Pass `null` to
- * clear one. Unknown names are rejected so typos fail loudly.
+ * clear one. Unknown names and values of the wrong type are rejected so mistakes fail loudly.
  */
 export function setSearchAttributes(values: Record<string, SearchAttributeInput>): void {
   const type = workflowInfo().workflowType;
   const def = definitionFor(type);
   if (!def) throw new NornConfigError(`setSearchAttributes(): workflow ${type} was not registered with implement()`);
   const pairs = Object.entries(values).map(([name, value]) => {
-    const saType = def.searchAttributes[name];
-    if (!saType) {
+    if (!Object.hasOwn(def.searchAttributes, name)) {
       throw new NornConfigError(`Workflow ${type} does not declare search attribute ${name} in @Workflow({ searchAttributes })`);
+    }
+    const saType = def.searchAttributes[name]!;
+    if (value !== null && !VALID[saType](value)) {
+      throw new NornConfigError(`Workflow ${type}: search attribute ${name} is ${saType}, got ${JSON.stringify(value)}`);
     }
     return { key: defineSearchAttributeKey(name, TEMPORAL_SA[saType]), value };
   });

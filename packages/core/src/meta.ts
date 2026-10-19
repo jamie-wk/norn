@@ -15,7 +15,7 @@ export interface MethodTag<T> {
 
 /** Attaches `value` to a decorated method function under `key`. */
 export function tagMethod(fn: Function, key: symbol, value: unknown): void {
-  if (Object.prototype.hasOwnProperty.call(fn, key)) {
+  if (Object.hasOwn(fn, key)) {
     throw new Error(`Method ${fn.name || '<anonymous>'} is already decorated with ${key.description ?? 'this decorator'}`);
   }
   Object.defineProperty(fn, key, { value, enumerable: false, configurable: false, writable: false });
@@ -24,7 +24,7 @@ export function tagMethod(fn: Function, key: symbol, value: unknown): void {
 /** Reads the tag stored on a function, if any. */
 export function readMethodTag<T>(fn: unknown, key: symbol): T | undefined {
   if (typeof fn !== 'function') return undefined;
-  return Object.prototype.hasOwnProperty.call(fn, key) ? ((fn as unknown as Record<symbol, T>)[key]) : undefined;
+  return Object.hasOwn(fn, key) ? ((fn as unknown as Record<symbol, T>)[key]) : undefined;
 }
 
 /** Attaches `value` to a decorated class under `key`, without affecting parent classes. */
@@ -34,7 +34,7 @@ export function setClassTag(cls: Function, key: symbol, value: unknown): void {
 
 /** Reads a class's own tag (not inherited). */
 export function classTag<T>(cls: Function, key: symbol): T | undefined {
-  return Object.prototype.hasOwnProperty.call(cls, key) ? (cls as unknown as Record<symbol, T>)[key] : undefined;
+  return Object.hasOwn(cls, key) ? (cls as unknown as Record<symbol, T>)[key] : undefined;
 }
 
 /**
@@ -63,7 +63,6 @@ export const NORN = Object.freeze({
   workflow: Symbol.for('norn.workflow'),
   handler: Symbol.for('norn.workflow.handler'),
   validator: Symbol.for('norn.workflow.validator'),
-  schedule: Symbol.for('norn.workflow.schedule'),
   activities: Symbol.for('norn.activities'),
   activity: Symbol.for('norn.activity'),
   nonRetryable: Symbol.for('norn.nonRetryable'),

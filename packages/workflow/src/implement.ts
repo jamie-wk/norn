@@ -7,7 +7,7 @@ import {
   setHandler,
   setWorkflowOptions,
 } from '@temporalio/workflow';
-import { NORN, type WorkflowClass, type WorkflowInput, type WorkflowOutput } from '@norn/core';
+import { type WorkflowClass, type WorkflowInput, type WorkflowOutput } from '@norn/core';
 import { describeWorkflow, type HandlerDefinition, type UnfinishedPolicy, type WorkflowDefinition } from './definition.js';
 
 export interface ImplementOptions {
@@ -107,7 +107,6 @@ export function implement<C extends WorkflowClass>(cls: C, options: ImplementOpt
   };
   Object.defineProperty(workflow, 'name', { value: def.name });
   Object.defineProperty(workflow, 'workflowType', { value: def.name, enumerable: true });
-  Object.defineProperty(workflow, NORN.workflow, { value: def });
 
   if (def.versioning !== undefined || def.failOn.length > 0) {
     setWorkflowOptions(

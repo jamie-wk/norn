@@ -81,7 +81,6 @@ Constructors must be synchronous and must not schedule activities or timers; the
 | `searchAttributes` | `Record<string, SearchAttributeType>` | `{}` | Custom search attributes the workflow sets, with their types. |
 | `failOn` | error classes | `[]` | Errors that fail the workflow (or the update) instead of retrying the workflow task. |
 | `drainHandlers` | `boolean` | `true` | Wait for in-flight signal and update handlers before completing. |
-| `description` | `string` | none | Short description for docs and tooling. |
 
 All options must be literals, because [`norn gen`](/guide/project-layout#how-norn-gen-works) reads them from source.
 
@@ -193,7 +192,7 @@ export class OrderWorkflow {
 }
 ```
 
-Types are `text`, `keyword`, `int`, `double`, `bool`, `datetime` and `keywordList`. Setting a name the workflow doesn't declare throws, so typos fail loudly. The declared attributes are also in the workflow's contract, so clients get typed `searchAttributes` on start and in `describe()` results, and can filter with `list()`. Custom search attributes must exist on the namespace before workflows use them; `norn gen` writes them all to `.norn/search-attributes.json` (see [Client: search attributes](/guide/client#search-attributes)).
+Types are `text`, `keyword`, `int`, `double`, `bool`, `datetime` and `keywordList`. Setting a name the workflow doesn't declare, or a value of the wrong type, throws, so mistakes fail loudly. The declared attributes are also in the workflow's contract, so clients get typed `searchAttributes` on start and in `describe()` results, and can filter with `list()`. Custom search attributes must exist on the namespace before workflows use them; `norn gen` writes them all to `.norn/search-attributes.json` (see [Client: search attributes](/guide/client#search-attributes)).
 
 ## Reusing handlers with inheritance
 
