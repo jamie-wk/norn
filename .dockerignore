@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+.git
+.tools
+docs/.vitepress/cache
+docs/.vitepress/dist
+e2e/.artifacts
+*.log
+.env*.local

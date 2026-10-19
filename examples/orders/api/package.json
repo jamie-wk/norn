@@ -1,0 +1,27 @@
+{
+  "name": "@norn/example-orders-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Example Hono API that starts and talks to the orders workflows.",
+  "exports": { ".": "./src/app.ts" },
+  "scripts": {
+    "start": "node src/main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "@norn/client": "workspace:^",
+    "@norn/codec": "workspace:^",
+    "@norn/core": "workspace:^",
+    "@norn/example-orders-contracts": "workspace:^",
+    "@norn/hono": "workspace:^",
+    "@temporalio/client": "1.24.0",
+    "@temporalio/common": "1.24.0",
+    "hono": "4.13.13"
+  },
+  "devDependencies": {
+    "@norn/testing": "workspace:^"
+  }
+}

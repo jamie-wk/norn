@@ -1,0 +1,12 @@
+{
+  "name": "@norn/example-orders-provider",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Scriptable payment, shipping and email provider stub for the orders example and e2e tests.",
+  "exports": { ".": "./src/provider.ts" },
+  "scripts": {
+    "start": "node src/main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

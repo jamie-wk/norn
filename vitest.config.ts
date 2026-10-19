@@ -46,6 +46,18 @@ export default defineConfig({
           pool: 'forks',
         },
       },
+      {
+        // The orders example as real processes. Needs `pnpm e2e:build` first.
+        extends: true,
+        test: {
+          name: 'e2e',
+          include: ['e2e/test/**/*.e2e.test.ts'],
+          testTimeout: 120_000,
+          hookTimeout: 180_000,
+          pool: 'forks',
+          fileParallelism: false,
+        },
+      },
     ],
   },
 });

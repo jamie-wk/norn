@@ -1,0 +1,59 @@
+# The orders example as containers, for `E2E_TARGET=compose pnpm test:e2e` and local demos.
+#   docker compose -f e2e/docker-compose.yml up -d --build --wait
+# Temporal UI: http://localhost:8233
+name: norn-e2e
+
+services:
+  temporal:
+    image: temporalio/temporal:1.5.1
+    command:
+      - server
+      - start-dev
+      - --ip=0.0.0.0
+      - --search-attribute=CustomerId=Keyword
+      - --search-attribute=OrderStatus=Keyword
+      - --ui-codec-endpoint=http://localhost:3000/codec
+    ports: ['7233:7233', '8233:8233']
+    healthcheck:
+      test: ['CMD', 'temporal', 'operator', 'cluster', 'health', '--address', '127.0.0.1:7233']
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  temporal-admin-tools:
+    image: temporalio/temporal:1.5.1
+    entrypoint: ['sleep', 'infinity']
+    depends_on: { temporal: { condition: service_healthy } }
+
+  provider:
+    build: { context: .., dockerfile: examples/orders/Dockerfile, target: provider }
+    ports: ['4010:4010']
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:4010/__calls').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 2s
+      retries: 30
+
+  worker:
+    build: { context: .., dockerfile: examples/orders/Dockerfile, target: worker }
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      PROVIDER_URL: http://provider:4010
+      NORN_SHUTDOWN_GRACE: 20s
+      NORN_LOG_LEVEL: INFO
+    ports: ['8081:8081']
+    stop_grace_period: 30s
+    depends_on:
+      temporal: { condition: service_healthy }
+      provider: { condition: service_healthy }
+
+  api:
+    build: { context: .., dockerfile: examples/orders/Dockerfile, target: api }
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      WEBHOOK_SECRET: e2e-webhook-secret
+    ports: ['3000:3000']
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 2s
+      retries: 30
+    depends_on: { temporal: { condition: service_healthy } }

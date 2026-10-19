@@ -1,0 +1,19 @@
+{
+  "name": "@norn/e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end tests: the orders example running as real processes (or Docker Compose) against Temporal.",
+  "scripts": {
+    "test": "vitest run --project e2e --root .."
+  },
+  "dependencies": {
+    "@norn/client": "workspace:^",
+    "@norn/codec": "workspace:^",
+    "@norn/core": "workspace:^",
+    "@norn/example-orders-contracts": "workspace:^",
+    "@norn/example-orders-provider": "workspace:^",
+    "@temporalio/client": "1.24.0",
+    "@temporalio/common": "1.24.0"
+  }
+}
