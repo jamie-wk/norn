@@ -37,10 +37,13 @@ drain, `codecServer` requires `auth` and `temporalWebhook` requires `verify` (`f
 
 ## Remaining: maintainer steps
 
-1. Push and get CI green on GitHub (Node 22/24/26, e2e, compose). CI has never run there.
+1. CI is green on GitHub (Node 22/24/26, e2e, compose). `Release` and `Docs` fail until steps 2 and 3 are done.
+   Note: `release.yml` runs `changesets/action` on every push to main, and with no pending changesets it publishes
+   every unpublished version. Once npm trusted publishing (or `NPM_TOKEN`) works, the next push to main publishes
+   1.0.0 — so the release happens on that push, not by running `pnpm release` by hand.
 2. Create or claim the `@norn` npm org (fallback `@nornjs`: rename every package and import); add `NPM_TOKEN` or set up
    trusted publishing for `release.yml`; enable GitHub Pages with "GitHub Actions" as the source; confirm `LICENSE`.
-3. `pnpm release` publishes every 1.0.0 package (don't add a changeset for 1.0.0). Tag `v1.0.0` and write release notes.
+3. Enable GitHub Pages (source: GitHub Actions) so `docs.yml` can deploy. Don't add a changeset for 1.0.0. After publishing, tag `v1.0.0` and write release notes.
 
 ## Design decisions worth keeping
 
