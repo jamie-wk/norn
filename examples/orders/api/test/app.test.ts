@@ -41,6 +41,16 @@ describe('orders API', () => {
     expect(notJson.status).toBe(400);
   });
 
+  it('returns 400 for quantities outside 1-100 without starting anything', async () => {
+    const { fake, call } = setup();
+    for (const qty of [-2, 0, 1.5, 101, '2', undefined]) {
+      expect((await call('/orders', { ...order, items: [{ sku: 'sku-book', qty }] })).status).toBe(400);
+      expect((await call('/carts/c-1/items', { customerId: 'c-1', email: 'a@b.c', card: 'tok', sku: 'sku-book', qty })).status).toBe(400);
+      expect((await call('/orders/o-1/items', { sku: 'sku-book', qty })).status).toBe(400);
+    }
+    expect(fake.calls).toHaveLength(0);
+  });
+
   it('maps rejected updates to 422', async () => {
     const { fake, call } = setup();
     fake.stub(OrderWorkflow, {

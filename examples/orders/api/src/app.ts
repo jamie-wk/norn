@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { PayloadCodec } from '@temporalio/common';
 import type { NornClient } from '@norn/client';
-import { codecServer, hmacSha256Verifier, nornErrorHandler, signalAction, temporal, temporalWebhook, type NornEnv } from '@norn/hono';
+import { codecServer, hmacSha256Verifier, nornErrorHandler, signalAction, temporal, temporalWebhook, timingSafeEqual, type NornEnv } from '@norn/hono';
 import { LoyaltyWorkflow, OrderWorkflow } from '@norn/example-orders-contracts';
 
 export interface AppOptions {
@@ -35,10 +35,16 @@ function str(body: Record<string, unknown>, key: string): string {
   return value;
 }
 
+// The workflow validates SKUs; reject bad quantities here so they never reach a charge.
+function qty(value: unknown): number {
+  if (!Number.isInteger(value) || (value as number) < 1 || (value as number) > 100) throw new HTTPException(400, { message: 'qty must be a whole number from 1 to 100' });
+  return value as number;
+}
+
 function items(value: unknown): LineItem[] {
   if (value === undefined) return [];
   if (!Array.isArray(value)) throw new HTTPException(400, { message: 'items must be an array' });
-  return value.map((v) => ({ sku: String((v as LineItem)?.sku ?? ''), qty: Number((v as LineItem)?.qty) }));
+  return value.map((v) => ({ sku: String((v as LineItem)?.sku ?? ''), qty: qty((v as LineItem)?.qty) }));
 }
 
 /** The orders API. Every Temporal error becomes a JSON response with the right status. */
@@ -64,12 +70,13 @@ export function createApp(options: AppOptions) {
 
   app.get('/orders/:orderId', async (c) => {
     const handle = c.var.norn.workflow(OrderWorkflow).get({ orderId: c.req.param('orderId') });
-    const [order, description] = await Promise.all([handle.query('view'), handle.describe()]);
-    return c.json({ ...order, workflowStatus: description.status });
+    // Query first: once the view is final, describe() is sure to see the closed run.
+    const order = await handle.query('view');
+    return c.json({ ...order, workflowStatus: (await handle.describe()).status });
   });
 
   app.post('/orders/:orderId/items', async (c) => {
-    const item = await json(c, (b) => ({ sku: str(b, 'sku'), qty: Number(b.qty) }));
+    const item = await json(c, (b) => ({ sku: str(b, 'sku'), qty: qty(b.qty) }));
     return c.json(await c.var.norn.workflow(OrderWorkflow).get({ orderId: c.req.param('orderId') }).update('addItem', item));
   });
 
@@ -90,7 +97,7 @@ export function createApp(options: AppOptions) {
       email: str(b, 'email'),
       card: str(b, 'card'),
       sku: str(b, 'sku'),
-      qty: Number(b.qty),
+      qty: qty(b.qty),
     }));
     const orderId = c.req.param('cartId');
     const { result } = await c.var.norn
@@ -125,7 +132,8 @@ export function createApp(options: AppOptions) {
 
   if (options.codec) {
     const { codec, token } = options.codec;
-    app.route('/codec', codecServer({ codec, auth: (c) => c.req.header('authorization') === `Bearer ${token}` }));
+    const expected = new TextEncoder().encode(`Bearer ${token}`);
+    app.route('/codec', codecServer({ codec, auth: (c) => timingSafeEqual(new TextEncoder().encode(c.req.header('authorization') ?? ''), expected) }));
   }
 
   return app;

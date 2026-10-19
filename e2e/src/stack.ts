@@ -257,7 +257,8 @@ async function composeStack(): Promise<Stack> {
     },
     async stop() {
       await compose('stop', '--timeout', '30', 'worker');
-      return { code: 0, signal: 'SIGTERM' };
+      const { stdout } = await compose('ps', '-a', '--format', 'json', 'worker');
+      return { code: (JSON.parse(stdout.split('\n')[0]!) as { ExitCode: number }).ExitCode, signal: null };
     },
     terminate() {
       void compose('kill', '-s', 'SIGTERM', 'worker');
@@ -287,7 +288,9 @@ async function composeStack(): Promise<Stack> {
           body: JSON.stringify({ url: `${process.env.E2E_API_URL_FROM_PROVIDER ?? 'http://api:3000'}/webhooks/payments`, secret, event }),
         })
       ).json()) as { status: number; body: any },
-    temporalCli: async (args) => (await exec('docker', ['compose', '-f', paths.compose, 'exec', '-T', 'temporal-admin-tools', 'temporal', ...args, '--address', 'temporal:7233'])).stdout,
+    temporalCli: async () => {
+      throw new Error('temporalCli is not available with E2E_TARGET=compose; run this test against the process stack');
+    },
     teardown: async () => {
       await connection.close();
     },
