@@ -7,8 +7,6 @@ pnpm add -D @norn/cli
 norn --help
 ```
 
-<!-- VERIFY: reconcile every command, flag and output on this page with packages/cli/README.md once it lands -->
-
 | Command | What it does |
 | --- | --- |
 | `norn gen` | Generates `.norn/` from your decorated classes and checks them. |
@@ -28,11 +26,11 @@ norn gen --accept-rename    # accept removed or renamed workflow types, handlers
 norn gen --config path/to/norn.config.ts
 ```
 
-`--check` and `--watch` can't be combined. On success it lists the files it wrote, or says everything is up to date. On failure it prints every problem as a compiler-style diagnostic and exits 1:
+`--check` and `--watch` can't be combined. On success it prints `wrote <file>` for each file it changed, or `Generated files are up to date.` (with `--check`: `All generated files are up to date.`, or the list of stale files and exit 1). On failure it prints every problem as a compiler-style diagnostic, then `Found N errors.`, and exits 1:
 
 ```text
-src/workflows/order.workflow.ts:10:5 - error norn(determinism): setTimeout() is not available in workflow code
-  hint: use sleep() or condition() from @temporalio/workflow
+src/workflows/order.workflow.ts:10:5 - error norn(determinism): setTimeout in workflow code: the sandbox only emulates it with a durable timer, and a callback timer easily outlives the code that needed it
+  hint: Use await sleep(ms) from '@temporalio/workflow', or await condition(() => ..., timeout).
 ```
 
 See [Project layout & codegen](/guide/project-layout) for what is generated and why.
@@ -49,7 +47,7 @@ See [Project layout & codegen](/guide/project-layout) for what is generated and 
 | `invalid-member` | A handler or activity decorator is on a private, static or symbol-named member. |
 | `invalid-validate` | `@Validate` names a method that isn't an `@Update`, or an update has more than one validator. |
 | `missing-run` | A `@Workflow` class has no `run()` method. |
-| `not-exported` | A decorated class isn't a named export. |
+| `not-exported` | A decorated class, or a class or token it injects, isn't a named export. |
 | `missing-annotation` | An injectable constructor parameter has no type annotation. |
 | `unsupported-type` | A constructor parameter type can't be injected: primitive, union, generic or rest parameter. |
 | `unresolved-type` | A constructor parameter type can't be found (not imported, or the import doesn't resolve). |
@@ -90,23 +88,29 @@ Paths are relative to the config file. `norn` finds the nearest `norn.config.ts`
 ## `norn bundle`
 
 ```sh
-norn bundle --out dist/workflow-bundle.js
+norn bundle                                  # writes dist/workflow-bundle.js
+norn bundle --out build/workflows.js --codec
 ```
 
-Bundles the registry's workflows with Norn's bundler settings (the same as [`bundleWorkflows()`](/reference/worker#bundleworkflows)) and writes a file for `NORN_WORKFLOW_BUNDLE`. It asks you to run `norn gen` first if the workflows barrel is missing. See [Worker & deployment](/guide/worker#production-builds-compile-then-bundle).
+Bundles `<outDir>/workflows.ts` (or `workflows.js`, if you compiled it) with Norn's bundler settings and workflow interceptors (the same as [`bundleWorkflows()`](https://github.com/jamie-wk/norn/tree/main/packages/worker#bundling-workflows)) and writes a file for `NORN_WORKFLOW_BUNDLE`. It asks you to run `norn gen` first if the workflows barrel is missing. See [Worker & deployment](/guide/worker#production-builds-compile-then-bundle).
 
-<!-- VERIFY: norn bundle flags (--out name, payload converter path for @norn/codec, plugins) -->
+| Flag | Description |
+| --- | --- |
+| `--out <file>` | Output file. Defaults to `dist/workflow-bundle.js`. |
+| `--codec` | Include `@norn/codec`'s payload converter. |
+| `--config <path>` | Use this config file. |
 
 ## `norn schedules sync`
 
 ```sh
 norn schedules sync --dry-run
 norn schedules sync
+norn schedules sync --prune
 ```
 
-Reads `.norn/schedules.json` and makes the namespace's schedules match it. Connects with `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE` and `TEMPORAL_API_KEY`. See [Schedules](/guide/schedules).
+Reads `<outDir>/schedules.json` and makes the namespace's schedules match it. `--dry-run` prints the plan without changing anything, `--prune` deletes norn-managed schedules that are no longer declared, and `--config <path>` picks the config file. See [Schedules](/guide/schedules).
 
-<!-- VERIFY: schedules sync flags beyond --dry-run -->
+It connects with `TEMPORAL_ADDRESS` (default `localhost:7233`), `TEMPORAL_NAMESPACE` (default `default`), `TEMPORAL_API_KEY` (enables TLS), and `TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY` (mTLS file paths, both or neither).
 
 ## `norn histories pull`
 
@@ -114,6 +118,4 @@ Reads `.norn/schedules.json` and makes the namespace's schedules match it. Conne
 norn histories pull <workflowId...> --out test/histories
 ```
 
-Downloads the event history of each workflow ID as `<workflowId>.json`, in the format `loadHistories()` reads. A workflow ID is required. See [Replay tests](/guide/versioning#replay-tests).
-
-<!-- VERIFY: histories pull arguments and flags (--out, --run-id, --query/--limit, namespace) -->
+Downloads the latest run's event history of each workflow ID to `<dir>/<workflowId>.json` (`--out` defaults to `histories`; characters unsafe in file names become `_`), in the format `loadHistories()` reads. At least one workflow ID is required; there are no query, run ID or namespace flags. It connects with the same environment variables as `schedules sync`. See [Replay tests](/guide/versioning#replay-tests).

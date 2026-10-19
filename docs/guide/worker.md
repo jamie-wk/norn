@@ -56,7 +56,7 @@ Options passed to `createWorker()` win over environment variables. Setting only 
 | `activityInterceptors` | Extra activity interceptor factories, after Norn's correlation interceptor. |
 | `activityOverrides` | Replace registered activities by name, typically in tests. Unknown names are rejected. |
 | `extraActivities` | Register activities that aren't `@Activities` classes. |
-| `workerOptions` | Passed through to every `Worker.create()`: concurrency limits, sticky cache size, pollers, workflow interceptors. Norn sets connection, namespace, task queue, activities, bundle, data converter and plugins itself. |
+| `workerOptions` | Passed through to every `Worker.create()`: concurrency limits, sticky cache size, pollers, workflow interceptors. Norn sets connection, namespace, task queue, activities, bundle, data converter, plugins, `shutdownGraceTime` and `workerDeploymentOptions` itself (use `createWorker()`'s own options for those). |
 
 ### mTLS with client certificates
 
@@ -127,7 +127,7 @@ norn bundle --out dist/workflow-bundle.js      # the workflow bundle
 NORN_WORKFLOW_BUNDLE=dist/workflow-bundle.js node dist/src/worker.js
 ```
 
-<!-- VERIFY: `norn bundle` flags (--out, and whether it bundles the compiled .js barrel or the .ts sources; payload converter option for @norn/codec) once packages/cli lands -->
+`norn bundle` bundles the barrel in `outDir`: `.norn/workflows.ts`, or `workflows.js` only when there is no `.ts`, so it reads the sources rather than the `tsc` output. `--out` defaults to `dist/workflow-bundle.js`; add `--codec` if you use `@norn/codec`'s payload converter. See [the CLI page](/guide/cli#norn-bundle).
 
 If you'd rather script it, `bundleWorkflows()` does the same thing:
 
@@ -182,8 +182,6 @@ CMD ["node", "dist/src/worker.js"]
 
 Use a Debian-based image such as `node:24-slim`: the Temporal SDK includes a native module built for glibc. `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_API_KEY` and, for versioning, `NORN_DEPLOYMENT_NAME` / `NORN_BUILD_ID` come from your deployment.
 
-For a complete AWS setup, with a self-hosted Temporal cluster and the worker as an ECS service, see [Self-hosting Temporal on AWS ECS](/recipes/self-hosting-aws-ecs).
-
 ## Metrics and logs
 
 `installRuntime()` installs the Temporal runtime once per process, **before** any connection or worker is created (calling it later throws). It sets the SDK log level (`NORN_LOG_LEVEL`) and, with `NORN_METRICS_ADDRESS`, serves Prometheus metrics for the SDK and Temporal core at `http://<address>/metrics`:
@@ -201,8 +199,8 @@ The metrics are the standard Temporal SDK metrics. The schedule-to-start latenci
 ```ts
 const worker = await createWorker({
   registry,
-  connection: env.nativeConnection,
-  namespace: env.namespace ?? 'default',
+  connection: env.temporal.nativeConnection,
+  namespace: env.temporal.namespace ?? 'default',
   handleSignals: false,
   workflowBundle: await bundleWorkflows(registry),
   activityOverrides: { 'payments.charge': async () => ({ id: 'ch_test', cents: 100 }) },

@@ -37,6 +37,6 @@ export class LoyaltyWorkflow {
   async run(input: LoyaltyInput): Promise<never> {
     const max = input.maxEventsPerRun ?? 500;
     await condition(() => this.eventsThisRun >= max || continueAsNewSuggested());
-    return continueAsNew<LoyaltyInput>({ customerId: input.customerId, points: this.points, recent: this.recent, maxEventsPerRun: max });
+    return continueAsNew<LoyaltyInput>(() => ({ customerId: input.customerId, points: this.points, recent: this.recent, maxEventsPerRun: max }));
   }
 }

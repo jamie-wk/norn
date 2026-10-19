@@ -99,7 +99,7 @@ app.route(
   '/codec',
   codecServer({
     codec: createEncryptionCodec({ keys, currentKeyId }),
-    auth: async (c) => verifyStaffToken(c.req.header('authorization')), // required in practice
+    auth: async (c) => verifyStaffToken(c.req.header('authorization')), // required
     cors: { origins: ['https://temporal.internal.example.com'] },
     namespaces: ['production'],
   }),
@@ -107,9 +107,7 @@ app.route(
 export default app;
 ```
 
-It serves `POST /encode` and `POST /decode` in the codec server protocol, with CORS preflight handling for browser origins (default `https://cloud.temporal.io` and `http://localhost:8233`), a namespace allow-list (from the `X-Namespace` header) and an `auth` hook. Anyone who passes `auth` can decrypt your payloads, so always set it, and restrict `cors.origins` to your Temporal UI. Then point the UI at it: in Temporal Cloud under the namespace's codec server settings, or for a self-hosted UI with `TEMPORAL_CODEC_ENDPOINT=https://api.example.com/codec`. The `@norn/hono/codec-server` entry point has no Temporal client dependency, so it can run on edge runtimes. Options are listed in the [Hono guide](/guide/hono#codec-server).
-
-<!-- VERIFY: codecServer options and the UI env var against packages/hono/README.md -->
+It serves `POST /encode` and `POST /decode` in the codec server protocol, with CORS preflight handling for browser origins (default `https://cloud.temporal.io` and `http://localhost:8233`), a namespace allow-list (from the `X-Namespace` header) and a required `auth` hook. Anyone who passes `auth` can decrypt your payloads, and restrict `cors.origins` to your Temporal UI. Then point the UI at it: in Temporal Cloud under the namespace's codec server settings, or for a self-hosted UI with `TEMPORAL_CODEC_ENDPOINT=https://api.example.com/codec`. The `@norn/hono/codec-server` entry point has no Temporal client dependency, so it can run on edge runtimes. Options are listed in the [Hono guide](/guide/hono#codec-server).
 
 If you use other codecs too (for example compression), pass them all in the order your data converter applies them: `codec: [compressionCodec, encryptionCodec]`.
 

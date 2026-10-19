@@ -31,6 +31,7 @@ function setup(options: Partial<WebhookOptions<NornEnv>> = {}) {
   a.post(
     '/hook',
     temporalWebhook<NornEnv>({
+      verify: false,
       map: (body) => {
         const event = body as Event;
         if (event.type === 'payment.succeeded') return signalAction(Payments, { paymentId: event.id }, 'paid', { amount: event.amount ?? 0 });
@@ -139,7 +140,7 @@ describe('temporalWebhook: happy paths', () => {
   it('uses an explicitly passed client without the middleware', async () => {
     const client = fakeClient();
     const a = new Hono();
-    a.post('/hook', temporalWebhook({ client, map: () => signalAction(Payments, { paymentId: 'p6' }, 'ping') }));
+    a.post('/hook', temporalWebhook({ client, verify: false, map: () => signalAction(Payments, { paymentId: 'p6' }, 'ping') }));
     const res = await a.request('/hook', { method: 'POST', body: '{}' });
     expect(res.status).toBe(202);
     expect(client.calls).toHaveLength(1);
@@ -277,7 +278,7 @@ describe('temporalWebhook: sad paths', () => {
         errors.push(err);
         return c.text('err', 500);
       });
-      a.post('/hook', temporalWebhook({ map: () => action as never }));
+      a.post('/hook', temporalWebhook({ verify: false, map: () => action as never }));
       expect((await post(a, {})).status).toBe(500);
       expect(errors[0]).toBeInstanceOf(NornConfigError);
     }
@@ -290,7 +291,7 @@ describe('temporalWebhook: sad paths', () => {
       errors.push(err);
       return c.text('err', 500);
     });
-    a.post('/hook', temporalWebhook({ map: () => signalAction(Payments, { paymentId: 'x' }, 'ping') }));
+    a.post('/hook', temporalWebhook({ verify: false, map: () => signalAction(Payments, { paymentId: 'x' }, 'ping') }));
     await a.request('/hook', { method: 'POST', body: '{}' });
     expect(errors[0]).toBeInstanceOf(NornConfigError);
     expect((errors[0] as Error).message).toMatch(/temporal\(\) middleware/);
@@ -298,8 +299,20 @@ describe('temporalWebhook: sad paths', () => {
 
   it('rejects invalid options at creation', () => {
     expect(() => temporalWebhook({} as never)).toThrow(NornConfigError);
-    expect(() => temporalWebhook({ map: () => null, onClosed: 'explode' as never })).toThrow(NornConfigError);
-    expect(() => temporalWebhook({ map: () => null, onNotFound: 1 as never })).toThrow(NornConfigError);
+    expect(() => temporalWebhook({ verify: false, map: () => null, onClosed: 'explode' as never })).toThrow(NornConfigError);
+    expect(() => temporalWebhook({ verify: false, map: () => null, onNotFound: 1 as never })).toThrow(NornConfigError);
     expect(() => temporalWebhook({ map: () => null, verify: 'yes' as never })).toThrow(NornConfigError);
+    expect(() => temporalWebhook({ map: () => null } as never)).toThrow(/`verify` is required/);
+    expect(() => temporalWebhook({ verify: false, map: () => null, maxBodyBytes: -1 })).toThrow(NornConfigError);
+  });
+
+  it('rejects bodies over maxBodyBytes with 413 before verifying', async () => {
+    const verify = vi.fn(() => true);
+    const { app, client } = setup({ verify, maxBodyBytes: 32 });
+    const res = await post(app, { type: 'payment.succeeded', id: 'p-big', note: 'x'.repeat(100) });
+    expect(res.status).toBe(413);
+    expect(await res.json()).toMatchObject({ error: { code: 'WEBHOOK_TOO_LARGE' } });
+    expect(verify).not.toHaveBeenCalled();
+    expect(client.calls).toHaveLength(0);
   });
 });

@@ -158,7 +158,7 @@ Options are `name`, `description` and `unfinishedPolicy`.
 
 Rules, all checked:
 
-- The name must refer to an `@Update` method of the class (a typo, or naming a signal, fails to type-check and fails `norn gen`).
+- The name must refer to an `@Update` method of the class. A typo fails to type-check; naming a signal fails `norn gen` and throws when the workflow is loaded.
 - The validator's parameters must match the update's (type-checked).
 - Validators must be synchronous and must not change state.
 - One validator per update.

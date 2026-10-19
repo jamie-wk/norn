@@ -12,7 +12,9 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Compile the packages, generate .norn, compile the worker and prebuild its workflow bundle.
 RUN pnpm build && pnpm --filter @norn/example-orders-worker build
-RUN pnpm deploy --filter @norn/example-orders-worker --prod --legacy /out/worker \
+# Without auto-install-peers=false, deploy tries to fetch @norn/cli's optional @norn/* peers from npm.
+RUN export npm_config_auto_install_peers=false \
+ && pnpm deploy --filter @norn/example-orders-worker --prod --legacy /out/worker \
  && cp -r examples/orders/worker/dist /out/worker/dist \
  && pnpm deploy --filter @norn/example-orders-api --prod --legacy /out/api \
  && pnpm deploy --filter @norn/example-orders-provider --prod --legacy /out/provider

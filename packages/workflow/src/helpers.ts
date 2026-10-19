@@ -15,12 +15,15 @@ export interface ContinueAsNewOptions {
 }
 
 /**
- * Continues the current workflow as a new run with `input`, after in-flight handlers finish so no
- * signal or update is lost in the rollover.
+ * Continues the current workflow as a new run, after in-flight handlers finish so no signal or
+ * update is lost in the rollover. Pass the input as a function, `continueAsNew(() => ({ count: this.count }))`,
+ * so it is read after those handlers ran; a plain value is captured before they finish.
  */
-export async function continueAsNew<Input>(input: Input, options: ContinueAsNewOptions = {}): Promise<never> {
+export async function continueAsNew<Input>(input: Input | (() => Input), options: ContinueAsNewOptions = {}): Promise<never> {
   if (options.waitForHandlers !== false) await condition(allHandlersFinished);
-  return temporalContinueAsNew<(input: Input) => Promise<unknown>>(input);
+  // Workflow inputs are serializable data, never functions, so a function can only be the thunk.
+  const next = typeof input === 'function' ? (input as () => Input)() : input;
+  return temporalContinueAsNew<(input: Input) => Promise<unknown>>(next);
 }
 
 /** True when Temporal suggests continuing as new because history is getting large. */

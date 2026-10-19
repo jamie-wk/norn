@@ -7,8 +7,9 @@ import { copyFixture, removeDir } from './helpers.ts';
 
 const pkgDir = fileURLToPath(new URL('..', import.meta.url));
 const tsc = fileURLToPath(new URL('../../../node_modules/.bin/tsc', import.meta.url));
-const bin = join(pkgDir, 'dist/bin.js');
 const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8')) as { version: string; bin: { norn: string } };
+// The committed stub that imports dist/bin.js, so every test below also covers it.
+const bin = join(pkgDir, pkg.bin.norn);
 
 // Plain Node: no vitest transforms and no @norn/source condition, exactly like an installed CLI.
 const norn = (args: string[], cwd: string) => {
@@ -28,8 +29,9 @@ afterAll(() => removeDir(dir));
 
 describe('the built norn binary', () => {
   it('is the package bin and starts with a shebang', () => {
-    expect(pkg.bin.norn).toBe('./dist/bin.js');
+    expect(pkg.bin.norn).toBe('./bin/norn.js');
     expect(readFileSync(bin, 'utf8').startsWith('#!/usr/bin/env node\n')).toBe(true);
+    expect(readFileSync(join(pkgDir, 'dist/bin.js'), 'utf8').startsWith('#!/usr/bin/env node\n')).toBe(true);
   });
 
   it('prints its version and help', () => {

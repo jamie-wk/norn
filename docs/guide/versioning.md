@@ -26,11 +26,9 @@ Activity **implementations** never replay; change them freely. Workflow code cha
 `norn gen` records every workflow type (with its task queue), signal, query, update and activity name in `norn.lock.json`. If a name disappears, generation fails:
 
 ```text
-norn.lock.json - error norn(lock-removed): signal "pause" of OrderWorkflow was removed; in-flight executions that receive it will fail
-  hint: if nothing still sends it, run norn gen --accept-rename
+norn.lock.json - error norn(lock-removed): signal "pause" of OrderWorkflow was removed or renamed; in-flight executions (and callers) still send "pause", which would be rejected or dropped
+  hint: If this is intentional (no executions in flight, or they were migrated), run norn gen --accept-rename to update norn.lock.json.
 ```
-
-<!-- VERIFY: exact lock-removed message text -->
 
 Adding names never complains. When a removal is intentional (you've drained or migrated every execution that could use the old name), run `norn gen --accept-rename` and commit the updated lock. To rename a handler's method without changing its wire name, keep the old name in the decorator: `@Signal('pause') suspend()`.
 
@@ -74,7 +72,7 @@ Workflows without `versioning` use the worker's default, `'auto-upgrade'` unless
    or ramp gradually with `set-ramping-version`. New executions (and auto-upgrade executions) now go to the new version.
 3. Keep the old version's workers running until its pinned executions have drained (`temporal worker deployment describe-version` shows whether it is still in use), then scale them down.
 
-On ECS or Kubernetes this means running each version as its own service or deployment, named after the build ID, rather than updating one service in place. See the [ECS recipe](/recipes/self-hosting-aws-ecs#workers) for a layout.
+On ECS or Kubernetes this means running each version as its own service or deployment, named after the build ID, rather than updating one service in place.
 
 ## Patching
 
@@ -100,10 +98,10 @@ async run(input: OrderInput) {
 The most reliable check is to replay real histories through the new code. Record some executions of each workflow type, commit them, and replay them in CI:
 
 ```sh
-norn histories pull order-o-42 payment-p_9 --out test/histories   # one <workflowId>.json per execution
+norn histories pull order-o-42 payment-p_9 --out test/histories   # one <workflowId>.json per execution (latest run)
 ```
 
-<!-- VERIFY: `norn histories pull` arguments and flags (--out directory, query/limit options, namespace) once packages/cli lands -->
+`--out` defaults to `histories`. The namespace and server come from `TEMPORAL_NAMESPACE` and `TEMPORAL_ADDRESS`, as for [the other CLI commands](/guide/cli#norn-histories-pull).
 
 You can also download a history from the Temporal UI or with `temporal workflow show --workflow-id order-o-42 --output json > test/histories/order-o-42.json`; `loadHistories()` reads both formats.
 

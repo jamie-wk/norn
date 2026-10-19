@@ -10,7 +10,7 @@
 import { Hono, type Context, type Env } from 'hono';
 import type { Payload, PayloadCodec } from '@temporalio/common';
 import { NornConfigError } from '@norn/core';
-import { decodeBase64, encodeBase64, isPlainObject } from './internal.js';
+import { decodeBase64, encodeBase64, isPlainObject, isPositiveInteger, readBody } from './internal.js';
 
 /** A payload in proto3 JSON form, as the codec server protocol sends it: bytes are base64. */
 export interface JsonPayload {
@@ -23,15 +23,19 @@ export interface CodecServerOptions<E extends Env = any> {
   codec: PayloadCodec | PayloadCodec[];
   /**
    * Authenticates the caller, e.g. by checking `Authorization: Bearer <token>`. Returning false
-   * or throwing → 401. Anyone who passes can decrypt your payloads, so always set this in production.
+   * or throwing → 401. Required: anyone who passes can decrypt your payloads. Pass `false` only
+   * when something in front of the server (a gateway, a private network) already authenticates.
    */
-  auth?: (c: Context<E>) => boolean | Promise<boolean>;
+  auth: ((c: Context<E>) => boolean | Promise<boolean>) | false;
   /**
    * Browser origins allowed to call the server (the Temporal UI). Default
    * `['https://cloud.temporal.io', 'http://localhost:8233']`; `'*'` allows any origin. `false`
    * turns CORS handling off (no preflight responses and no origin checks), e.g. for CLI-only use.
+   * Named origins are allowed with credentials (cookies); `'*'` is not.
    */
   cors?: { origins: string[] } | false;
+  /** Largest request body accepted; bigger ones → 413. Default 16 MiB. */
+  maxBodyBytes?: number;
   /** Namespaces (from the `X-Namespace` header) the server may be used for. Others → 403. */
   namespaces?: string[];
   /**
@@ -45,6 +49,7 @@ export const DEFAULT_CODEC_ORIGINS: readonly string[] = Object.freeze(['https://
 const ALLOW_HEADERS = 'content-type, x-namespace, authorization';
 const ALLOW_METHODS = 'POST, OPTIONS';
 const MAX_AGE = '600';
+const DEFAULT_MAX_BODY_BYTES = 16 * 1024 * 1024;
 
 class BadPayloadsError extends Error {}
 
@@ -77,7 +82,8 @@ function parsePayloads(body: unknown): Payload[] {
   if (!isPlainObject(body) || !Array.isArray(body.payloads)) throw new BadPayloadsError('Body must be { "payloads": [...] }');
   return body.payloads.map((p: unknown, i: number): Payload => {
     if (!isPlainObject(p)) throw new BadPayloadsError(`payloads[${i}] must be an object`);
-    const metadata: Record<string, Uint8Array> = {};
+    // Null prototype: a "__proto__" key from JSON.parse must stay a plain key.
+    const metadata: Record<string, Uint8Array> = Object.create(null);
     if (p.metadata !== undefined && p.metadata !== null) {
       if (!isPlainObject(p.metadata)) throw new BadPayloadsError(`payloads[${i}].metadata must be an object`);
       for (const [key, value] of Object.entries(p.metadata)) metadata[key] = bytesOf(value, `payloads[${i}].metadata.${key}`);
@@ -88,7 +94,7 @@ function parsePayloads(body: unknown): Payload[] {
 }
 
 function toJsonPayload(p: Payload): JsonPayload {
-  const metadata: Record<string, string> = {};
+  const metadata: Record<string, string> = Object.create(null);
   for (const [key, value] of Object.entries(p.metadata ?? {})) if (value) metadata[key] = encodeBase64(value);
   return { metadata, data: encodeBase64(p.data ?? new Uint8Array()) };
 }
@@ -116,8 +122,10 @@ export function codecServer<E extends Env = any>(options: CodecServerOptions<E>)
   if (codecs.length === 0 || !codecs.every(isCodec)) {
     throw new NornConfigError('codecServer: `codec` must be a PayloadCodec ({ encode, decode }) or a non-empty array of them');
   }
-  const { auth, onError } = options;
-  if (auth !== undefined && typeof auth !== 'function') throw new NornConfigError('codecServer: `auth` must be a function');
+  const { auth, onError, maxBodyBytes = DEFAULT_MAX_BODY_BYTES } = options;
+  if (auth === undefined) throw new NornConfigError('codecServer: `auth` is required (a function, or false when something in front already authenticates)');
+  if (auth !== false && typeof auth !== 'function') throw new NornConfigError('codecServer: `auth` must be a function or false');
+  if (!isPositiveInteger(maxBodyBytes)) throw new NornConfigError('codecServer: `maxBodyBytes` must be a positive integer');
   if (onError !== undefined && typeof onError !== 'function') throw new NornConfigError('codecServer: `onError` must be a function');
 
   let origins: Set<string> | undefined;
@@ -144,7 +152,7 @@ export function codecServer<E extends Env = any>(options: CodecServerOptions<E>)
       // Logging must not change the response.
     }
   };
-  const fail = (c: Context<E>, status: 400 | 401 | 403 | 500, code: string, message: string) => c.json({ error: { code, message, details: {} } }, status);
+  const fail = (c: Context<E>, status: 400 | 401 | 403 | 413 | 500, code: string, message: string) => c.json({ error: { code, message, details: {} } }, status);
 
   const allowedOrigin = (origin: string | undefined): boolean => origins !== undefined && origin !== undefined && (origins.has('*') || origins.has(origin));
 
@@ -158,7 +166,10 @@ export function codecServer<E extends Env = any>(options: CodecServerOptions<E>)
         c.header('vary', 'Origin');
         return fail(c, 403, 'FORBIDDEN_ORIGIN', 'Origin is not allowed');
       }
-      if (origin !== undefined) {
+      if (origin !== undefined && origins?.has('*')) {
+        // A wildcard never comes with credentials, or any site could read decrypted payloads with the user's cookies.
+        c.header('access-control-allow-origin', '*');
+      } else if (origin !== undefined) {
         c.header('access-control-allow-origin', origin);
         c.header('access-control-allow-credentials', 'true');
         c.header('vary', 'Origin');
@@ -188,9 +199,11 @@ export function codecServer<E extends Env = any>(options: CodecServerOptions<E>)
       if (namespace === undefined || !namespaces.has(namespace)) return fail(c, 403, 'FORBIDDEN_NAMESPACE', 'Namespace is not allowed');
     }
 
+    const body = await readBody(c.req.raw, maxBodyBytes);
+    if (!body) return fail(c, 413, 'PAYLOAD_TOO_LARGE', `Body is larger than ${maxBodyBytes} bytes`);
     let payloads: Payload[];
     try {
-      payloads = parsePayloads(JSON.parse(await c.req.text()));
+      payloads = parsePayloads(JSON.parse(new TextDecoder().decode(body)));
     } catch (error) {
       return fail(c, 400, 'INVALID_PAYLOADS', error instanceof BadPayloadsError ? error.message : 'Body is not valid JSON');
     }

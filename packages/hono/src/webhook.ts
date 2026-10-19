@@ -11,7 +11,7 @@ import {
   type WorkflowNotFoundError,
 } from '@norn/core';
 import { respondWithError } from './errors.js';
-import { isPlainObject } from './internal.js';
+import { isPlainObject, isPositiveInteger, readBody } from './internal.js';
 
 type MaybePromise<T> = T | Promise<T>;
 type Keys<R> = keyof R & string;
@@ -57,9 +57,12 @@ export type WebhookMapResult = WebhookAction | readonly WebhookAction[] | null |
 export interface WebhookOptions<E extends Env = any> {
   /**
    * Checks the request is genuine, e.g. with {@link hmacSha256Verifier}. Gets the raw body as text
-   * and as the exact bytes received. `false` → 401 `WEBHOOK_UNVERIFIED`.
+   * and as the exact bytes received. Returning false → 401 `WEBHOOK_UNVERIFIED`. Required: without it,
+   * anyone can signal your workflows. Pass `false` only when something in front already verifies.
    */
-  verify?: (c: Context<E>, rawBody: string, rawBytes: Uint8Array) => MaybePromise<boolean>;
+  verify: ((c: Context<E>, rawBody: string, rawBytes: Uint8Array) => MaybePromise<boolean>) | false;
+  /** Largest body accepted; bigger ones → 413 `WEBHOOK_TOO_LARGE`, before `verify` runs. Default 1 MiB. */
+  maxBodyBytes?: number;
   /** Parses the raw body. Default `JSON.parse`. Throwing → 400 `WEBHOOK_INVALID_BODY`. */
   parse?: (rawBody: string, c: Context<E>) => unknown;
   /** Maps the event to signals and updates. `null`, `undefined` or `[]` → 202 `{ accepted: 0, ignored: 'unmapped' }`. */
@@ -138,6 +141,7 @@ function checkPolicy(name: string, policy: unknown): void {
 
 // `ignoreBOM` keeps a leading BOM in the text, so it matches the bytes the provider signed.
 const textDecoder = new TextDecoder('utf-8', { ignoreBOM: true });
+const DEFAULT_MAX_BODY_BYTES = 1024 * 1024;
 
 /**
  * A handler for inbound webhooks (payment providers, carriers, …) that turns events into
@@ -162,14 +166,17 @@ export function temporalWebhook<E extends Env = any>(options: WebhookOptions<E>)
   if (typeof options !== 'object' || options === null || typeof options.map !== 'function') {
     throw new NornConfigError('temporalWebhook: `map` must be a function');
   }
-  const { verify, parse, map, onClosed = 'ignore', onNotFound = 'error', client: explicitClient } = options;
-  if (verify !== undefined && typeof verify !== 'function') throw new NornConfigError('temporalWebhook: `verify` must be a function');
+  const { verify, parse, map, onClosed = 'ignore', onNotFound = 'error', client: explicitClient, maxBodyBytes = DEFAULT_MAX_BODY_BYTES } = options;
+  if (verify === undefined) throw new NornConfigError('temporalWebhook: `verify` is required (a function, or false when something in front already verifies)');
+  if (verify !== false && typeof verify !== 'function') throw new NornConfigError('temporalWebhook: `verify` must be a function or false');
+  if (!isPositiveInteger(maxBodyBytes)) throw new NornConfigError('temporalWebhook: `maxBodyBytes` must be a positive integer');
   if (parse !== undefined && typeof parse !== 'function') throw new NornConfigError('temporalWebhook: `parse` must be a function');
   checkPolicy('onClosed', onClosed);
   checkPolicy('onNotFound', onNotFound);
 
   return async (c) => {
-    const bytes = new Uint8Array(await c.req.arrayBuffer());
+    const bytes = await readBody(c.req.raw, maxBodyBytes);
+    if (!bytes) return respondWithError(c, new NornError('WEBHOOK_TOO_LARGE', 413, `Webhook body is larger than ${maxBodyBytes} bytes`), 413);
     const raw = textDecoder.decode(bytes);
 
     if (verify && (await verify(c, raw, bytes)) !== true) {

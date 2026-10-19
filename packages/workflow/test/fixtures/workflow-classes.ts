@@ -211,9 +211,37 @@ export class CounterWorkflow {
     return { count: this.count, runs: this.runs };
   }
   async run(input: { counterId: string; count?: number; runs?: number; target: number; perRun: number }) {
-    const startCount = this.count;
+    // Not this.count: signals that arrived before the first workflow task are already applied here.
+    const startCount = input.count ?? 0;
     await condition(() => this.count >= input.target || this.count - startCount >= input.perRun);
     if (this.count >= input.target) return { count: this.count, runs: this.runs };
     return continueAsNew({ ...input, count: this.count, runs: this.runs + 1 });
+  }
+}
+
+interface CarryInput {
+  total?: number;
+  rolled?: boolean;
+}
+
+/** Continues as new while an async update is still running: the update's effect must reach the next run. */
+@Workflow({ taskQueue: 'orders' })
+export class CarryWorkflow {
+  private total: number;
+  private updating = false;
+  private readonly pay = useActivities(payments);
+  constructor(input: CarryInput) {
+    this.total = input.total ?? 0;
+  }
+  @Update() async add(n: number) {
+    this.updating = true;
+    await this.pay.slow(300);
+    this.total += n;
+    return this.total;
+  }
+  async run(input: CarryInput) {
+    if (input.rolled) return this.total;
+    await condition(() => this.updating);
+    return continueAsNew<CarryInput>(() => ({ total: this.total, rolled: true }));
   }
 }

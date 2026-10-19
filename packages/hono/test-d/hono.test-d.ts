@@ -21,7 +21,9 @@ app.get('/', (c) => {
   expectTypeOf(c.var.correlationId).toEqualTypeOf<string>();
   return c.text('ok');
 });
-app.route('/codec', codecServer({ codec: { encode: async (p) => p, decode: async (p) => p } }));
+app.route('/codec', codecServer({ codec: { encode: async (p) => p, decode: async (p) => p }, auth: false }));
+// @ts-expect-error auth is required: a function, or false to allow anyone
+codecServer({ codec: { encode: async (p) => p, decode: async (p) => p } });
 
 // Typed action helpers.
 signalAction(Payments, { paymentId: 'p' }, 'paid', { amount: 1 });
@@ -47,10 +49,14 @@ const bad: WebhookAction<typeof Payments> = { workflow: Payments, target: { paym
 const both: WebhookAction<typeof Payments> = { workflow: Payments, target: { paymentId: 'p' }, signal: 'ping', update: 'capture', args: [] };
 void [ok, noArgs, bad, both];
 
+// @ts-expect-error verify is required: a function, or false
+temporalWebhook({ map: () => null });
+
 // Actions for different contracts can be returned together.
 app.post(
   '/hook',
   temporalWebhook<NornEnv>({
+    verify: false,
     map: (_body, c) => {
       expectTypeOf(c.var.correlationId).toEqualTypeOf<string>();
       return [signalAction(Payments, { paymentId: 'p' }, 'ping'), signalAction(Shipments, { workflowId: 's' }, 'delivered', 'now')];

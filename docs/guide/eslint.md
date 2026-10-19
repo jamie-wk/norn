@@ -103,4 +103,4 @@ import { Workflow, useActivities } from '@norn/workflow';
 import { sleep } from '@temporalio/workflow';
 ```
 
-The full option reference is in the [`@norn/eslint-plugin` reference](/reference/eslint-plugin) and the [package README](https://github.com/jamie-wk/norn/tree/main/packages/eslint-plugin#readme).
+The full option reference is in the [package README](https://github.com/jamie-wk/norn/tree/main/packages/eslint-plugin#readme).

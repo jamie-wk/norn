@@ -113,8 +113,9 @@ with the correlation ID also in the `x-correlation-id` header. Stacks and causes
 | `INTERNAL` | 500 | Any other error. Message is `Internal Server Error` unless `expose` |
 | `WEBHOOK_UNVERIFIED` | 401 | `temporalWebhook()`: signature verification failed |
 | `WEBHOOK_INVALID_BODY` | 400 | `temporalWebhook()`: body is not valid JSON (or your `parse` threw) |
+| `WEBHOOK_TOO_LARGE` | 413 | `temporalWebhook()`: body is over `maxBodyBytes` |
 | your own | its `status` | Any `new NornError(code, status, message, { details })` you throw |
-| — | its own | hono `HTTPException`: its own response, exactly as hono's default handler |
+| `BAD_REQUEST`, `UNAUTHORIZED`, `NOT_FOUND`, … or `HTTP_<status>` | its `status` | hono `HTTPException`: the same JSON body with its message. One created with its own `res` is sent as that response |
 
 Raw Temporal client errors that reach the handler (for example from calling `@temporalio/client` directly) are converted with `toNornError()` first, so a forgotten mapping still gives 503 for unavailability, 409 for an already-started workflow and so on.
 
@@ -178,8 +179,8 @@ app.post(
 
 For each request it:
 
-1. reads the raw body once (as text and as the exact bytes),
-2. calls `verify` → 401 `WEBHOOK_UNVERIFIED` unless it returns `true`,
+1. reads the raw body once (as text and as the exact bytes) → 413 `WEBHOOK_TOO_LARGE` past `maxBodyBytes`,
+2. calls `verify` (unless it is `false`) → 401 `WEBHOOK_UNVERIFIED` unless it returns `true`,
 3. parses it (`JSON.parse`, or your `parse`) → 400 `WEBHOOK_INVALID_BODY` if that throws,
 4. calls `map` → actions; every action is checked before any is sent,
 5. sends the actions in order with `c.var.norn` (or `client`), and responds.
@@ -194,6 +195,7 @@ For each request it:
 | Workflow closed with `onClosed: 'error'` | 409 | `WORKFLOW_CLOSED` error body |
 | Verification failed | 401 | `WEBHOOK_UNVERIFIED` error body |
 | Unparseable body | 400 | `WEBHOOK_INVALID_BODY` error body |
+| Body over `maxBodyBytes` | 413 | `WEBHOOK_TOO_LARGE` error body |
 | Anything else (Temporal down, `map` threw, ...) | via `app.onError` | e.g. 503 `TEMPORAL_UNAVAILABLE` |
 
 Why these defaults: providers retry any non-2xx response, usually for days. A late or duplicate delivery for a workflow that has already finished must not be retried forever, so closed workflows are acknowledged with 200. A workflow that does not exist (yet) is a 404 so it does get retried, which also covers an event racing ahead of the request that starts the workflow. Temporal being unavailable becomes a 503 through your error handler, so the provider retries later.
@@ -202,7 +204,8 @@ Why these defaults: providers retry any non-2xx response, usually for days. A la
 
 ```ts
 function temporalWebhook<E extends Env = any>(options: {
-  verify?: (c: Context<E>, rawBody: string, rawBytes: Uint8Array) => boolean | Promise<boolean>;
+  verify: ((c: Context<E>, rawBody: string, rawBytes: Uint8Array) => boolean | Promise<boolean>) | false;
+  maxBodyBytes?: number; // default 1 MiB
   parse?: (rawBody: string, c: Context<E>) => unknown;
   map: (body: unknown, c: Context<E>) => WebhookMapResult | Promise<WebhookMapResult>;
   onClosed?: 'ignore' | 'error' | ((info: WebhookFailureInfo<WorkflowClosedError>, c: Context<E>) => Response | void | Promise<Response | void>);
@@ -319,6 +322,7 @@ Pass the same codecs your clients and workers use, in the same order: `codec: cl
 | 401 | `UNAUTHORIZED` | `auth` returned false or threw |
 | 403 | `FORBIDDEN_ORIGIN` | Request or preflight from an origin that is not allowed |
 | 403 | `FORBIDDEN_NAMESPACE` | `X-Namespace` missing or not in `namespaces` |
+| 413 | `PAYLOAD_TOO_LARGE` | Body is over `maxBodyBytes` |
 | 500 | `INTERNAL` | Any other codec error (message not exposed) |
 
 Errors use the body `{ error: { code, message, details } }`.
@@ -328,16 +332,17 @@ Errors use the body `{ error: { code, message, details } }`.
 ```ts
 function codecServer<E extends Env = any>(options: {
   codec: PayloadCodec | PayloadCodec[];
-  auth?: (c: Context<E>) => boolean | Promise<boolean>;
+  auth: ((c: Context<E>) => boolean | Promise<boolean>) | false;
   cors?: { origins: string[] } | false;
+  maxBodyBytes?: number; // default 16 MiB
   namespaces?: string[];
   onError?: (err: unknown, c: Context<E>) => void;
 }): Hono<E>;
 ```
 
-- `auth`: runs before the body is read. Return `true` to allow. Throwing counts as unauthenticated (and is passed to `onError`).
+- `auth`: required. Runs before the body is read. Return `true` to allow. Throwing counts as unauthenticated (and is passed to `onError`). Pass `false` only when something in front of the server (a gateway, a private network) already authenticates callers.
 - `namespaces`: allowed values of the `X-Namespace` header the Temporal UI sends. When set, requests without it are refused.
-- `cors`: browser origins allowed to call the server. Default `['https://cloud.temporal.io', 'http://localhost:8233']` (Temporal Cloud and the dev server UI). Allowed origins get `Access-Control-Allow-Origin: <origin>`, `Access-Control-Allow-Credentials: true` and `Vary: Origin` on every response (errors included, so the UI can show them); preflights (`OPTIONS`) get 204 with `Access-Control-Allow-Methods: POST, OPTIONS`, `Access-Control-Allow-Headers: content-type, x-namespace, authorization` and a 10-minute max age, without calling `auth`. Requests from other origins get 403. Requests without an `Origin` header (the CLI, servers) are not affected. `'*'` allows any origin. `cors: false` turns all of this off, for CLI-only servers or when you handle CORS yourself.
+- `cors`: browser origins allowed to call the server. Default `['https://cloud.temporal.io', 'http://localhost:8233']` (Temporal Cloud and the dev server UI). Allowed origins get `Access-Control-Allow-Origin: <origin>`, `Access-Control-Allow-Credentials: true` and `Vary: Origin` on every response (errors included, so the UI can show them); preflights (`OPTIONS`) get 204 with `Access-Control-Allow-Methods: POST, OPTIONS`, `Access-Control-Allow-Headers: content-type, x-namespace, authorization` and a 10-minute max age, without calling `auth`. Requests from other origins get 403. Requests without an `Origin` header (the CLI, servers) are not affected. `'*'` allows any origin, answered with `Access-Control-Allow-Origin: *` and without credentials, so cookies are never sent cross-site. `cors: false` turns all of this off, for CLI-only servers or when you handle CORS yourself.
 - `onError`: called with `auth` and codec errors, e.g. for logging. It never receives payload contents (unless your own codec puts them in its error messages).
 
 ### Connecting the Temporal UI and CLI
@@ -358,7 +363,7 @@ Point them at the mount path; they append `/encode` and `/decode`.
 import { env } from 'cloudflare:workers';
 import { Hono } from 'hono';
 import { codecServer } from '@norn/hono/codec-server';
-import { createEncryptionCodec } from '@norn/codec';
+import { createEncryptionCodec } from '@norn/codec/encryption';
 
 type Env = { Bindings: { NORN_KEY_2026_10: string; CODEC_TOKEN: string } };
 
@@ -373,14 +378,14 @@ app.route(
 export default app;
 ```
 
-`createEncryptionCodec` itself only uses WebCrypto, but the `@norn/codec` entry point also contains the worker helper `resolvePayloadConverterPath()`, which imports `node:url`; on Cloudflare Workers enable the `nodejs_compat` compatibility flag (or bring any other `PayloadCodec`). The main `@norn/hono` entry needs the Temporal client, which requires Node (or Bun/Deno with Node compatibility).
+Import `createEncryptionCodec` from `@norn/codec/encryption` there: it only uses WebCrypto, while the main `@norn/codec` entry also contains the worker helper `resolvePayloadConverterPath()`, which imports `node:url`. The main `@norn/hono` entry needs the Temporal client, which requires Node (or Bun/Deno with Node compatibility).
 
 ## Security notes
 
 - **Correlation IDs** from clients are validated (1–128 chars of `[A-Za-z0-9._:-]`) and otherwise replaced; use `trustIncoming: false` if callers must not choose them at all. They are not secrets and not authentication.
 - **Error responses** never include stacks or causes. `NornError` messages and details are designed to be returned to callers; messages of other errors are hidden unless you set `expose`. Note that 5xx Norn errors (`WORKFLOW_FAILED`, `QUERY_FAILED`, `TEMPORAL_UNAVAILABLE`, `CONFIG`) do include their message; use `format` to hide them if your workflow failure messages are internal.
-- **Webhooks**: always set `verify` for endpoints reachable from the internet; without it anyone can signal your workflows. Signatures are checked over the exact bytes received, with a constant-time comparison. HMAC alone does not stop replays: prefer providers' timestamped schemes and reject old timestamps, and deduplicate by event ID. Keep webhook secrets in your secret manager and rotate them with your provider.
-- **Codec server**: anyone who can call `/decode` can read every payload you send it. Always set `auth` in production (for Temporal Cloud, verify the passed access token), restrict `namespaces`, and keep `cors.origins` to your UI origins (never `'*'` together with cookie-based auth). Serve it over HTTPS only. It never logs payloads; make sure your own logging (`onError`, access logs with bodies) does not either.
+- **Webhooks**: `verify` is required; `verify: false` is for endpoints already verified upstream, since without verification anyone can signal your workflows. Bodies over `maxBodyBytes` (default 1 MiB) are refused before they are fully read. Signatures are checked over the exact bytes received, with a constant-time comparison. HMAC alone does not stop replays: prefer providers' timestamped schemes and reject old timestamps, and deduplicate by event ID. Keep webhook secrets in your secret manager and rotate them with your provider.
+- **Codec server**: anyone who can call `/decode` can read every payload you send it. `auth` is required (for Temporal Cloud, verify the passed access token); restrict `namespaces` and keep `cors.origins` to your UI origins. `'*'` never sends credentials, so it can't be combined with cookie-based auth. Serve it over HTTPS only. It never logs payloads; make sure your own logging (`onError`, access logs with bodies) does not either.
 - The codec server holds your encryption keys: deploy it with the same care as workers, and see `@norn/codec`'s [key rotation](../codec/README.md#key-rotation) notes.
 
 ## API

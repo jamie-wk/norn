@@ -74,14 +74,13 @@ export class ReportWorkflow {
 
 ```sh
 norn schedules sync --dry-run   # show what would change
-norn schedules sync             # create, update or delete schedules to match schedules.json
+norn schedules sync             # create or update schedules to match schedules.json
+norn schedules sync --prune     # also delete norn-managed schedules that are no longer declared
 ```
 
-`sync` connects with the same environment variables as the client and worker (`TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_API_KEY`), creates schedules that don't exist, updates ones whose spec or options changed, and removes schedules that Norn created but that are no longer declared. Run it in your deploy pipeline after the new workers are up, so the first run of a new schedule finds a worker.
+`sync` connects with `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_API_KEY` and `TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY` (see [the CLI page](/guide/cli#norn-schedules-sync)); `--config <path>` picks the config file. It creates schedules that don't exist, updates ones whose spec or options changed, and with `--prune` deletes schedules that Norn created but that are no longer declared. Schedules it creates carry the memo `{ nornManaged: true }`; schedules without it are never modified or deleted, and a declared ID that already belongs to one is reported as a `conflict` (exit 1). Run it in your deploy pipeline after the new workers are up, so the first run of a new schedule finds a worker.
 
-<!-- VERIFY: norn schedules sync flags beyond --dry-run (namespace/address overrides, --config), and how it identifies schedules it manages (e.g. a memo or search attribute) so it never deletes schedules created by hand -->
-
-Schedules created this way are ordinary Temporal schedules: you can pause, trigger or backfill them from the Temporal UI or CLI (`temporal schedule trigger --schedule-id nightly-report`). If you pause a schedule by hand during an incident, check the dry run before the next `sync`: it may set `paused` back to what the code declares. <!-- VERIFY: whether sync resets the paused state of an existing schedule -->
+Schedules created this way are ordinary Temporal schedules: you can pause, trigger or backfill them from the Temporal UI or CLI (`temporal schedule trigger --schedule-id nightly-report`). If you pause a schedule by hand during an incident, `sync` leaves it alone while its declaration is unchanged; once the declaration changes, `sync` updates the schedule and sets `paused` back to what the code declares. The dry run lists such schedules as `updated`.
 
 ## Schedules vs long-running loops
 

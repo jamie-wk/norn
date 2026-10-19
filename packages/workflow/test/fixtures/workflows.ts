@@ -11,3 +11,4 @@ export const ShipmentWorkflow = implement(W.ShipmentWorkflow);
 export const ParentWorkflow = implement(W.ParentWorkflow);
 export const PausableJobWorkflow = implement(W.PausableJobWorkflow, { descriptions: { pause: 'Pause the job' } });
 export const CounterWorkflow = implement(W.CounterWorkflow);
+export const CarryWorkflow = implement(W.CarryWorkflow);

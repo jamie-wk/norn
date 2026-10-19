@@ -44,7 +44,7 @@ export class LoyaltyWorkflow {
   async run(input: LoyaltyInput): Promise<never> {
     const max = input.maxEventsPerRun ?? 500;
     await condition(() => this.eventsThisRun >= max || continueAsNewSuggested());
-    return continueAsNew<LoyaltyInput>({ customerId: input.customerId, points: this.points, recent: this.recent, maxEventsPerRun: max });
+    return continueAsNew<LoyaltyInput>(() => ({ customerId: input.customerId, points: this.points, recent: this.recent, maxEventsPerRun: max }));
   }
 }
 ```
@@ -52,7 +52,7 @@ export class LoyaltyWorkflow {
 Three things to notice:
 
 1. **The constructor reads state from the input.** The first run gets `{ customerId }`; every later run gets the previous run's carried state. Handlers see the right state from the first event of each run.
-2. **`continueAsNew()` waits for in-flight handlers first**, so a signal or update that is mid-flight isn't lost in the rollover. Pass `{ waitForHandlers: false }` to skip that.
+2. **`continueAsNew()` waits for in-flight handlers first**, so a signal or update that is mid-flight isn't lost in the rollover. Pass the input as a function, as above, so it's read *after* those handlers finish; a plain object is captured before they do. Pass `{ waitForHandlers: false }` to skip the wait.
 3. **`continueAsNew()` never returns**; `return` it so TypeScript knows the method ends there. A workflow that only ever continues as new returns `Promise<never>`.
 
 `continueAsNewSuggested()` is `true` when Temporal recommends rolling over because history is getting large. Checking both it and your own counter keeps runs small and predictable.
@@ -72,7 +72,7 @@ Everything you need must be in the next run's input, because the new run starts 
     this.status = transitions(TABLE, input.status ?? 'trialing'); // a state name or a snapshot
   }
   // ...
-  return continueAsNew({ ...input, status: this.status.snapshot() });
+  return continueAsNew(() => ({ ...input, status: this.status.snapshot() }));
   ```
 
 Search attributes and memo carry over automatically. The correlation ID is forwarded to the next run by Norn's workflow interceptor.

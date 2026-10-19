@@ -33,6 +33,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "bin",
     "src",
     "!src/**/*.test.ts",
     "README.md"
@@ -45,7 +46,7 @@
     "provenance": true
   },
   "bin": {
-    "norn": "./dist/bin.js"
+    "norn": "./bin/norn.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

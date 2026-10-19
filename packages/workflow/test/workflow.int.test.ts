@@ -201,11 +201,27 @@ describe('children, external workflows and continue-as-new', () => {
     for (let run = 1; run <= 3; run++) {
       await handle.signal('increment');
       await handle.signal('increment');
-      await expect.poll(async () => ((await latest.query('value')) as { runs: number }).runs, { timeout: 15_000 }).toBe(run + 1);
+      try {
+        await expect.poll(async () => ((await latest.query('value')) as { runs: number }).runs, { timeout: 15_000 }).toBe(run + 1);
+      } catch (e) {
+        process.stderr.write('DBG value ' + JSON.stringify(await latest.query('value')) + '\n');
+        const h = await latest.fetchHistory();
+        for (const ev of h.events ?? []) process.stderr.write('DBG ev ' + ev.eventId + ' ' + Object.keys(ev).filter((k) => k.endsWith('Attributes')).join(',') + (ev.workflowTaskFailedEventAttributes ? ' ' + JSON.stringify(ev.workflowTaskFailedEventAttributes.failure?.message) : '') + '\n');
+        throw e;
+      }
     }
     await handle.signal('increment');
     const result = (await latest.result()) as { count: number; runs: number };
     expect(result).toEqual({ count: 7, runs: 4 });
+  });
+});
+
+describe('continueAsNew input', () => {
+  it('builds the next input after in-flight handlers finish', async () => {
+    const handle = await env.client.workflow.start('CarryWorkflow', { taskQueue: 'orders', workflowId: uid('carry'), args: [{}] });
+    const update = handle.executeUpdate('add', { args: [5] });
+    expect(await update).toBe(5);
+    expect(await env.client.workflow.getHandle(handle.workflowId).result()).toBe(5);
   });
 });
 

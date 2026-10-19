@@ -27,7 +27,13 @@
     "unicorn/consistent-function-scoping": "off",
     "unicorn/no-array-reverse": "off",
     "unicorn/prefer-add-event-listener": "off",
-    "unicorn/no-array-sort": "off"
+    "unicorn/no-array-sort": "off",
+    "vitest/valid-expect": [
+      "error",
+      {
+        "maxArgs": 2
+      }
+    ]
   },
   "ignorePatterns": [
     "**/dist/**",

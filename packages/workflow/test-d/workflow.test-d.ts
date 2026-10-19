@@ -5,6 +5,7 @@ import {
   Validate,
   Workflow,
   asFailure,
+  continueAsNew,
   defineActivities,
   implement,
   isFailure,
@@ -112,3 +113,11 @@ if (rejected) {
 }
 
 export { BadId, Deduped, Validated };
+
+// continueAsNew takes the input, or a function returning it (read after in-flight handlers finish).
+async function _continueAsNewInput(count: number) {
+  expectTypeOf(continueAsNew<{ count: number }>).parameter(0).toEqualTypeOf<{ count: number } | (() => { count: number })>();
+  await continueAsNew<{ count: number }>(() => ({ count }));
+  // @ts-expect-error the thunk must return the declared input
+  await continueAsNew<{ count: number }>(() => ({ count: 'x' }));
+}

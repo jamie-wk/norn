@@ -96,21 +96,21 @@ Norn weaves those threads into code that reads like the story it tells: a class 
 
 | Package | What it does |
 | --- | --- |
-| [`@norn/core`](/reference/core) | Workflow-safe building blocks: contracts, durations, ID templates, errors, state machines, business-day calendars. |
-| [`@norn/workflow`](/reference/workflow) | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `@Schedule`; `useActivities`, `useChild`, `useExternal`, `continueAsNew`. |
-| [`@norn/activity`](/reference/activity) | `@Activities`, `@Activity`, `@NonRetryable`, `@Service`, tokens, `provide()`, the container, activity context helpers. |
-| [`@norn/client`](/reference/client) | `createClient()`: typed start, execute, signal, query, update, with-start operations, list and count. |
-| [`@norn/worker`](/reference/worker) | `createWorker()`: one worker per task queue, health checks, graceful drain, versioning, bundling, metrics. |
-| [`@norn/testing`](/reference/testing) | `createTestEnv()`, typed `mockActivities()`, `createFakeClient()`, replay checks, the Vitest decorator plugin. |
-| [`@norn/codec`](/reference/codec) | AES-256-GCM payload encryption with key rotation; a payload converter for `bigint` and TC39 Temporal values. |
-| [`@norn/hono`](/reference/hono) | Hono middleware with correlation IDs, an error handler, webhook-to-signal routing and a codec server. |
-| [`@norn/cli`](/reference/cli) | `norn gen`, `norn bundle`, `norn schedules sync`, `norn histories pull`. |
-| [`@norn/eslint-plugin`](/reference/eslint-plugin) | Editor-time determinism and import-boundary rules for workflow files. |
+| [`@norn/core`](https://github.com/jamie-wk/norn/tree/main/packages/core#readme) | Workflow-safe building blocks: contracts, durations, ID templates, errors, state machines, business-day calendars. |
+| [`@norn/workflow`](https://github.com/jamie-wk/norn/tree/main/packages/workflow#readme) | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `@Schedule`; `useActivities`, `useChild`, `useExternal`, `continueAsNew`. |
+| [`@norn/activity`](https://github.com/jamie-wk/norn/tree/main/packages/activity#readme) | `@Activities`, `@Activity`, `@NonRetryable`, `@Service`, tokens, `provide()`, the container, activity context helpers. |
+| [`@norn/client`](https://github.com/jamie-wk/norn/tree/main/packages/client#readme) | `createClient()`: typed start, execute, signal, query, update, with-start operations, list and count. |
+| [`@norn/worker`](https://github.com/jamie-wk/norn/tree/main/packages/worker#readme) | `createWorker()`: one worker per task queue, health checks, graceful drain, versioning, bundling, metrics. |
+| [`@norn/testing`](https://github.com/jamie-wk/norn/tree/main/packages/testing#readme) | `createTestEnv()`, typed `mockActivities()`, `createFakeClient()`, replay checks, the Vitest decorator plugin. |
+| [`@norn/codec`](https://github.com/jamie-wk/norn/tree/main/packages/codec#readme) | AES-256-GCM payload encryption with key rotation; a payload converter for `bigint` and TC39 Temporal values. |
+| [`@norn/hono`](https://github.com/jamie-wk/norn/tree/main/packages/hono#readme) | Hono middleware with correlation IDs, an error handler, webhook-to-signal routing and a codec server. |
+| [`@norn/cli`](https://github.com/jamie-wk/norn/tree/main/packages/cli#readme) | `norn gen`, `norn bundle`, `norn schedules sync`, `norn histories pull`. |
+| [`@norn/eslint-plugin`](https://github.com/jamie-wk/norn/tree/main/packages/eslint-plugin#readme) | Editor-time determinism and import-boundary rules for workflow files. |
 
 ## Requirements
 
 - **Node.js 22.18 or later** (tested on 22, 24 and 26).
-- **A Temporal service**: Temporal Cloud, a self-hosted cluster (see [Self-hosting on AWS ECS](/recipes/self-hosting-aws-ecs)) or `temporal server start-dev` locally.
+- **A Temporal service**: Temporal Cloud, a self-hosted cluster or `temporal server start-dev` locally.
 - **TypeScript 5.0+ or 7** with **TC39 standard decorators**. Do **not** enable `experimentalDecorators`: Norn's decorators are standard decorators, and the legacy ones have a different signature. See [Getting started](/guide/getting-started#typescript) for the tsconfig.
 
 Next: [Getting started](/guide/getting-started).

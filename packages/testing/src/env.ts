@@ -18,7 +18,7 @@ export interface TestEnvOptions {
   activities?: ActivitySource | readonly ActivitySource[];
   /** Container overrides, e.g. a fake service: `{ overrides: [[Mailer, fakeMailer]] }`. */
   container?: RegistryContainerOptions;
-  /** Search attributes to register on the dev server, in addition to the registry's. */
+  /** Search attributes to register on the server, in addition to the registry's. */
   searchAttributes?: Record<string, SearchAttributeType>;
   taskQueues?: readonly string[];
   /** Set false to skip the worker, e.g. to test starts and signals only. */
@@ -53,6 +53,53 @@ const TEMPORAL_TYPES = {
   datetime: 'DATETIME',
   keywordList: 'KEYWORD_LIST',
 } as const;
+
+/** `temporal.api.enums.v1.IndexedValueType`, for the operator service. */
+const INDEXED_VALUE_TYPES = {
+  text: 1,
+  keyword: 2,
+  int: 3,
+  double: 4,
+  bool: 5,
+  datetime: 6,
+  keywordList: 7,
+} as const satisfies Record<SearchAttributeType, number>;
+
+const SEARCH_ATTRIBUTE_TIMEOUT_MS = 30_000;
+const SEARCH_ATTRIBUTE_POLL_MS = 100;
+
+/**
+ * Waits until the server lists every search attribute. `temporal server start-dev` registers its
+ * `--search-attribute`s about a second after it starts serving, and until then starts that use them fail.
+ */
+async function waitForSearchAttributes(temporal: TestWorkflowEnvironment, names: readonly string[]): Promise<void> {
+  if (names.length === 0) return;
+  const deadline = Date.now() + SEARCH_ATTRIBUTE_TIMEOUT_MS;
+  let missing = names;
+  while (Date.now() < deadline) {
+    const { customAttributes } = await temporal.connection.operatorService.listSearchAttributes({ namespace: temporal.namespace ?? 'default' });
+    missing = names.filter((name) => !(name in (customAttributes ?? {})));
+    if (missing.length === 0) return;
+    await new Promise((resolve) => setTimeout(resolve, SEARCH_ATTRIBUTE_POLL_MS));
+  }
+  throw new NornConfigError(`Search attributes ${missing.join(', ')} were not registered within ${SEARCH_ATTRIBUTE_TIMEOUT_MS / 1000}s`);
+}
+
+/** Registers search attributes through the operator service, for servers that take no CLI flags. */
+async function addSearchAttributes(temporal: TestWorkflowEnvironment, searchAttributes: Record<string, SearchAttributeType>): Promise<void> {
+  if (Object.keys(searchAttributes).length === 0) return;
+  try {
+    await temporal.connection.operatorService.addSearchAttributes({
+      namespace: temporal.namespace ?? 'default',
+      searchAttributes: Object.fromEntries(Object.entries(searchAttributes).map(([name, type]) => [name, INDEXED_VALUE_TYPES[type]])),
+    });
+  } catch (error) {
+    throw new NornConfigError(
+      `The time-skipping test server could not register search attributes (${Object.keys(searchAttributes).join(', ')}); use mode: 'local'`,
+      { cause: error },
+    );
+  }
+}
 
 let runtimeChecked = false;
 function quietRuntime(level: LogLevel | undefined): void {
@@ -108,6 +155,15 @@ export async function createTestEnv(options: TestEnvOptions = {}): Promise<TestE
         searchAttributes: Object.entries(searchAttributes).map(([name, type]) => defineSearchAttributeKey(name, TEMPORAL_TYPES[type])),
       },
     });
+  }
+
+  try {
+    // The time-skipping server registers synchronously (and has no listSearchAttributes); the dev server doesn't.
+    if (mode === 'time-skipping') await addSearchAttributes(temporal, searchAttributes);
+    else await waitForSearchAttributes(temporal, Object.keys(searchAttributes));
+  } catch (error) {
+    await temporal.teardown();
+    throw error;
   }
 
   let worker: NornWorker | undefined;

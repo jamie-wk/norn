@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { defineSearchAttributeKey } from '@temporalio/common';
 import { historyToJSON } from '@temporalio/common/lib/proto-utils.js';
 import { assertReplays, createTestEnv, loadHistories, mockActivities } from '../src/index.ts';
 import { Reminders, Waits } from './fixtures/contracts.ts';
@@ -38,6 +39,24 @@ describe('createTestEnv', () => {
     expect(await handle.query('status')).toEqual({ stage: 'waiting', snoozed: 0 });
     await env.sleep('2 hours');
     expect(await handle.result()).toMatchObject({ snoozed: 0 });
+  });
+
+  it.each(['local', 'time-skipping'] as const)('registers search attributes in %s mode', async (mode) => {
+    await using env = await createTestEnv({ registry, mode, worker: false, searchAttributes: { NornTestTag: 'keyword', NornTestCount: 'int' } });
+    const tag = defineSearchAttributeKey('NornTestTag', 'KEYWORD');
+    const count = defineSearchAttributeKey('NornTestCount', 'INT');
+    const handle = await env.temporal.client.workflow.start('WaitWorkflow', {
+      taskQueue: 'testing-q',
+      workflowId: uid('sa'),
+      typedSearchAttributes: [
+        { key: tag, value: 'blue' },
+        { key: count, value: 3 },
+      ],
+    });
+    const described = await handle.describe();
+    expect(described.typedSearchAttributes.get(tag)).toBe('blue');
+    expect(described.typedSearchAttributes.get(count)).toBe(3);
+    await handle.terminate('cleanup');
   });
 
   it('can start without a worker', async () => {

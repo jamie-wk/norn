@@ -61,7 +61,7 @@ it('refunds when the customer cancels inside the window', async () => {
 ### Modes
 
 - **`'local'`** (default): a real Temporal dev server (`temporal server start-dev`). Timers take real time. Search attributes from the registry (plus `searchAttributes`) are registered for you, so visibility queries work. Use it for search-attribute and `list()` tests, and anything where real time is fine.
-- **`'time-skipping'`**: Temporal's test server. While the test waits on a workflow result, the server skips ahead to the next timer, so a workflow that sleeps for 14 days finishes in milliseconds. Use it for timers, reminders, expiries and SLAs.
+- **`'time-skipping'`**: Temporal's test server. While the test waits on a workflow result, the server skips ahead to the next timer, so a workflow that sleeps for 14 days finishes in milliseconds. Use it for timers, reminders, expiries and SLAs. Search attributes are registered here too. The client is the test server's own (it unlocks time while waiting for results), so `clientDataConverter` is not used in this mode.
 
 `env.sleep(duration)` advances time explicitly: it skips on the time-skipping server and sleeps for real on the dev server. Use it to observe a workflow mid-way:
 
@@ -83,7 +83,7 @@ Servers are downloaded on first use and cached. To use existing binaries (offlin
 | `mode` | `'local'` (default) or `'time-skipping'`. |
 | `activities` | Mocks from `mockActivities()`, plain `{ 'payments.charge': fn }` records, or a list of either. Names must be registered activities; unmocked activities run for real through the container. |
 | `container` | `{ overrides, errors }`: replace services or providers, such as `{ overrides: [[TransferService, fakeTransfers]] }`. |
-| `searchAttributes` | Extra search attributes to register on the dev server. |
+| `searchAttributes` | Extra search attributes to register on the server, in addition to the registry's. |
 | `taskQueues` | Poll a subset of the registry's queues. |
 | `worker` | `false` to skip the worker, to test starts and signals only. |
 | `dataConverter`, `clientDataConverter` | For workflows using [`@norn/codec`](/guide/encryption). |

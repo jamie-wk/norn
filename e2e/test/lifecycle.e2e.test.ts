@@ -61,7 +61,8 @@ describe('long-running workflows', () => {
     }
     await expect.poll(() => loyalty.get({ customerId }).query('balance'), { timeout: 20_000 }).toEqual({ points: 10 + 20 + 5 + 1 + 49, orders: 5 });
     const runs = await stack.temporal.workflow.count(`WorkflowId = "loyalty-${customerId}"`);
-    expect(runs.count).toBeGreaterThanOrEqual(3);
+    // Signals batched into one workflow task can push a run past maxEventsPerRun, so only require one rollover.
+    expect(runs.count).toBeGreaterThanOrEqual(2);
   });
 });
 

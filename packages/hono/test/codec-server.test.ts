@@ -24,7 +24,7 @@ const valueOf = (p: JsonPayload) => defaultPayloadConverter.fromPayload(fromJson
 
 function server(options: Partial<CodecServerOptions> = {}) {
   const app = new Hono();
-  app.route('/codec', codecServer({ codec, ...options }));
+  app.route('/codec', codecServer({ codec, auth: false, ...options }));
   return app;
 }
 
@@ -159,6 +159,22 @@ describe('codecServer: sad paths', () => {
     expect(res.status).toBe(500);
   });
 
+  it('rejects bodies over maxBodyBytes with 413 before decoding', async () => {
+    const decode = vi.fn(async (p: Payload[]) => p);
+    const app = server({ codec: { encode: async (p) => p, decode }, maxBodyBytes: 64 });
+    const res = await call(app, 'decode', { payloads: [plain('x'.repeat(200))] });
+    expect(res.status).toBe(413);
+    expect(await res.json()).toMatchObject({ error: { code: 'PAYLOAD_TOO_LARGE' } });
+    expect(decode).not.toHaveBeenCalled();
+  });
+
+  it('keeps a metadata key named __proto__', async () => {
+    const app = server({ codec: { encode: async (p) => p, decode: async (p) => p } });
+    const res = await call(app, 'decode', '{"payloads":[{"metadata":{"__proto__":"eA=="},"data":""}]}');
+    const [payload] = await payloadsOf(res);
+    expect(Object.keys(payload!.metadata!)).toEqual(['__proto__']);
+  });
+
   it('only serves POST /encode and /decode', async () => {
     const app = server();
     expect((await app.request('/codec/decode')).status).toBe(404);
@@ -167,12 +183,14 @@ describe('codecServer: sad paths', () => {
 
   it('validates options at creation', () => {
     expect(() => codecServer({} as never)).toThrow(NornConfigError);
-    expect(() => codecServer({ codec: {} as never })).toThrow(NornConfigError);
-    expect(() => codecServer({ codec: [] })).toThrow(NornConfigError);
-    expect(() => codecServer({ codec, cors: { origins: 'https://x' as never } })).toThrow(NornConfigError);
-    expect(() => codecServer({ codec, cors: { origins: ['not a url'] } })).toThrow(NornConfigError);
-    expect(() => codecServer({ codec, namespaces: 'default' as never })).toThrow(NornConfigError);
-    expect(() => codecServer({ codec, namespaces: [] })).toThrow(NornConfigError);
+    expect(() => codecServer({ codec: {} as never, auth: false })).toThrow(NornConfigError);
+    expect(() => codecServer({ codec: [], auth: false })).toThrow(NornConfigError);
+    expect(() => codecServer({ codec } as never)).toThrow(/`auth` is required/);
+    expect(() => codecServer({ codec, auth: false, maxBodyBytes: 0 })).toThrow(NornConfigError);
+    expect(() => codecServer({ codec, auth: false, cors: { origins: 'https://x' as never } })).toThrow(NornConfigError);
+    expect(() => codecServer({ codec, auth: false, cors: { origins: ['not a url'] } })).toThrow(NornConfigError);
+    expect(() => codecServer({ codec, auth: false, namespaces: 'default' as never })).toThrow(NornConfigError);
+    expect(() => codecServer({ codec, auth: false, namespaces: [] })).toThrow(NornConfigError);
     expect(() => codecServer({ codec, auth: true as never })).toThrow(NornConfigError);
   });
 });
@@ -272,10 +290,11 @@ describe('codecServer: CORS', () => {
     expect((await preflight(app, 'https://temporal.internal.example.com.evil.io')).status).toBe(403);
   });
 
-  it('reflects any origin with "*"', async () => {
+  it('allows any origin with "*", without credentials', async () => {
     const res = await preflight(server({ cors: { origins: ['*'] } }), 'https://anything.example');
     expect(res.status).toBe(204);
-    expect(res.headers.get('access-control-allow-origin')).toBe('https://anything.example');
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
+    expect(res.headers.get('access-control-allow-credentials')).toBeNull();
   });
 
   it('turns CORS off with cors: false', async () => {

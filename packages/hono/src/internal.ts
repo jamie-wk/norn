@@ -70,3 +70,29 @@ export function withHeader(res: Response, name: string, value: string): Response
     }
   }
 }
+
+/** True for a positive safe integer, e.g. a byte limit. */
+export const isPositiveInteger = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) > 0;
+
+/**
+ * Reads a request body, stopping as soon as it exceeds `maxBytes` (a lying or missing
+ * `content-length` doesn't help). Returns undefined when the body is too large.
+ */
+export async function readBody(req: Request, maxBytes: number): Promise<Uint8Array | undefined> {
+  if (Number(req.headers.get('content-length')) > maxBytes) return undefined;
+  if (!req.body) return new Uint8Array();
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel();
+      return undefined;
+    }
+    chunks.push(value);
+  }
+  return new Uint8Array(await new Blob(chunks).arrayBuffer());
+}

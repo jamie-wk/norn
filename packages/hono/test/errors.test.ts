@@ -113,11 +113,46 @@ describe('nornErrorHandler: raw Temporal errors', () => {
 });
 
 describe('nornErrorHandler: other errors', () => {
-  it('returns hono HTTPException responses unchanged, plus the correlation header', async () => {
+  it('turns hono HTTPExceptions into the JSON error body, code from the status', async () => {
     const res = await call(appThrowing(new HTTPException(401, { message: 'nope' })));
     expect(res.status).toBe(401);
-    expect(await res.text()).toBe('nope');
+    expect(res.headers.get('content-type')).toMatch(/application\/json/);
+    expect(await res.json()).toEqual({ error: { code: 'UNAUTHORIZED', message: 'nope', details: {}, correlationId: 'err-corr' } });
     expect(res.headers.get('x-correlation-id')).toBe('err-corr');
+  });
+
+  it.each([
+    [400, 'BAD_REQUEST'],
+    [403, 'FORBIDDEN'],
+    [404, 'NOT_FOUND'],
+    [413, 'PAYLOAD_TOO_LARGE'],
+    [429, 'TOO_MANY_REQUESTS'],
+    [418, 'HTTP_418'],
+    [502, 'HTTP_502'],
+  ] as const)('maps an HTTPException %i to code %s', async (status, code) => {
+    const res = await call(appThrowing(new HTTPException(status, { message: 'm' })));
+    expect(res.status).toBe(status);
+    expect(await res.json()).toMatchObject({ error: { code, message: 'm' } });
+  });
+
+  it('uses the status text when an HTTPException has no message', async () => {
+    const res = await call(appThrowing(new HTTPException(400)));
+    expect(await res.json()).toMatchObject({ error: { code: 'BAD_REQUEST', message: 'Bad Request' } });
+  });
+
+  it('passes HTTPExceptions through format and the status overrides', async () => {
+    const format = vi.fn((err: NornError, c: { json(body: unknown, status: number): Response }, info: { status: number }) =>
+      c.json({ custom: err.code }, info.status),
+    );
+    const res = await call(appThrowing(new HTTPException(400, { message: 'bad' }), { format: format as never, status: { BAD_REQUEST: 422 } }));
+    expect(res.status).toBe(422);
+    expect(await res.json()).toEqual({ custom: 'BAD_REQUEST' });
+    expect(format).toHaveBeenCalledOnce();
+  });
+
+  it('does not log HTTPExceptions as unexpected errors', async () => {
+    await call(appThrowing(new HTTPException(500, { message: 'gone wrong' })));
+    expect(console.error).not.toHaveBeenCalled();
   });
 
   it('keeps a custom HTTPException response', async () => {

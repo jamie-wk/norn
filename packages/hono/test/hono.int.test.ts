@@ -60,7 +60,7 @@ function buildApp(client: NornClient): Hono<NornEnv> {
       },
     }),
   );
-  a.route('/codec', codecServer({ codec: clientDataConverter({ keys, currentKeyId: '2026-10' }).payloadCodecs }));
+  a.route('/codec', codecServer({ codec: clientDataConverter({ keys, currentKeyId: '2026-10' }).payloadCodecs, auth: false }));
   return a;
 }
 

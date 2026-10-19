@@ -25,8 +25,6 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/introduction', activeMatch: '^/guide/' },
       { text: 'Recipes', link: '/recipes/', activeMatch: '^/recipes/' },
-      { text: 'Reference', link: '/reference/', activeMatch: '^/reference/' },
-      { text: 'Comparisons', link: '/comparisons/plain-sdk', activeMatch: '^/comparisons/' },
       {
         text: '1.0',
         items: [

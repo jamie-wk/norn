@@ -1,12 +1,10 @@
 # Hono integration
 
-[`@norn/hono`](/reference/hono) connects a [Hono](https://hono.dev) API to Temporal: a middleware that puts a Norn client on every request with a correlation ID, an error handler that turns Norn errors into JSON responses with the right status, a webhook handler that routes provider events to signals and updates, and a codec server for the Temporal UI.
+[`@norn/hono`](https://github.com/jamie-wk/norn/tree/main/packages/hono#readme) connects a [Hono](https://hono.dev) API to Temporal: a middleware that puts a Norn client on every request with a correlation ID, an error handler that turns Norn errors into JSON responses with the right status, a webhook handler that routes provider events to signals and updates, and a codec server for the Temporal UI.
 
 ```sh
-pnpm add @norn/hono @norn/client @norn/core hono @temporalio/client @temporalio/common
+pnpm add @norn/hono @norn/client hono @temporalio/client @temporalio/common
 ```
-
-<!-- VERIFY: reconcile every option name on this page with packages/hono/README.md once it lands -->
 
 ```ts
 import { Hono } from 'hono';
@@ -86,7 +84,7 @@ Error responses look like this, with the correlation ID in the body and the resp
 
 - `NornError`s (from Norn, or your own `new NornError('CODE', status, message)`) use their status, or the override in `status`.
 - Raw Temporal client errors are converted with `toNornError()` first, so a gRPC `UNAVAILABLE` still becomes `503 TEMPORAL_UNAVAILABLE`.
-- Hono `HTTPException`s return their own response, as with Hono's default handler.
+- Hono `HTTPException`s get the same JSON body, with a code derived from the status (`400` → `BAD_REQUEST`, `401` → `UNAUTHORIZED`, `404` → `NOT_FOUND`, otherwise `HTTP_<status>`) and the exception's message. An `HTTPException` created with its own `res` is sent as that response.
 - Anything else becomes `500 INTERNAL` with the message `Internal Server Error`.
 
 | Option | Description |
@@ -125,10 +123,10 @@ app.post(
 
 For each request it:
 
-1. Reads the raw body once and calls `verify(c, rawBody, rawBytes)`. `false` responds **401** `WEBHOOK_UNVERIFIED`.
+1. Reads the raw body once (over `maxBodyBytes`, default 1 MiB: **413** `WEBHOOK_TOO_LARGE`) and calls `verify(c, rawBody, rawBytes)`. Returning `false` responds **401** `WEBHOOK_UNVERIFIED`. `verify` is required; pass `verify: false` only when something in front of the endpoint already verifies requests.
 2. Parses it (`JSON.parse`, or your `parse(rawBody, c)`). A parse error responds **400** `WEBHOOK_INVALID_BODY`.
 3. Calls `map(body, c)`, which returns an action, a list of actions, or `null` / `undefined` / `[]` to ignore the event (**202** `{ accepted: 0, ignored: 'unmapped' }`). Every action is validated before any is sent, so a bad mapping never half-applies an event.
-4. Sends the actions in order and responds **202** `{ accepted: n }`, plus `results` when there were updates.
+4. Sends the actions in order and responds **202** `{ accepted: n }`, plus `ignored: m` if some were skipped and `results` when there were updates.
 
 Build actions with `signalAction(contract, target, signal, ...args)` and `updateAction(contract, target, update, ...args)`; both are typed by the contract, and `target` is the ID template's fields or `{ workflowId }`. Combine them with [`dedupeBy`](/guide/messages#dedupeby-at-least-once-sources) on the signal, because providers redeliver events.
 
@@ -137,7 +135,7 @@ What happens when the workflow isn't there:
 | Option | Default | Behaviour |
 | --- | --- | --- |
 | `onClosed` | `'ignore'` | The workflow already closed: skip the action. If nothing was accepted, respond **200** `{ ignored: 'closed' }`, so the provider stops retrying a late delivery. |
-| `onNotFound` | `'error'` | No such workflow: respond **404** `WORKFLOW_NOT_FOUND`. |
+| `onNotFound` | `'error'` | No such workflow: respond **404** `WORKFLOW_NOT_FOUND`. With `'ignore'`, skip the action (**200** `{ ignored: 'not_found' }` if nothing was accepted). |
 
 Each takes `'ignore'`, `'error'`, or a function `({ action, index, error }, c)` that returns a `Response` to send, or nothing to ignore the action. Any other failure, such as Temporal being unavailable, is thrown to `app.onError`, so the response is a 5xx and the provider retries.
 
@@ -181,8 +179,9 @@ app.route('/codec', codecServer({ codec: createEncryptionCodec({ keys, currentKe
 | Option | Default | Description |
 | --- | --- | --- |
 | `codec` | required | A `PayloadCodec`, or several in the order your data converter applies them. |
-| `auth` | none | `(c) => boolean`; returning `false` or throwing responds 401. Anyone who passes can decrypt your payloads, so always set it in production. |
-| `cors` | `{ origins: ['https://cloud.temporal.io', 'http://localhost:8233'] }` | Browser origins allowed to call it (`'*'` for any), or `false` to disable CORS handling for CLI-only use. Other origins get 403. |
+| `auth` | required | `(c) => boolean`; returning `false` or throwing responds 401. Anyone who passes can decrypt your payloads. `false` disables it, for servers already behind authentication. |
+| `cors` | `{ origins: ['https://cloud.temporal.io', 'http://localhost:8233'] }` | Browser origins allowed to call it (`'*'` for any, without credentials), or `false` to disable CORS handling for CLI-only use. Other origins get 403. |
+| `maxBodyBytes` | 16 MiB | Larger bodies get 413 `PAYLOAD_TOO_LARGE`. |
 | `namespaces` | any | Namespaces (from the `X-Namespace` header) the server may be used for; others get 403. |
 | `onError` | none | Called with errors from `auth` and the codecs, for logging. Payload contents are never passed to it. |
 

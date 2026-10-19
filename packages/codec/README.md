@@ -16,6 +16,22 @@ pnpm add @norn/codec
 
 Requires Node 22.18+ (or any runtime with WebCrypto for the codec on its own).
 
+### Entry points
+
+| Import | Contents | Runtimes |
+| --- | --- | --- |
+| `@norn/codec` | Everything below, plus `createDataConverter`, `clientDataConverter`, `resolvePayloadConverterPath` and `NornCodecError` | Node (imports `node:url` for `resolvePayloadConverterPath()`) |
+| `@norn/codec/encryption` | `createEncryptionCodec`, `generateKey`, `EncryptionCodecOptions`, `ENCRYPTED_ENCODING`, `ENCRYPTION_KEY_ID_METADATA_KEY` | Any runtime with WebCrypto: Node, Bun, Deno, Cloudflare Workers, Vercel Edge (type-only imports from `@temporalio/common`, nothing at runtime) |
+| `@norn/codec/payload-converter` | `payloadConverter`, `NornJsonPayloadConverter`, `TEMPORAL_TYPES` | Anywhere `@temporalio/common` runs, including the workflow sandbox; this is the module `payloadConverterPath` points workers at |
+
+Use `@norn/codec/encryption` for codec servers on edge runtimes, so the bundle never pulls in `node:url` (no `nodejs_compat` flag needed on Cloudflare Workers):
+
+```ts
+import { createEncryptionCodec } from '@norn/codec/encryption';
+```
+
+The codec still throws `NornCodecError` for bad keys and tampered payloads; check `error.name === 'NornCodecError'` if you need to tell them apart without importing the main entry.
+
 ## Usage
 
 Generate a key once and store it in your secret manager:
@@ -123,4 +139,5 @@ Tagged JSON values look like `{"$norn":"bigint","v":"123"}` and `{"$norn":"Tempo
 - Each payload gets a fresh random IV. With random 96-bit IVs, NIST recommends at most about 2³² encryptions per key: rotate well before that.
 - GCM authenticates the data and key id, so tampering is detected (`NornCodecError: ... could not be decrypted ...`). It does not stop a payload from being replayed into a different place in history, and metadata outside the encrypted envelope (like the key id) is visible to the server.
 - Encryption covers payloads (inputs, results, signals, queries, updates, memos, heartbeat details, failure details encoded as payloads). It does not cover workflow ids, types, task queues, search attributes, or failure messages and stack traces, unless you also configure a failure converter with `encodeCommonAttributes`.
+- Decoding passes payloads that aren't `binary/encrypted` through unchanged, as Temporal's own codecs do, so a namespace with existing plaintext history keeps working after you turn encryption on. The flip side: a client deployed without the codec writes plaintext that workers accept silently, so configure the codec on every client and worker.
 - A codec server can decrypt everything it is given: put it behind authentication and restrict CORS to your Temporal UI origin.

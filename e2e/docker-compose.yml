@@ -5,7 +5,7 @@ name: norn-e2e
 
 services:
   temporal:
-    image: temporalio/temporal:1.5.1
+    image: temporalio/temporal:1.9.1
     command:
       - server
       - start-dev
@@ -21,7 +21,7 @@ services:
       retries: 60
 
   temporal-admin-tools:
-    image: temporalio/temporal:1.5.1
+    image: temporalio/temporal:1.9.1
     entrypoint: ['sleep', 'infinity']
     depends_on: { temporal: { condition: service_healthy } }
 

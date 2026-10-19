@@ -126,7 +126,7 @@ const norn = createClient({ interceptors: [new OpenTelemetryWorkflowClientInterc
 Temporal plugins that add workflow interceptors can only add them when the bundle is built. `createWorker()`'s automatic bundling doesn't pass `plugins` to the bundler, so build the bundle yourself with `bundleWorkflows(registry, { plugins })` as above, or include the plugin when you prebuild for production.
 :::
 
-<!-- VERIFY: whether `norn bundle` accepts plugins or extra workflow interceptor modules for OpenTelemetry -->
+`norn bundle` has no option for plugins or extra interceptor modules, so with OpenTelemetry prebuild the bundle with `bundleWorkflows()` instead.
 
 Correlation IDs and trace IDs complement each other: traces show timing within one request, and the correlation ID survives places traces often don't, like an activity that runs three days later after a timer.
 
