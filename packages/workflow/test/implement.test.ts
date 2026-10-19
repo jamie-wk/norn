@@ -26,7 +26,7 @@ describe('implement', () => {
     const fn = implement(PinnedWorkflow);
     expect(fn.name).toBe('Renamed');
     expect(fn.workflowType).toBe('Renamed');
-    expect((fn as unknown as Record<symbol, { taskQueue: string }>)[NORN.workflow].taskQueue).toBe('q');
+    expect((fn as unknown as Record<symbol, { taskQueue: string }>)[NORN.workflow]?.taskQueue).toBe('q');
   });
 
   it('attaches versioning behavior and failure types as Temporal workflow options', () => {

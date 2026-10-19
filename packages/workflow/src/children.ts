@@ -161,7 +161,9 @@ export function useChild<T extends Target>(target: T, defaults: ChildOptions = {
  */
 export function useExternal<T extends Target>(
   target: T,
-  id: IdParamsFor<InputOf<T>, T extends AnyWorkflowContract ? T['idTemplate'] : string> | { workflowId: string; runId?: string },
+  id:
+    | (T extends AnyWorkflowContract ? IdParamsFor<InputOf<T>, T['idTemplate']> : Partial<NonNullable<InputOf<T>>>)
+    | { workflowId: string; runId?: string },
 ): ExternalRef<T> {
   const t = info(target);
   const explicit = id as { workflowId?: string; runId?: string };

@@ -1,6 +1,5 @@
 import { expectTypeOf } from 'vitest';
 import {
-  Query,
   Signal,
   Update,
   Validate,
@@ -79,7 +78,7 @@ declare const pay: ActivityProxy<typeof payments>;
 expectTypeOf(pay.charge).toEqualTypeOf<(orderId: string, cents: number) => Promise<{ id: string }>>();
 expectTypeOf(pay.refund).toEqualTypeOf<(_chargeId: string) => Promise<boolean>>();
 // @ts-expect-error helper is not registered as an activity
-pay.helper;
+void pay.helper;
 
 expectTypeOf(useActivities(payments)).toEqualTypeOf<ActivityProxy<typeof payments>>();
 

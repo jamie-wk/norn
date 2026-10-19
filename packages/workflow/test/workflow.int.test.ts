@@ -72,7 +72,7 @@ describe('handlers', () => {
     await waitForStatus(handle, 'paid');
     const rejected = handle.executeUpdate('addItem', { args: [''] });
     await expect(rejected).rejects.toBeInstanceOf(WorkflowUpdateFailedError);
-    const failure = await rejected.catch((e: WorkflowUpdateFailedError) => e.cause as ApplicationFailure);
+    const failure = (await rejected.catch((e: WorkflowUpdateFailedError) => e.cause)) as ApplicationFailure;
     expect(failure.type).toBe('InvalidItemError');
     expect(((await handle.query('getStatus')) as { items: string[] }).items).toEqual([]);
     await handle.signal('cancel', 'cleanup');

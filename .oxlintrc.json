@@ -26,7 +26,8 @@
     "no-underscore-dangle": "off",
     "unicorn/consistent-function-scoping": "off",
     "unicorn/no-array-reverse": "off",
-    "unicorn/prefer-add-event-listener": "off"
+    "unicorn/prefer-add-event-listener": "off",
+    "unicorn/no-array-sort": "off"
   },
   "ignorePatterns": [
     "**/dist/**",
@@ -34,5 +35,22 @@
     "**/.norn/**",
     "docs/.vitepress/cache/**",
     "**/fixtures/**/expected/**"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/test/**",
+        "**/test-d/**",
+        "e2e/**",
+        "examples/**/test/**"
+      ],
+      "rules": {
+        "typescript/no-extraneous-class": "off",
+        "no-useless-constructor": "off",
+        "no-unused-private-class-members": "off",
+        "vitest/require-mock-type-parameters": "off",
+        "vitest/require-to-throw-message": "off"
+      }
+    }
   ]
 }
