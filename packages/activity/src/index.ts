@@ -35,4 +35,4 @@ export {
   lastHeartbeat,
   runWithCorrelationId,
 } from './context.js';
-export type { ActivityOptions, Duration } from '@norn/core';
+export type { ActivityOptions, Duration } from '@norn-ts/core';

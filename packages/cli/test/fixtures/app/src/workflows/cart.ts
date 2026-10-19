@@ -1,5 +1,5 @@
 import { condition } from '@temporalio/workflow';
-import { Query as Q, Signal, Update, Workflow } from '@norn/workflow';
+import { Query as Q, Signal, Update, Workflow } from '@norn-ts/workflow';
 import { Pausable } from './base.js';
 
 @Workflow({

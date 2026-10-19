@@ -7,7 +7,7 @@ import {
   type Duration,
   type SearchAttributeType,
   type SearchAttributeValues,
-} from '@norn/core';
+} from '@norn-ts/core';
 
 export type IfRunning = 'fail' | 'useExisting' | 'terminateExisting';
 export type IfClosed = 'allow' | 'allowIfFailed' | 'reject';

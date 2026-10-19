@@ -4,7 +4,7 @@ Activities are where side effects happen: HTTP calls, database writes, emails, p
 
 ```ts
 // src/activities/notification.activities.ts
-import { Activities, Activity, NonRetryable, idempotencyKey } from '@norn/activity';
+import { Activities, Activity, NonRetryable, idempotencyKey } from '@norn-ts/activity';
 import { Mailer, InvalidAddressError } from '../services/mailer.js';
 
 @Activities({ prefix: 'notify.' })
@@ -130,10 +130,10 @@ Precedence is: the activity's own options, then the shared overrides, then the p
 
 ## Context helpers
 
-Inside an activity (and inside services it calls), `@norn/activity` exports helpers for the running activity:
+Inside an activity (and inside services it calls), `@norn-ts/activity` exports helpers for the running activity:
 
 ```ts
-import { activityInfo, cancellationSignal, heartbeat, idempotencyKey, lastHeartbeat } from '@norn/activity';
+import { activityInfo, cancellationSignal, heartbeat, idempotencyKey, lastHeartbeat } from '@norn-ts/activity';
 ```
 
 | Helper | Description |

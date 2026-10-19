@@ -1,4 +1,4 @@
-import { Activities, Activity, NonRetryable } from '@norn/activity';
+import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
 import { OutOfStockError } from '../errors.js';
 import { InventoryService } from '../services/inventory.js';
 

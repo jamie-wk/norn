@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { Hono } from 'hono';
 import { requestId } from 'hono/request-id';
-import { getCorrelationId } from '@norn/client';
-import { NornConfigError } from '@norn/core';
+import { getCorrelationId } from '@norn-ts/client';
+import { NornConfigError } from '@norn-ts/core';
 import { temporal, type NornEnv } from '../src/index.ts';
 import { fakeClient } from './helpers.ts';
 

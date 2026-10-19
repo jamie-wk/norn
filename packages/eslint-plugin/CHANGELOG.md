@@ -1,4 +1,4 @@
-# @norn/eslint-plugin
+# @norn-ts/eslint-plugin
 
 ## 1.0.0
 

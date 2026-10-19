@@ -10,7 +10,7 @@ Workflows talk to the outside world through three kinds of messages. In Norn eac
 
 ```ts
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Update, Validate, Workflow } from '@norn/workflow';
+import { Query, Signal, Update, Validate, Workflow } from '@norn-ts/workflow';
 
 export class OrderStateError extends Error {
   override name = 'OrderStateError';

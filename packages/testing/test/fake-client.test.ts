@@ -10,7 +10,7 @@ import {
   signal,
   type,
   update,
-} from '@norn/core';
+} from '@norn-ts/core';
 import { createFakeClient } from '../src/index.ts';
 
 const Orders = defineWorkflow({

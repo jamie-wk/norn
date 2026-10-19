@@ -9,7 +9,7 @@ import {
   tagMethod,
   toActivityOptions,
   type ActivityOptions,
-} from '@norn/core';
+} from '@norn-ts/core';
 import { isInjectionKey, type InjectionKey } from './tokens.js';
 
 export type Scope = 'singleton' | 'activity';

@@ -1,5 +1,5 @@
 import { DefaultLogger, Runtime, makeTelemetryFilterString, type LogLevel } from '@temporalio/worker';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 
 export interface InstallRuntimeOptions {
   /** Serve Prometheus metrics for the SDK and Temporal core on this address, e.g. `'0.0.0.0:9464'` or `'[::]:9464'`. Defaults to `NORN_METRICS_ADDRESS`. */

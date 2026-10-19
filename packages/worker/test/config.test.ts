@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { resolveWorkerConfig } from '../src/index.ts';
 import { registry } from './fixtures/registry.ts';
 

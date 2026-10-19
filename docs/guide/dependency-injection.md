@@ -10,7 +10,7 @@ A service is a class decorated with `@Service`. Its constructor parameters are i
 
 ```ts
 // src/services/http.ts
-import { Service, cancellationSignal, getCorrelationId } from '@norn/activity';
+import { Service, cancellationSignal, getCorrelationId } from '@norn-ts/activity';
 import { AppConfig } from './config.js';
 
 @Service()
@@ -45,7 +45,7 @@ TypeScript interfaces don't exist at runtime, so the container can't use them as
 
 ```ts
 // src/services/transfers.ts
-import { Service, token } from '@norn/activity';
+import { Service, token } from '@norn-ts/activity';
 
 export interface TransferService {
   send(transfer: Transfer): Promise<TransferResult>;
@@ -76,8 +76,8 @@ Some dependencies are not classes you own: configuration objects, a `pg.Pool`, a
 
 ```ts
 // src/providers.ts
-import { provide } from '@norn/activity';
-import { createClient } from '@norn/client';
+import { provide } from '@norn-ts/activity';
+import { createClient } from '@norn-ts/client';
 import pg from 'pg';
 import { AppConfig, Db, TemporalClient } from './services/tokens.js';
 
@@ -198,7 +198,7 @@ See [Testing](/guide/testing#testing-activities) for running those functions ins
 `createContainer()` is what the generated code calls; you can use it directly in scripts and unit tests:
 
 ```ts
-import { createContainer, provide } from '@norn/activity';
+import { createContainer, provide } from '@norn-ts/activity';
 
 await using container = createContainer({
   providers: [provide(AppConfig, () => ({ providerUrl: 'http://localhost:4010', httpTimeoutMs: 1_000 }))],
@@ -212,4 +212,4 @@ const http = await container.resolve(HttpClient);
 const activities = await container.activities();
 ```
 
-`deps` on an entry is what `norn gen` writes; it takes precedence over `inject`. See the [`@norn/activity` README](https://github.com/jamie-wk/norn/tree/main/packages/activity#createcontaineroptions) for every option.
+`deps` on an entry is what `norn gen` writes; it takes precedence over `inject`. See the [`@norn-ts/activity` README](https://github.com/jamie-wk/norn/tree/main/packages/activity#createcontaineroptions) for every option.

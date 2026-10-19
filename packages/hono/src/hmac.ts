@@ -1,5 +1,5 @@
 import type { Context } from 'hono';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { decodeBase64, isHeaderName } from './internal.js';
 
 type ImportedKey = Awaited<ReturnType<typeof globalThis.crypto.subtle.importKey>>;

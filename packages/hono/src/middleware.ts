@@ -1,6 +1,6 @@
 import type { Context, MiddlewareHandler } from 'hono';
-import { createClient, runWithCorrelationId, type ClientOptions, type NornClient } from '@norn/client';
-import { NornConfigError } from '@norn/core';
+import { createClient, runWithCorrelationId, type ClientOptions, type NornClient } from '@norn-ts/client';
+import { NornConfigError } from '@norn-ts/core';
 import { DEFAULT_CORRELATION_HEADER, isHeaderName, isValidCorrelationId, withHeader } from './internal.js';
 
 /** Context variables set by {@link temporal}. */

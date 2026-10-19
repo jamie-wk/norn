@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { Workflow, defineActivities, implement, activityName } from '../src/index.ts';
 
 class BadInput extends Error {}

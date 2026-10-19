@@ -8,7 +8,7 @@ import {
   type ScheduleOverlap,
   type WorkflowClass,
   type WorkflowInput,
-} from '@norn/core';
+} from '@norn-ts/core';
 import {
   validateHandlerOptions,
   validateWorkflowOptions,

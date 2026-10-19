@@ -1,4 +1,4 @@
-# @norn/activity
+# @norn-ts/activity
 
 Activities as decorated classes for [Norn](https://jamie-wk.github.io/norn/), with a small dependency-injection container that builds their services once, scopes some of them to a single execution and disposes everything on shutdown.
 
@@ -7,21 +7,21 @@ Activities as decorated classes for [Norn](https://jamie-wk.github.io/norn/), wi
 - **Error mapping**: thrown errors become `ApplicationFailure`s whose type is the error's name, so workflows can match them with `asFailure()`; optional HTTP-status and custom rules decide what is retried.
 - **Context helpers**: `idempotencyKey()`, `heartbeat()`, `lastHeartbeat()`, `cancellationSignal()`, `activityInfo()` and `getCorrelationId()`.
 
-This package runs on the worker side (Node), never in the workflow sandbox. Workflows call activities through `useActivities()` from `@norn/workflow`.
+This package runs on the worker side (Node), never in the workflow sandbox. Workflows call activities through `useActivities()` from `@norn-ts/workflow`.
 
 ## Install
 
 ```sh
-pnpm add @norn/activity @temporalio/activity @temporalio/common
+pnpm add @norn-ts/activity @temporalio/activity @temporalio/common
 ```
 
-Requires Node 22.18+ and TypeScript with TC39 standard decorators (no `experimentalDecorators`). Add `@norn/cli` for `norn gen` and `@norn/worker` to run activities.
+Requires Node 22.18+ and TypeScript with TC39 standard decorators (no `experimentalDecorators`). Add `@norn-ts/cli` for `norn gen` and `@norn-ts/worker` to run activities.
 
 ## Example
 
 ```ts
 // src/services/payment-gateway.ts
-import { Service, token } from '@norn/activity';
+import { Service, token } from '@norn-ts/activity';
 import { HttpClient } from './http.js';
 
 export interface PaymentGateway {
@@ -40,7 +40,7 @@ export class HttpPaymentGateway implements PaymentGateway {
 
 ```ts
 // src/activities/payment.activities.ts
-import { Activities, Activity, NonRetryable } from '@norn/activity';
+import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
 import { PaymentDeclinedError } from '../domain.js';
 import { PaymentGateway } from '../services/payment-gateway.js';
 
@@ -65,8 +65,8 @@ export class PaymentActivities {
 
 ```ts
 // src/providers.ts: values the container can't build from a class
-import { provide } from '@norn/activity';
-import { createClient } from '@norn/client';
+import { provide } from '@norn-ts/activity';
+import { createClient } from '@norn-ts/client';
 
 export const providers = [
   provide(AppConfig, () => loadConfig()),
@@ -188,7 +188,7 @@ interface Container extends AsyncDisposable {
 The generated `.norn/container.ts` calls this with every `@Service` and `@Activities` class and their dependency lists (`deps` on an entry takes precedence over `inject`), and the worker calls `activities()`. You can call it directly in scripts and unit tests:
 
 ```ts
-import { createContainer, provide } from '@norn/activity';
+import { createContainer, provide } from '@norn-ts/activity';
 
 await using container = createContainer({
   providers: [provide(AppConfig, () => ({ providerUrl: 'http://localhost:4010', httpTimeoutMs: 1_000 }))],
@@ -220,7 +220,7 @@ Every activity the container builds converts thrown errors with `mapActivityErro
 4. With `errors.http: true`, an error with an HTTP `status`, `statusCode` or `response.status` from 400 to 499 is final, except 408 and 429.
 5. Everything else is a retryable `ApplicationFailure`.
 
-The failure's type is `errorTypeOf(error)` from `@norn/core`: the error's `name` if set, else its class name. Set `override name = 'PaymentDeclinedError'` on error classes so the name survives minification and matches `asFailure(error, PaymentDeclinedError)` in workflows. The original stack is kept.
+The failure's type is `errorTypeOf(error)` from `@norn-ts/core`: the error's `name` if set, else its class name. Set `override name = 'PaymentDeclinedError'` on error classes so the name survives minification and matches `asFailure(error, PaymentDeclinedError)` in workflows. The original stack is kept.
 
 ```ts
 const worker = await createWorker({ registry, container: { errors: { http: true, map: (error) => (error instanceof RateLimitError ? 'retryable' : undefined) } } });
@@ -246,7 +246,7 @@ Call these inside a running activity, or in services it calls. Outside one they 
 | `heartbeat(details?)` | Records progress; required more often than the `heartbeat` timeout. |
 | `lastHeartbeat<T>()` | Details of the last heartbeat from a previous attempt, so a retry can resume. |
 | `cancellationSignal()` | An `AbortSignal` that fires when the activity is cancelled; pass it to `fetch()`. |
-| `getCorrelationId()` | The correlation ID the workflow carried, if any (set by `@norn/worker`'s activity interceptor). |
+| `getCorrelationId()` | The correlation ID the workflow carried, if any (set by `@norn-ts/worker`'s activity interceptor). |
 | `runWithCorrelationId(id, fn)` | Runs `fn` with a correlation ID. |
 
 ```ts
@@ -262,14 +262,14 @@ async importRows(fileId: string) {
 }
 ```
 
-The correlation ID is stored in one process-wide `AsyncLocalStorage` shared with `@norn/client`, so a client call made from an activity carries the same ID onward, even with separate copies of the packages installed.
+The correlation ID is stored in one process-wide `AsyncLocalStorage` shared with `@norn-ts/client`, so a client call made from an activity carries the same ID onward, even with separate copies of the packages installed.
 
 ## API
 
 | Export | Kind |
 | --- | --- |
 | `Activities(options?)`, `ActivitiesOptions` | Class decorator |
-| `Activity(options?)`, `ActivityOptions`, `Duration` | Method decorator (option types re-exported from `@norn/core`) |
+| `Activity(options?)`, `ActivityOptions`, `Duration` | Method decorator (option types re-exported from `@norn-ts/core`) |
 | `NonRetryable(errors?)`, `ErrorClass` | Method or class decorator |
 | `Service(options?)`, `ServiceOptions`, `Scope` | Class decorator |
 | `token<T>(name)`, `Token<T>`, `InjectionKey<T>`, `Resolved<K>` | Injection keys |

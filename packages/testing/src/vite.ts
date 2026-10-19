@@ -8,7 +8,7 @@
  * ```ts
  * // vitest.config.ts
  * import { defineConfig } from 'vitest/config';
- * import { standardDecorators } from '@norn/testing/vite';
+ * import { standardDecorators } from '@norn-ts/testing/vite';
  *
  * export default defineConfig({ plugins: [standardDecorators()] });
  * ```

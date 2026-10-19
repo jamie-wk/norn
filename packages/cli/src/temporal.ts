@@ -40,7 +40,7 @@ async function importClient(): Promise<typeof import('@temporalio/client')> {
   try {
     return await import('@temporalio/client');
   } catch (error) {
-    throw new Error(`This command needs @temporalio/client. Install it next to @norn/cli. (${(error as Error).message})`, { cause: error });
+    throw new Error(`This command needs @temporalio/client. Install it next to @norn-ts/cli. (${(error as Error).message})`, { cause: error });
   }
 }
 

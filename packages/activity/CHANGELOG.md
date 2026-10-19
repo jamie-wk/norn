@@ -1,4 +1,4 @@
-# @norn/activity
+# @norn-ts/activity
 
 ## 1.0.0
 

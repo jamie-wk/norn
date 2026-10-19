@@ -1,6 +1,6 @@
 import type { Context, Env, ErrorHandler } from 'hono';
-import { getCorrelationId, toNornError } from '@norn/client';
-import { NornConfigError, NornError } from '@norn/core';
+import { getCorrelationId, toNornError } from '@norn-ts/client';
+import { NornConfigError, NornError } from '@norn-ts/core';
 import { DEFAULT_CORRELATION_HEADER, isHeaderName, withHeader } from './internal.js';
 
 /** Error codes produced by Norn and this package. Custom `NornError` codes are allowed too. */
@@ -134,7 +134,7 @@ const INTERNAL_MESSAGE = 'Internal Server Error';
 /**
  * An `app.onError()` handler that turns errors into JSON responses:
  *
- * - `NornError`s (from `@norn/client`, `@norn/core` or your own) → their `status` (or the
+ * - `NornError`s (from `@norn-ts/client`, `@norn-ts/core` or your own) → their `status` (or the
  *   configured override) and `{ error: { code, message, details, correlationId } }`.
  * - Raw Temporal client errors are converted with `toNornError()` first, so a gRPC
  *   `UNAVAILABLE` still becomes 503 `TEMPORAL_UNAVAILABLE`.

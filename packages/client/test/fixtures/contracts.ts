@@ -1,5 +1,5 @@
 // The shape `norn gen` emits: types come from the classes through `import type` only.
-import { contract } from '@norn/core';
+import { contract } from '@norn-ts/core';
 import type { CartWorkflow, EchoWorkflow, OrderWorkflow, TickWorkflow } from './workflow-classes.ts';
 
 export const Orders = contract<typeof OrderWorkflow>()({

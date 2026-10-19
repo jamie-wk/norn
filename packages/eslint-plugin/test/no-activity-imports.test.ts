@@ -8,7 +8,7 @@ ruleTester.run('no-activity-imports', rule, {
     // Workflow-safe packages and plain relative modules.
     `import { sleep, condition } from '@temporalio/workflow';`,
     `import { ApplicationFailure } from '@temporalio/common';`,
-    `import { Workflow, Signal, useActivities } from '@norn/workflow';`,
+    `import { Workflow, Signal, useActivities } from '@norn-ts/workflow';`,
     `import { payments } from './registry.ts';`,
     `import { orderContract } from '../contracts/orders.js';`,
     // Names that only resemble the activity/service patterns.
@@ -29,15 +29,15 @@ ruleTester.run('no-activity-imports', rule, {
     `export type * from './payments.activities.ts';`,
     `import type Fs = require('fs');`,
     `import type { Client } from '@temporalio/client';`,
-    `import type { ActivityContext } from '@norn/activity';`,
+    `import type { ActivityContext } from '@norn-ts/activity';`,
     // Inline `type` specifiers are fine when the module itself may be loaded.
     `import { type ActivityRef } from './registry.ts';`,
-    `import { type Duration, ms } from '@norn/core';`,
+    `import { type Duration, ms } from '@norn-ts/core';`,
     `export { type Contract } from './contracts.ts';`,
     // Decorated workflow class that imports activity *types* only.
     `
 import type { PaymentActivities } from './activities/payments.ts';
-import { Workflow, useActivities } from '@norn/workflow';
+import { Workflow, useActivities } from '@norn-ts/workflow';
 import { payments } from './registry.ts';
 
 @Workflow({ taskQueue: 'orders' })
@@ -57,7 +57,7 @@ export class OrderWorkflow {
     // `onlyAllowed`: everything in the default or configured allow list (and its subpaths) passes.
     { code: `import { sleep } from '@temporalio/workflow';`, options: [{ onlyAllowed: true }] },
     { code: `import { x } from '@temporalio/workflow/lib/interfaces';`, options: [{ onlyAllowed: true }] },
-    { code: `import { Duration } from '@norn/core';`, options: [{ onlyAllowed: true }] },
+    { code: `import { Duration } from '@norn-ts/core';`, options: [{ onlyAllowed: true }] },
     { code: `import { payments } from './registry.ts';`, options: [{ onlyAllowed: true }] },
     { code: `import { z } from 'zod'; import { y } from 'zod/v4';`, options: [{ onlyAllowed: true, allow: ['zod'] }] },
     { code: `import type { Big } from 'big.js';`, options: [{ onlyAllowed: true }] },
@@ -67,7 +67,7 @@ export class OrderWorkflow {
     { code: `import { x } from '@acme/io/helpers';`, options: [{ deny: ['@acme/io/client'] }] },
     // Package names that merely start with a denied name.
     `import { x } from '@temporalio/client-extra';`,
-    `import { x } from '@norn/workflow-utils';`,
+    `import { x } from '@norn-ts/workflow-utils';`,
   ],
   invalid: [
     // Node built-ins, with and without the node: prefix, including subpaths and node:-only modules.
@@ -143,20 +143,20 @@ export class OrderWorkflow {
       '@temporalio/client',
       '@temporalio/worker',
       '@temporalio/testing',
-      '@norn/activity',
-      '@norn/worker',
-      '@norn/client',
-      '@norn/testing',
-      '@norn/hono',
-      '@norn/cli',
+      '@norn-ts/activity',
+      '@norn-ts/worker',
+      '@norn-ts/client',
+      '@norn-ts/testing',
+      '@norn-ts/hono',
+      '@norn-ts/cli',
     ].map((source) => ({
       code: `import { x } from '${source}';`,
       errors: [{ messageId: 'denied', data: { source } }],
     })),
     { code: `import { x } from '@temporalio/worker/lib/bundler';`, errors: [{ messageId: 'denied' }] },
-    { code: `import { x } from '@norn/testing/vite';`, options: [{ onlyAllowed: true }], errors: [{ messageId: 'denied' }] },
+    { code: `import { x } from '@norn-ts/testing/vite';`, options: [{ onlyAllowed: true }], errors: [{ messageId: 'denied' }] },
     { code: `const { Connection } = require('@temporalio/client');`, errors: [{ messageId: 'denied' }] },
-    { code: `export * from '@norn/activity';`, errors: [{ messageId: 'denied' }] },
+    { code: `export * from '@norn-ts/activity';`, errors: [{ messageId: 'denied' }] },
     // `deny` adds to the defaults (and matches subpaths).
     {
       code: `import axios from 'axios'; import { get } from 'got/dist'; import { Client } from '@temporalio/client';`,
@@ -209,7 +209,7 @@ export class OrderWorkflow {
       code: `
 import { readFileSync } from 'node:fs';
 import { charge } from './activities/payments.ts';
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 
 @Workflow()
 export class Orders {

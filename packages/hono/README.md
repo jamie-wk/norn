@@ -1,4 +1,4 @@
-# @norn/hono
+# @norn-ts/hono
 
 [Hono](https://hono.dev) integration for [Norn](https://jamie-wk.github.io/norn/): a middleware that puts a typed Temporal client and a correlation ID on every request, an error handler that turns Norn and Temporal errors into JSON responses with the right status, a handler that turns inbound webhooks into signals and updates, and a Temporal codec server for the Temporal UI and CLI.
 
@@ -10,16 +10,16 @@
 ## Install
 
 ```sh
-pnpm add @norn/hono @norn/client hono @temporalio/client @temporalio/common
+pnpm add @norn-ts/hono @norn-ts/client hono @temporalio/client @temporalio/common
 ```
 
-Requires Node 22.18+ for the client parts. The package itself uses only Web-standard APIs (`Request`, `Response`, `crypto.subtle`, `TextEncoder`, `atob`/`btoa`), so it runs on Node, Bun and Deno; `@norn/hono/codec-server` has no Temporal client or Node dependency and also runs on edge runtimes (see [Codec server](#codec-server)).
+Requires Node 22.18+ for the client parts. The package itself uses only Web-standard APIs (`Request`, `Response`, `crypto.subtle`, `TextEncoder`, `atob`/`btoa`), so it runs on Node, Bun and Deno; `@norn-ts/hono/codec-server` has no Temporal client or Node dependency and also runs on edge runtimes (see [Codec server](#codec-server)).
 
 ## Setup
 
 ```ts
 import { Hono } from 'hono';
-import { nornErrorHandler, temporal, type NornEnv } from '@norn/hono';
+import { nornErrorHandler, temporal, type NornEnv } from '@norn-ts/hono';
 import { Orders } from './.norn/contracts.js';
 
 const app = new Hono<NornEnv>();
@@ -70,7 +70,7 @@ interface TemporalMiddleware extends MiddlewareHandler<NornEnv> {
 type NornEnv = { Variables: { norn: NornClient; correlationId: string } };
 ```
 
-- Pass an existing client (`{ client: createClient(...) }`) or `ClientOptions` from `@norn/client` (`address`, `namespace`, `apiKey`, `tls`, `dataConverter`, ...). With options, one client is created lazily on the first request and reused; `close()` closes it. `close()` never closes a client you passed in.
+- Pass an existing client (`{ client: createClient(...) }`) or `ClientOptions` from `@norn-ts/client` (`address`, `namespace`, `apiKey`, `tls`, `dataConverter`, ...). With options, one client is created lazily on the first request and reused; `close()` closes it. `close()` never closes a client you passed in.
 - Use `new Hono<NornEnv>()` to get `c.var.norn` and `c.var.correlationId` typed. To combine with your own variables: `new Hono<{ Variables: NornVariables & { user: User } }>()`.
 
 ### Correlation IDs
@@ -84,7 +84,7 @@ Every request runs inside `runWithCorrelationId(id)`, so any workflow started, s
 
 Incoming IDs are only accepted if they are 1–128 characters of `[A-Za-z0-9._:-]`; anything else is skipped (the next candidate is tried, ending with a fresh UUID), so callers cannot inject arbitrary text into your logs and headers. Set `trustIncoming: false` to always generate a fresh ID, for public APIs where callers should not choose it.
 
-The ID is available as `c.var.correlationId` and `getCorrelationId()` (re-exported from `@norn/client`), and echoed in the `x-correlation-id` response header on every response, including errors and 404s (a header the handler set itself is kept).
+The ID is available as `c.var.correlationId` and `getCorrelationId()` (re-exported from `@norn-ts/client`), and echoed in the `x-correlation-id` response header on every response, including errors and 404s (a header the handler set itself is kept).
 
 ## Errors
 
@@ -161,7 +161,7 @@ interface ErrorFormatInfo { status: number; correlationId: string; body: NornErr
 `temporalWebhook()` turns inbound webhooks (payment providers, carriers, CI, ...) into signals and updates:
 
 ```ts
-import { hmacSha256Verifier, signalAction, temporalWebhook } from '@norn/hono';
+import { hmacSha256Verifier, signalAction, temporalWebhook } from '@norn-ts/hono';
 
 app.post(
   '/webhooks/payments',
@@ -277,7 +277,7 @@ hmacSha256Verifier({ secret: env.SHOPIFY_WEBHOOK_SECRET, header: 'x-shopify-hmac
 For schemes that sign more than the body, such as timestamped signatures (`t=<unix>,v1=<hex>` over `"<t>.<body>"`), write `verify` with the exported `hmacSha256` and `timingSafeEqual`, and reject old timestamps to stop replays:
 
 ```ts
-import { hmacSha256, timingSafeEqual } from '@norn/hono';
+import { hmacSha256, timingSafeEqual } from '@norn-ts/hono';
 
 const toHex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 const utf8 = new TextEncoder();
@@ -298,12 +298,12 @@ Mount webhook routes before any middleware that reads the body (hono caches pars
 
 ## Codec server
 
-When payloads are encrypted (for example with `createEncryptionCodec` / `clientDataConverter` from `@norn/codec`), the Temporal UI and CLI show ciphertext until they can call a [codec server](https://docs.temporal.io/production-deployment/data-encryption). `codecServer()` is one, as a Hono sub-app:
+When payloads are encrypted (for example with `createEncryptionCodec` / `clientDataConverter` from `@norn-ts/codec`), the Temporal UI and CLI show ciphertext until they can call a [codec server](https://docs.temporal.io/production-deployment/data-encryption). `codecServer()` is one, as a Hono sub-app:
 
 ```ts
 import { Hono } from 'hono';
-import { codecServer } from '@norn/hono/codec-server';
-import { createEncryptionCodec } from '@norn/codec';
+import { codecServer } from '@norn-ts/hono/codec-server';
+import { createEncryptionCodec } from '@norn-ts/codec';
 
 const app = new Hono();
 app.route(
@@ -366,14 +366,14 @@ Point them at the mount path; they append `/encode` and `/decode`.
 
 ### Edge runtimes
 
-`@norn/hono/codec-server` imports only hono and `@norn/core` (no Temporal client, no Node APIs), and `createEncryptionCodec` uses WebCrypto only, so the codec server can run on Cloudflare Workers, Deno Deploy, Vercel Edge and similar:
+`@norn-ts/hono/codec-server` imports only hono and `@norn-ts/core` (no Temporal client, no Node APIs), and `createEncryptionCodec` uses WebCrypto only, so the codec server can run on Cloudflare Workers, Deno Deploy, Vercel Edge and similar:
 
 ```ts
 // Cloudflare Workers
 import { env } from 'cloudflare:workers';
 import { Hono } from 'hono';
-import { codecServer } from '@norn/hono/codec-server';
-import { createEncryptionCodec } from '@norn/codec/encryption';
+import { codecServer } from '@norn-ts/hono/codec-server';
+import { createEncryptionCodec } from '@norn-ts/codec/encryption';
 
 type Env = { Bindings: { NORN_KEY_2026_10: string; CODEC_TOKEN: string } };
 
@@ -388,7 +388,7 @@ app.route(
 export default app;
 ```
 
-Import `createEncryptionCodec` from `@norn/codec/encryption` there: it only uses WebCrypto, while the main `@norn/codec` entry also contains the worker helper `resolvePayloadConverterPath()`, which imports `node:url`. The main `@norn/hono` entry needs the Temporal client, which requires Node (or Bun/Deno with Node compatibility).
+Import `createEncryptionCodec` from `@norn-ts/codec/encryption` there: it only uses WebCrypto, while the main `@norn-ts/codec` entry also contains the worker helper `resolvePayloadConverterPath()`, which imports `node:url`. The main `@norn-ts/hono` entry needs the Temporal client, which requires Node (or Bun/Deno with Node compatibility).
 
 ## Security notes
 
@@ -396,7 +396,7 @@ Import `createEncryptionCodec` from `@norn/codec/encryption` there: it only uses
 - **Error responses** never include stacks or causes. `NornError` messages and details are designed to be returned to callers; messages of other errors are hidden unless you set `expose`. Note that 5xx Norn errors (`WORKFLOW_FAILED`, `QUERY_FAILED`, `TEMPORAL_UNAVAILABLE`, `CONFIG`) do include their message; use `format` to hide them if your workflow failure messages are internal.
 - **Webhooks**: `verify` is required; `verify: false` is for endpoints already verified upstream, since without verification anyone can signal your workflows. Bodies over `maxBodyBytes` (default 1 MiB) are refused before they are fully read. Signatures are checked over the exact bytes received, with a constant-time comparison. HMAC alone does not stop replays: prefer providers' timestamped schemes and reject old timestamps, and deduplicate by event ID. Keep webhook secrets in your secret manager and rotate them with your provider.
 - **Codec server**: anyone who can call `/decode` can read every payload you send it. `auth` is required (for Temporal Cloud, verify the passed access token); restrict `namespaces` and keep `cors.origins` to your UI origins. `'*'` never sends credentials, so it can't be combined with cookie-based auth. Serve it over HTTPS only. It never logs payloads; make sure your own logging (`onError`, access logs with bodies) does not either.
-- The codec server holds your encryption keys: deploy it with the same care as workers, and see `@norn/codec`'s [key rotation](../codec/README.md#key-rotation) notes.
+- The codec server holds your encryption keys: deploy it with the same care as workers, and see `@norn-ts/codec`'s [key rotation](../codec/README.md#key-rotation) notes.
 
 ## API
 
@@ -412,6 +412,6 @@ Import `createEncryptionCodec` from `@norn/codec/encryption` there: it only uses
 | `WebhookAction<C>`, `WebhookSignalAction<C>`, `WebhookUpdateAction<C>`, `WebhookUpdateResult<C, K>`, `WebhookOptions`, `WebhookMapResult`, `WebhookFailureInfo`, `WebhookFailurePolicy` | Types |
 | `hmacSha256Verifier(options)` | `verify` for HMAC-SHA256 header signatures |
 | `hmacSha256(secret, data)`, `timingSafeEqual(a, b)` | WebCrypto helpers for custom verifiers |
-| `codecServer(options)` | Codec server sub-app (also `@norn/hono/codec-server`) |
+| `codecServer(options)` | Codec server sub-app (also `@norn-ts/hono/codec-server`) |
 | `CodecServerOptions`, `JsonPayload`, `DEFAULT_CODEC_ORIGINS` | Codec server types and defaults |
-| `getCorrelationId()`, `runWithCorrelationId(id, fn)`, `NornClient` | Re-exported from `@norn/client` |
+| `getCorrelationId()`, `runWithCorrelationId(id, fn)`, `NornClient` | Re-exported from `@norn-ts/client` |

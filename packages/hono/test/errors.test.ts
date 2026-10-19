@@ -13,7 +13,7 @@ import {
   WorkflowClosedError,
   WorkflowFailedError,
   WorkflowNotFoundError,
-} from '@norn/core';
+} from '@norn-ts/core';
 import { nornErrorHandler, temporal, type NornEnv, type NornErrorHandlerOptions } from '../src/index.ts';
 import { fakeClient } from './helpers.ts';
 

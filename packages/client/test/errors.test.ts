@@ -22,7 +22,7 @@ import {
   WorkflowAlreadyStartedError,
   WorkflowFailedError,
   WorkflowNotFoundError,
-} from '@norn/core';
+} from '@norn-ts/core';
 import { toNornError } from '../src/index.ts';
 
 const status = { UNAVAILABLE: 14, DEADLINE_EXCEEDED: 4, NOT_FOUND: 5, RESOURCE_EXHAUSTED: 8 } as const;

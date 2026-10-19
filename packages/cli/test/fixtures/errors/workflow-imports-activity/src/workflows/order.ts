@@ -1,4 +1,4 @@
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 import { CURRENCY } from '../activities/payment.js';
 import type { PaymentActivities } from '../activities/payment.js';
 

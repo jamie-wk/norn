@@ -1,5 +1,5 @@
-import { provide } from '@norn/activity';
-import { createClient } from '@norn/client';
+import { provide } from '@norn-ts/activity';
+import { createClient } from '@norn-ts/client';
 import { TemporalClient } from './activities/loyalty.activities.ts';
 import { AppConfig, loadConfig } from './services/config.ts';
 

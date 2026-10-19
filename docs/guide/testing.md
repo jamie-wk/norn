@@ -1,6 +1,6 @@
 # Testing
 
-`@norn/testing` covers four levels of tests:
+`@norn-ts/testing` covers four levels of tests:
 
 | Level | Tool | Needs Temporal |
 | --- | --- | --- |
@@ -11,12 +11,12 @@
 
 ## Setup: Vitest and decorators
 
-Vitest uses Vite, which compiles TypeScript with Oxc and leaves TC39 decorators untouched; Node can't run them yet. Add the plugin from `@norn/testing/vite`, which lowers decorators with esbuild before Vite's own transform:
+Vitest uses Vite, which compiles TypeScript with Oxc and leaves TC39 decorators untouched; Node can't run them yet. Add the plugin from `@norn-ts/testing/vite`, which lowers decorators with esbuild before Vite's own transform:
 
 ```ts
 // vitest.config.ts
 import { defineConfig } from 'vitest/config';
-import { standardDecorators } from '@norn/testing/vite';
+import { standardDecorators } from '@norn-ts/testing/vite';
 
 export default defineConfig({
   plugins: [standardDecorators()],
@@ -39,7 +39,7 @@ Workflow code itself is bundled by the worker with its own compiler settings, so
 
 ```ts
 import { expect, it } from 'vitest';
-import { createTestEnv, mockActivities } from '@norn/testing';
+import { createTestEnv, mockActivities } from '@norn-ts/testing';
 import { NotificationActivities, PaymentActivities } from '../.norn/activities.js';
 import { OrderWorkflow } from '../.norn/contracts.js';
 import { registry } from '../.norn/registry.js';
@@ -88,7 +88,7 @@ Servers are downloaded on first use and cached. To use existing binaries (offlin
 | `searchAttributes` | Extra search attributes to register on the server, in addition to the registry's. |
 | `taskQueues` | Poll a subset of the registry's queues. |
 | `worker` | `false` to skip the worker, to test starts and signals only. |
-| `dataConverter`, `clientDataConverter` | For workflows using [`@norn/codec`](/guide/encryption). |
+| `dataConverter`, `clientDataConverter` | For workflows using [`@norn-ts/codec`](/guide/encryption). |
 | `serverPath`, `logLevel` | See above. |
 
 The environment has `client` (a `NornClient`), `workflow(contract)` (shorthand for `client.workflow()`), `worker`, `temporal` (the SDK's `TestWorkflowEnvironment`), `mode`, `sleep()` and `teardown()`. Dispose it with `await using` or `await env.teardown()`.
@@ -110,11 +110,11 @@ Mock only what you need: the rest of the reference's activities, and every other
 
 ### Vitest helpers
 
-`@norn/testing/vitest` has the same `mockActivities()`, but every mock is a `vi.fn()` so you get `toHaveBeenCalledWith` and friends, plus `useTestEnv()`, which creates one environment per test file in `beforeAll` and tears it down in `afterAll`:
+`@norn-ts/testing/vitest` has the same `mockActivities()`, but every mock is a `vi.fn()` so you get `toHaveBeenCalledWith` and friends, plus `useTestEnv()`, which creates one environment per test file in `beforeAll` and tears it down in `afterAll`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { mockActivities, useTestEnv } from '@norn/testing/vitest';
+import { mockActivities, useTestEnv } from '@norn-ts/testing/vitest';
 
 const notify = mockActivities(InvitationActivities, {
   sendInvitation: async () => ({ messageId: 'm1' }),
@@ -170,8 +170,8 @@ API routes shouldn't need a Temporal server to test. `createFakeClient()` is an 
 
 ```ts
 import { expect, it } from 'vitest';
-import { createFakeClient } from '@norn/testing';
-import { UpdateRejectedError } from '@norn/client';
+import { createFakeClient } from '@norn-ts/testing';
+import { UpdateRejectedError } from '@norn-ts/client';
 import { buildApp } from '../src/api.js';
 import { PaymentWorkflow } from '../.norn/contracts.js';
 

@@ -13,7 +13,7 @@ export const workflowInterceptorModule = fileURLToPath(new URL(`./workflow-inter
 export interface BundleWorkflowsOptions {
   /** Also write the bundle to this file, for `workflowBundle: { codePath }` in production. */
   outFile?: string;
-  /** Required when workers use a custom payload converter, such as `createDataConverter()` from `@norn/codec`. */
+  /** Required when workers use a custom payload converter, such as `createDataConverter()` from `@norn-ts/codec`. */
   payloadConverterPath?: string;
   /** Extra workflow interceptor modules. */
   workflowInterceptorModules?: string[];

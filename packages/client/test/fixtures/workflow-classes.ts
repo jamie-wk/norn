@@ -1,5 +1,5 @@
 import { ApplicationFailure, condition, sleep } from '@temporalio/workflow';
-import { Query, Signal, Update, Validate, Workflow, setSearchAttributes } from '@norn/workflow';
+import { Query, Signal, Update, Validate, Workflow, setSearchAttributes } from '@norn-ts/workflow';
 
 export class InvalidItemError extends Error {
   override name = 'InvalidItemError';

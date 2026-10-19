@@ -2,14 +2,14 @@
  * A Temporal codec server (the protocol the Temporal UI and `temporal` CLI use to decode
  * payloads), as a Hono sub-app.
  *
- * This module depends only on hono and `@norn/core`, not on the Temporal client, so it can run on
- * edge runtimes. Import it as `@norn/hono/codec-server` there.
+ * This module depends only on hono and `@norn-ts/core`, not on the Temporal client, so it can run on
+ * edge runtimes. Import it as `@norn-ts/hono/codec-server` there.
  *
  * @module
  */
 import { Hono, type Context, type Env } from 'hono';
 import type { Payload, PayloadCodec } from '@temporalio/common';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { decodeBase64, encodeBase64, isPlainObject, isPositiveInteger, readBody } from './internal.js';
 
 /** A payload in proto3 JSON form, as the codec server protocol sends it: bytes are base64. */

@@ -11,7 +11,7 @@ import {
   WorkflowClosedError,
   WorkflowFailedError,
   WorkflowNotFoundError,
-} from '@norn/core';
+} from '@norn-ts/core';
 import { createLocalEnv, startWorkers, type RunningWorkers } from '../../../tooling/test-support/temporal.ts';
 import { createClient, runWithCorrelationId, type NornClient } from '../src/index.ts';
 import { Carts, Echo, Orders, Tick } from './fixtures/contracts.ts';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CORRELATION_HEADER } from '@norn/core';
+import { CORRELATION_HEADER } from '@norn-ts/core';
 import { interceptors } from '../src/workflow-interceptors.ts';
 
 const header = { metadata: {}, data: new Uint8Array([1, 2, 3]) };

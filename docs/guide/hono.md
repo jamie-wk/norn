@@ -1,14 +1,14 @@
 # Hono integration
 
-[`@norn/hono`](https://github.com/jamie-wk/norn/tree/main/packages/hono#readme) connects a [Hono](https://hono.dev) API to Temporal: a middleware that puts a Norn client on every request with a correlation ID, an error handler that turns Norn errors into JSON responses with the right status, a webhook handler that routes provider events to signals and updates, and a codec server for the Temporal UI.
+[`@norn-ts/hono`](https://github.com/jamie-wk/norn/tree/main/packages/hono#readme) connects a [Hono](https://hono.dev) API to Temporal: a middleware that puts a Norn client on every request with a correlation ID, an error handler that turns Norn errors into JSON responses with the right status, a webhook handler that routes provider events to signals and updates, and a codec server for the Temporal UI.
 
 ```sh
-pnpm add @norn/hono @norn/client hono @temporalio/client @temporalio/common
+pnpm add @norn-ts/hono @norn-ts/client hono @temporalio/client @temporalio/common
 ```
 
 ```ts
 import { Hono } from 'hono';
-import { hmacSha256Verifier, nornErrorHandler, signalAction, temporal, temporalWebhook, type NornEnv } from '@norn/hono';
+import { hmacSha256Verifier, nornErrorHandler, signalAction, temporal, temporalWebhook, type NornEnv } from '@norn-ts/hono';
 import { PaymentWorkflow } from '../.norn/contracts.js';
 
 const app = new Hono<NornEnv>();
@@ -65,7 +65,7 @@ If your app has its own variables, combine the types: `new Hono<{ Variables: Nor
 | `requestIdHeader` | `x-request-id` | Fallback request header; `false` disables it. |
 | `trustIncoming` | `true` | Accept IDs sent by callers (after validation). Set `false` on public APIs. |
 
-The ID is the first valid value from the correlation header, the request-ID header, or Hono's `requestId()` middleware variable; otherwise a fresh UUID. Valid means 1 to 128 characters of `[A-Za-z0-9._:-]`. The rest of the request runs inside `runWithCorrelationId()`, so every workflow call carries it into workflows and activities, and `getCorrelationId()` (re-exported from `@norn/hono`) works anywhere in the handler.
+The ID is the first valid value from the correlation header, the request-ID header, or Hono's `requestId()` middleware variable; otherwise a fresh UUID. Valid means 1 to 128 characters of `[A-Za-z0-9._:-]`. The rest of the request runs inside `runWithCorrelationId()`, so every workflow call carries it into workflows and activities, and `getCorrelationId()` (re-exported from `@norn-ts/hono`) works anywhere in the handler.
 
 ## `nornErrorHandler()`
 
@@ -104,7 +104,7 @@ Error responses look like this, with the correlation ID in the body and the resp
 Payment providers, carriers and e-signature services report progress through webhooks. `temporalWebhook()` turns each event into signals or updates on your workflows, with signature verification and the response codes providers expect:
 
 ```ts
-import { hmacSha256Verifier, signalAction, temporalWebhook, updateAction } from '@norn/hono';
+import { hmacSha256Verifier, signalAction, temporalWebhook, updateAction } from '@norn-ts/hono';
 
 app.post(
   '/webhooks/transfers',
@@ -158,7 +158,7 @@ Checks an HMAC-SHA256 signature of the raw body sent in a header, using WebCrypt
 Providers that sign something other than the raw body (a timestamp plus the body, or with another hash) need their own `verify` function; `hmacSha256()` and `timingSafeEqual()` are exported to help write one:
 
 ```ts
-import { hmacSha256, timingSafeEqual } from '@norn/hono';
+import { hmacSha256, timingSafeEqual } from '@norn-ts/hono';
 
 const verify = async (c: Context, rawBody: string) => {
   const timestamp = c.req.header('x-timestamp') ?? '';
@@ -175,7 +175,7 @@ const verify = async (c: Context, rawBody: string) => {
 `codecServer(options)` returns a Hono app implementing the Temporal codec server protocol (`POST /encode`, `POST /decode`), so the Temporal UI and CLI can display encrypted payloads. Mount it under any path:
 
 ```ts
-import { codecServer } from '@norn/hono/codec-server';
+import { codecServer } from '@norn-ts/hono/codec-server';
 
 app.route('/codec', codecServer({ codec: createEncryptionCodec({ keys, currentKeyId }), auth: requireStaff }));
 ```
@@ -189,7 +189,7 @@ app.route('/codec', codecServer({ codec: createEncryptionCodec({ keys, currentKe
 | `namespaces` | any | Namespaces (from the `X-Namespace` header) the server may be used for; others get 403. |
 | `onError` | none | Called with errors from `auth` and the codecs, for logging. Payload contents are never passed to it. |
 
-`@norn/hono/codec-server` depends only on Hono and `@norn/core`, so it can run on edge runtimes. See [Encryption](/guide/encryption#codec-server-for-the-temporal-ui) for pointing the UI at it.
+`@norn-ts/hono/codec-server` depends only on Hono and `@norn-ts/core`, so it can run on edge runtimes. See [Encryption](/guide/encryption#codec-server-for-the-temporal-ui) for pointing the UI at it.
 
 ## Testing routes
 

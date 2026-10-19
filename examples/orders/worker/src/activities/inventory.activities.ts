@@ -1,4 +1,4 @@
-import { Activities, Activity, NonRetryable } from '@norn/activity';
+import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
 import { OutOfStockError, PRICES, type LineItem } from '../domain.ts';
 
 /** In-memory stock, standing in for an inventory service. */

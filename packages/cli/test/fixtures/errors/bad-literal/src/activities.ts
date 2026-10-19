@@ -1,4 +1,4 @@
-import { Activities, Activity } from '@norn/activity';
+import { Activities, Activity } from '@norn-ts/activity';
 
 const TIMEOUT = '1m';
 const defaults = { local: true };

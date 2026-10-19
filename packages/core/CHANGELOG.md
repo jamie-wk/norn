@@ -1,4 +1,4 @@
-# @norn/core
+# @norn-ts/core
 
 ## 1.0.0
 

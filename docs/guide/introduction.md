@@ -9,7 +9,7 @@ With Norn you write **workflows as decorated classes**, **activities as decorate
 ```ts
 // src/workflows/order.workflow.ts
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Workflow, useActivities } from '@norn/workflow';
+import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
 import { PaymentActivities } from '../../.norn/activities.js';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
@@ -40,7 +40,7 @@ export class OrderWorkflow {
 
 ```ts
 // src/activities/payment.activities.ts
-import { Activities, Activity, NonRetryable } from '@norn/activity';
+import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
 import { CardDeclinedError } from '../errors.js';
 import { PaymentGateway } from '../services/payment-gateway.js';
 
@@ -63,7 +63,7 @@ export class PaymentActivities {
 
 ```ts
 // api: anywhere, e.g. a Hono route
-import { createClient } from '@norn/client';
+import { createClient } from '@norn-ts/client';
 import { OrderWorkflow } from '../.norn/contracts.js';
 
 const norn = createClient();
@@ -99,16 +99,16 @@ Norn weaves those threads into code that reads like the story it tells: a class 
 
 | Package | What it does |
 | --- | --- |
-| [`@norn/core`](https://github.com/jamie-wk/norn/tree/main/packages/core#readme) | Workflow-safe building blocks: contracts, durations, ID templates, errors, state machines, business-day calendars. |
-| [`@norn/workflow`](https://github.com/jamie-wk/norn/tree/main/packages/workflow#readme) | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `@Schedule`; `useActivities`, `useChild`, `useExternal`, `continueAsNew`. |
-| [`@norn/activity`](https://github.com/jamie-wk/norn/tree/main/packages/activity#readme) | `@Activities`, `@Activity`, `@NonRetryable`, `@Service`, tokens, `provide()`, the container, activity context helpers. |
-| [`@norn/client`](https://github.com/jamie-wk/norn/tree/main/packages/client#readme) | `createClient()`: typed start, execute, signal, query, update, with-start operations, list and count. |
-| [`@norn/worker`](https://github.com/jamie-wk/norn/tree/main/packages/worker#readme) | `createWorker()`: one worker per task queue, health checks, graceful drain, versioning, bundling, metrics. |
-| [`@norn/testing`](https://github.com/jamie-wk/norn/tree/main/packages/testing#readme) | `createTestEnv()`, typed `mockActivities()`, `createFakeClient()`, replay checks, the Vitest decorator plugin. |
-| [`@norn/codec`](https://github.com/jamie-wk/norn/tree/main/packages/codec#readme) | AES-256-GCM payload encryption with key rotation; a payload converter for `bigint` and TC39 Temporal values. |
-| [`@norn/hono`](https://github.com/jamie-wk/norn/tree/main/packages/hono#readme) | Hono middleware with correlation IDs, an error handler, webhook-to-signal routing and a codec server. |
-| [`@norn/cli`](https://github.com/jamie-wk/norn/tree/main/packages/cli#readme) | `norn gen`, `norn bundle`, `norn schedules sync`, `norn histories pull`. |
-| [`@norn/eslint-plugin`](https://github.com/jamie-wk/norn/tree/main/packages/eslint-plugin#readme) | Editor-time determinism and import-boundary rules for workflow files. |
+| [`@norn-ts/core`](https://github.com/jamie-wk/norn/tree/main/packages/core#readme) | Workflow-safe building blocks: contracts, durations, ID templates, errors, state machines, business-day calendars. |
+| [`@norn-ts/workflow`](https://github.com/jamie-wk/norn/tree/main/packages/workflow#readme) | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `@Schedule`; `useActivities`, `useChild`, `useExternal`, `continueAsNew`. |
+| [`@norn-ts/activity`](https://github.com/jamie-wk/norn/tree/main/packages/activity#readme) | `@Activities`, `@Activity`, `@NonRetryable`, `@Service`, tokens, `provide()`, the container, activity context helpers. |
+| [`@norn-ts/client`](https://github.com/jamie-wk/norn/tree/main/packages/client#readme) | `createClient()`: typed start, execute, signal, query, update, with-start operations, list and count. |
+| [`@norn-ts/worker`](https://github.com/jamie-wk/norn/tree/main/packages/worker#readme) | `createWorker()`: one worker per task queue, health checks, graceful drain, versioning, bundling, metrics. |
+| [`@norn-ts/testing`](https://github.com/jamie-wk/norn/tree/main/packages/testing#readme) | `createTestEnv()`, typed `mockActivities()`, `createFakeClient()`, replay checks, the Vitest decorator plugin. |
+| [`@norn-ts/codec`](https://github.com/jamie-wk/norn/tree/main/packages/codec#readme) | AES-256-GCM payload encryption with key rotation; a payload converter for `bigint` and TC39 Temporal values. |
+| [`@norn-ts/hono`](https://github.com/jamie-wk/norn/tree/main/packages/hono#readme) | Hono middleware with correlation IDs, an error handler, webhook-to-signal routing and a codec server. |
+| [`@norn-ts/cli`](https://github.com/jamie-wk/norn/tree/main/packages/cli#readme) | `norn gen`, `norn bundle`, `norn schedules sync`, `norn histories pull`. |
+| [`@norn-ts/eslint-plugin`](https://github.com/jamie-wk/norn/tree/main/packages/eslint-plugin#readme) | Editor-time determinism and import-boundary rules for workflow files. |
 
 ## Requirements
 

@@ -1,4 +1,4 @@
-import { NornConfigError, formatDuration, type Duration } from '@norn/core';
+import { NornConfigError, formatDuration, type Duration } from '@norn-ts/core';
 import type { WorkerDeploymentOptions } from '@temporalio/worker';
 import type { NornRegistry } from './registry.js';
 

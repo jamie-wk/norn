@@ -1,4 +1,4 @@
-# @norn/testing
+# @norn-ts/testing
 
 ## 1.0.0
 

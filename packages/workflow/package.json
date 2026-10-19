@@ -1,5 +1,5 @@
 {
-  "name": "@norn/workflow",
+  "name": "@norn-ts/workflow",
   "version": "1.0.0",
   "description": "Decorators and runtime for writing Temporal workflows as typed classes with Norn.",
   "license": "MIT",
@@ -48,7 +48,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@norn/core": "workspace:^"
+    "@norn-ts/core": "workspace:^"
   },
   "peerDependencies": {
     "@temporalio/workflow": "^1.24.0",

@@ -1,4 +1,4 @@
-# @norn/workflow
+# @norn-ts/workflow
 
 ## 1.0.0
 

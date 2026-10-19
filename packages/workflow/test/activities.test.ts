@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { defineActivities, useActivities } from '../src/index.ts';
 
 const calls = vi.hoisted(() => ({ remote: [] as unknown[], local: [] as unknown[] }));

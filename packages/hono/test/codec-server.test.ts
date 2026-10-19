@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Hono } from 'hono';
 import { defaultPayloadConverter, type Payload, type PayloadCodec } from '@temporalio/common';
-import { clientDataConverter, createEncryptionCodec, generateKey } from '@norn/codec';
-import { NornConfigError } from '@norn/core';
+import { clientDataConverter, createEncryptionCodec, generateKey } from '@norn-ts/codec';
+import { NornConfigError } from '@norn-ts/core';
 import { codecServer as codecServerFromIndex } from '../src/index.ts';
 import { codecServer, type CodecServerOptions, type JsonPayload } from '../src/codec-server.ts';
 

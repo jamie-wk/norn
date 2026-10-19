@@ -7,7 +7,7 @@ import {
   methodTags,
   templateKeys,
   type SearchAttributeType,
-} from '@norn/core';
+} from '@norn-ts/core';
 
 export type VersioningBehavior = 'pinned' | 'auto-upgrade';
 export type UnfinishedPolicy = 'abandon' | 'warn';

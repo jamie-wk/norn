@@ -1,10 +1,10 @@
 # Worker & deployment
 
-`createWorker()` from `@norn/worker` turns the generated registry into a production worker process: one Temporal worker per task queue, activities built by the dependency container, a prebuilt or on-the-fly workflow bundle, health endpoints, graceful shutdown on SIGTERM, correlation IDs and optional worker versioning.
+`createWorker()` from `@norn-ts/worker` turns the generated registry into a production worker process: one Temporal worker per task queue, activities built by the dependency container, a prebuilt or on-the-fly workflow bundle, health endpoints, graceful shutdown on SIGTERM, correlation IDs and optional worker versioning.
 
 ```ts
 // src/worker.ts
-import { createWorker, installRuntime } from '@norn/worker';
+import { createWorker, installRuntime } from '@norn-ts/worker';
 import { registry } from '../.norn/registry.js';
 
 // log level and Prometheus metrics from the environment; optional
@@ -55,7 +55,7 @@ Options passed to `createWorker()` win over environment variables. Setting only 
 | `handleSignals` | Shut down gracefully on SIGTERM and SIGINT. Default `true`. |
 | `container` | `{ overrides, errors }` for the dependency container. See [Errors](/guide/errors#activity-errors). |
 | `workflowBundle` | `{ code }` or `{ codePath }` from `bundleWorkflows()`. |
-| `dataConverter` | Such as `createDataConverter()` from [`@norn/codec`](/guide/encryption). |
+| `dataConverter` | Such as `createDataConverter()` from [`@norn-ts/codec`](/guide/encryption). |
 | `plugins` | Temporal worker plugins, such as the [OpenTelemetry plugin](/guide/observability#opentelemetry). Also applied when bundling at startup. |
 | `activityOverrides` | Replace registered activities by name, typically in tests. Unknown names are rejected. |
 | `workerOptions` | Passed through to every `Worker.create()`: concurrency limits, sticky cache size, pollers, interceptors (activity interceptors run after Norn's correlation interceptor). Norn sets connection, namespace, task queue, activities, bundle, bundler options, data converter, plugins, `shutdownGraceTime` and `workerDeploymentOptions` itself (use `createWorker()`'s own options for those). |
@@ -131,15 +131,15 @@ norn bundle --out dist/workflow-bundle.js      # the workflow bundle
 NORN_WORKFLOW_BUNDLE=dist/workflow-bundle.js node dist/src/worker.js
 ```
 
-`norn bundle` bundles the barrel in `outDir`: `.norn/workflows.ts`, or `workflows.js` only when there is no `.ts`, so it reads the sources rather than the `tsc` output. `--out` defaults to `dist/workflow-bundle.js`; add `--codec` if you use `@norn/codec`'s payload converter. See [the CLI page](/guide/cli#norn-bundle).
+`norn bundle` bundles the barrel in `outDir`: `.norn/workflows.ts`, or `workflows.js` only when there is no `.ts`, so it reads the sources rather than the `tsc` output. `--out` defaults to `dist/workflow-bundle.js`; add `--codec` if you use `@norn-ts/codec`'s payload converter. See [the CLI page](/guide/cli#norn-bundle).
 
 If you'd rather script it, `bundleWorkflows()` does the same thing:
 
 ```ts
 // scripts/bundle.ts
-import { bundleWorkflows } from '@norn/worker';
-// only if you use @norn/codec
-import { resolvePayloadConverterPath } from '@norn/codec';
+import { bundleWorkflows } from '@norn-ts/worker';
+// only if you use @norn-ts/codec
+import { resolvePayloadConverterPath } from '@norn-ts/codec';
 import { registry } from '../dist/.norn/registry.js';
 
 await bundleWorkflows(registry, {
@@ -200,7 +200,7 @@ The metrics are the standard Temporal SDK metrics. The schedule-to-start latenci
 
 ## Running workers in tests
 
-`createTestEnv()` from `@norn/testing` runs `createWorker()` for you against a test server, with signals, health and versioning turned off. To run one yourself:
+`createTestEnv()` from `@norn-ts/testing` runs `createWorker()` for you against a test server, with signals, health and versioning turned off. To run one yourself:
 
 ```ts
 const worker = await createWorker({

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NornConfigError, defineWorkflow, type } from '@norn/core';
+import { NornConfigError, defineWorkflow, type } from '@norn-ts/core';
 import { startOptions, toTypedSearchAttributes } from '../src/index.ts';
 import { Echo, Orders } from './fixtures/contracts.ts';
 

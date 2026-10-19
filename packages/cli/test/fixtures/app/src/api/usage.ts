@@ -1,11 +1,11 @@
 // Type-level checks that generated contracts and activity refs carry the workflow and activity types.
-import type { ContractInput, ContractOutput, RefArgs, RefResult } from '@norn/core';
-import type { ActivityProxy } from '@norn/workflow';
+import type { ContractInput, ContractOutput, RefArgs, RefResult } from '@norn-ts/core';
+import type { ActivityProxy } from '@norn-ts/workflow';
 import { OrderWorkflow, ShoppingCart } from '../../.norn/contracts.js';
 import { ReportWorkflow } from '../../shared/contracts.js';
 import type { PaymentActivities } from '../../.norn/activities.js';
 import type { OrderStatus } from '../workflows/order.js';
-import type { NornClient } from '@norn/client';
+import type { NornClient } from '@norn-ts/client';
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type Expect<T extends true> = T;

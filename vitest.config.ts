@@ -6,7 +6,7 @@ import { standardDecorators } from './packages/testing/src/vite.ts';
 // Optional machine-specific settings (gitignored), such as paths to pre-downloaded Temporal binaries.
 const localEnv = existsSync('.env.test.local') ? parseEnv(readFileSync('.env.test.local', 'utf8')) : {};
 
-// Resolve @norn/* workspace packages to their TypeScript sources, so tests never need a build.
+// Resolve @norn-ts/* workspace packages to their TypeScript sources, so tests never need a build.
 const conditions = ['@norn/source', 'module', 'node', 'development|production'];
 
 export default defineConfig({
@@ -15,7 +15,7 @@ export default defineConfig({
   ssr: { resolve: { conditions, externalConditions: ['@norn/source'] } },
   test: {
     env: {
-      // Lets @norn/worker's bundler hook resolve workspace packages to source inside workflow bundles.
+      // Lets @norn-ts/worker's bundler hook resolve workspace packages to source inside workflow bundles.
       NORN_DEV_CONDITIONS: '@norn/source',
       ...localEnv,
     },

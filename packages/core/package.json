@@ -1,5 +1,5 @@
 {
-  "name": "@norn/core",
+  "name": "@norn-ts/core",
   "version": "1.0.0",
   "description": "Workflow-safe building blocks for Norn: contracts, durations, ID templates, errors and pure helpers.",
   "license": "MIT",

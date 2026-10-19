@@ -1,4 +1,4 @@
-import { Service, token } from '@norn/activity';
+import { Service, token } from '@norn-ts/activity';
 import { PaymentDeclinedError } from '../domain.ts';
 import { HttpClient, HttpError } from './http.ts';
 

@@ -1,4 +1,4 @@
-# @norn/core
+# @norn-ts/core
 
 Workflow-safe building blocks shared by every [Norn](https://jamie-wk.github.io/norn/) package: typed workflow contracts, durations, ID templates, the error classes with codes and HTTP statuses, a small state machine, a business-day calendar and the activity option translation.
 
@@ -6,12 +6,12 @@ Workflow-safe building blocks shared by every [Norn](https://jamie-wk.github.io/
 - **Errors**: `NornError` and its subclasses, each with a stable `code`, an HTTP `status`, `details` and the SDK error as `cause`.
 - **`Duration`**, **ID templates**, **`transitions()`**, **`businessCalendar()`**: pure, deterministic helpers that are safe inside workflow code.
 
-`@norn/core` has no runtime dependencies and imports no Node APIs, so it runs in the Temporal workflow sandbox, in API servers and on edge runtimes. Most apps get it through `@norn/workflow`, `@norn/client` and the generated files; import it directly for errors, manual contracts and duration helpers.
+`@norn-ts/core` has no runtime dependencies and imports no Node APIs, so it runs in the Temporal workflow sandbox, in API servers and on edge runtimes. Most apps get it through `@norn-ts/workflow`, `@norn-ts/client` and the generated files; import it directly for errors, manual contracts and duration helpers.
 
 ## Install
 
 ```sh
-pnpm add @norn/core
+pnpm add @norn-ts/core
 ```
 
 Requires Node 22.18+ (any modern JavaScript runtime works for the package itself). No peer dependencies.
@@ -26,7 +26,7 @@ A contract describes a workflow type for callers: its name, task queue, ID templ
 
 ```ts
 // .norn/contracts.ts (generated)
-import { contract } from '@norn/core';
+import { contract } from '@norn-ts/core';
 import type { OrderWorkflow as OrderWorkflow$ } from '../src/workflows/order.workflow.ts';
 
 export const OrderWorkflow = contract<typeof OrderWorkflow$>()({
@@ -47,7 +47,7 @@ Keys are method names (what TypeScript callers use); values are the registered n
 For a workflow implemented in another service or language, write the contract with `defineWorkflow()`:
 
 ```ts
-import { defineWorkflow, query, signal, type, update } from '@norn/core';
+import { defineWorkflow, query, signal, type, update } from '@norn-ts/core';
 
 export const Fulfilment = defineWorkflow({
   name: 'FulfilmentWorkflow',
@@ -139,7 +139,7 @@ class NornError extends Error {
 The subclasses take a single arguments object, for example `new UpdateRejectedError({ workflowId, update, failureType, message, cause? })` or `new WorkflowClosedError({ workflowId, closeStatus })`, which is handy for stubbing in tests. Throw your own `NornError` for domain failures that your API returns:
 
 ```ts
-import { NornError } from '@norn/core';
+import { NornError } from '@norn-ts/core';
 
 throw new NornError('INVITATION_EXPIRED', 410, 'This invitation has expired', { details: { invitationId } });
 ```
@@ -152,8 +152,8 @@ throw new NornError('INVITATION_EXPIRED', 410, 'This invitation has expired', { 
 A deterministic state machine for workflow status. Illegal or repeated moves are ignored instead of corrupting state, which suits out-of-order and duplicate events such as webhooks.
 
 ```ts
-// also re-exported by @norn/workflow
-import { transitions } from '@norn/core';
+// also re-exported by @norn-ts/workflow
+import { transitions } from '@norn-ts/core';
 
 const status = transitions(
   {
@@ -197,8 +197,8 @@ Every target in the table must be a state (checked at compile time and at runtim
 Banking-day arithmetic for timers such as ACH settlement windows. Pure, so it is safe in workflow code; load holidays with an activity and pass them in.
 
 ```ts
-// also re-exported by @norn/workflow
-import { businessCalendar } from '@norn/core';
+// also re-exported by @norn-ts/workflow
+import { businessCalendar } from '@norn-ts/core';
 
 const calendar = businessCalendar({ holidays: ['2026-12-25'], utcOffsetMinutes: -300 });
 await condition(() => this.settled, calendar.msUntilBusinessDays(Date.now(), 3));
@@ -214,7 +214,7 @@ The calendar has `isBusinessDay(at)`, `addBusinessDays(from, days)` (keeps the t
 
 ## Activity options
 
-`ActivityOptions` is the shape of `@Activity()` options (see `@norn/activity`). `toActivityOptions(options)` turns them into Temporal SDK options: `timeout` → `startToCloseTimeout` (default `DEFAULT_ACTIVITY_TIMEOUT`, 60 000 ms, when neither `timeout` nor `scheduleToClose` is set), `retries: n` → `retry.maximumAttempts: n + 1`, `nonRetryable` → `retry.nonRetryableErrorTypes`, and options that don't apply to local activities are dropped. It throws `NornConfigError` for invalid durations, a zero `timeout`, `scheduleToClose` or retry interval, a `backoffCoefficient` below 1, non-integer counts, `retry.maximumAttempts` below 1, or `retries` combined with `retry.maximumAttempts`. `@norn/workflow`'s `useActivities()` calls it for you.
+`ActivityOptions` is the shape of `@Activity()` options (see `@norn-ts/activity`). `toActivityOptions(options)` turns them into Temporal SDK options: `timeout` → `startToCloseTimeout` (default `DEFAULT_ACTIVITY_TIMEOUT`, 60 000 ms, when neither `timeout` nor `scheduleToClose` is set), `retries: n` → `retry.maximumAttempts: n + 1`, `nonRetryable` → `retry.nonRetryableErrorTypes`, and options that don't apply to local activities are dropped. It throws `NornConfigError` for invalid durations, a zero `timeout`, `scheduleToClose` or retry interval, a `backoffCoefficient` below 1, non-integer counts, `retry.maximumAttempts` below 1, or `retries` combined with `retry.maximumAttempts`. `@norn-ts/workflow`'s `useActivities()` calls it for you.
 
 ## Decorator metadata
 

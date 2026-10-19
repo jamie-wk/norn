@@ -2,8 +2,8 @@ import { readdir, readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { historyFromJSON } from '@temporalio/common/lib/proto-utils.js';
 import { Worker, type ReplayWorkerOptions } from '@temporalio/worker';
-import { NornConfigError } from '@norn/core';
-import type { NornRegistry } from '@norn/worker';
+import { NornConfigError } from '@norn-ts/core';
+import type { NornRegistry } from '@norn-ts/worker';
 import { cachedBundle } from './env.js';
 
 export interface RecordedHistory {

@@ -1,4 +1,4 @@
-import { Workflow, useActivities } from '@norn/workflow';
+import { Workflow, useActivities } from '@norn-ts/workflow';
 import { ShippingActivities } from '../../.norn/activities.ts';
 
 /** Runs on its own task queue so shipping capacity scales separately from orders. */

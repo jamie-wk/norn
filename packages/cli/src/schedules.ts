@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import type { Client, ScheduleOverlapPolicy } from '@temporalio/client';
-import type { ScheduleSpec } from '@norn/worker';
+import type { ScheduleSpec } from '@norn-ts/worker';
 
 export type { ScheduleSpec };
 

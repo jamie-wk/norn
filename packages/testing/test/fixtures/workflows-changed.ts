@@ -1,6 +1,6 @@
 // ReminderWorkflow with an incompatible change: an activity runs before the timer.
 import { sleep } from '@temporalio/workflow';
-import { Workflow, implement, useActivities } from '@norn/workflow';
+import { Workflow, implement, useActivities } from '@norn-ts/workflow';
 import { NotifyActivities } from './refs.ts';
 
 @Workflow({ taskQueue: 'testing-q', name: 'ReminderWorkflow', id: 'reminder-{userId}' })

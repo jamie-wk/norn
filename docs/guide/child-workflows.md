@@ -6,7 +6,7 @@ A workflow can start other workflows as **children**, and signal or cancel workf
 
 ```ts
 // src/workflows/shipment.workflow.ts
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 
 @Workflow({ taskQueue: 'shipping', id: 'shipment-{orderId}' })
 export class ShipmentWorkflow {
@@ -19,7 +19,7 @@ export class ShipmentWorkflow {
 
 ```ts
 // src/workflows/order.workflow.ts
-import { Workflow, useChild } from '@norn/workflow';
+import { Workflow, useChild } from '@norn-ts/workflow';
 import { ShipmentWorkflow } from './shipment.workflow.js';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
@@ -70,7 +70,7 @@ private readonly report = useChild(MonthlyReportWorkflow, { parentClosePolicy: '
 A class target must be a workflow in the **same bundle**: it is imported into the parent's workflow file, which is fine because it is workflow code too. For a workflow implemented somewhere else (another service, another repository, another language), pass a **contract** instead. A contract carries the name, task queue, ID template and handler names, with no code:
 
 ```ts
-import { defineWorkflow, signal, type } from '@norn/core';
+import { defineWorkflow, signal, type } from '@norn-ts/core';
 
 export const KycCheck = defineWorkflow({
   name: 'KycCheck',
@@ -97,7 +97,7 @@ Use a child workflow when the sub-process is long-running, has its own timers or
 `useExternal(target, id)` returns a handle to a workflow the current one did not start, for signals and cancellation. Pass the target's ID template fields, or `{ workflowId, runId? }`:
 
 ```ts
-import { useExternal } from '@norn/workflow';
+import { useExternal } from '@norn-ts/workflow';
 import { LoyaltyWorkflow } from './loyalty.workflow.js';
 
 // from inside a workflow

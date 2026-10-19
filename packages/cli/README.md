@@ -1,11 +1,11 @@
-# @norn/cli
+# @norn-ts/cli
 
 The `norn` command for [Norn](https://jamie-wk.github.io/norn/) projects. It reads your `@Workflow`, `@Activities` and `@Service` classes and generates the glue Temporal needs: the workflow bundle entry, workflow-safe activity references, typed contracts for API code, the dependency-injection container and the worker registry. It also checks that workflow code stays inside the sandbox, keeps a lock file of every name in-flight executions depend on, syncs `@Schedule`s to Temporal, pulls histories for replay tests and bundles workflows for production.
 
 `norn gen` never runs your code. It parses the TypeScript source with [oxc](https://oxc.rs) and reads decorators syntactically, so it is fast, works before anything compiles, and cannot trigger side effects. The price is that decorator options must be literals (see [Decorator options are literals](#decorator-options-are-literals)).
 
 ```sh
-pnpm add -D @norn/cli
+pnpm add -D @norn-ts/cli
 ```
 
 Requires Node 22.18+ (for `norn.config.ts`, loaded with Node's built-in TypeScript type stripping).
@@ -25,7 +25,7 @@ Exit codes: `0` success, `1` errors (or stale files with `--check`), `2` usage e
 
 ```ts
 // norn.config.ts
-import { defineConfig } from '@norn/cli';
+import { defineConfig } from '@norn-ts/cli';
 
 export default defineConfig({
   include: ['src/**/*.ts'],
@@ -71,7 +71,7 @@ Given this workflow and activity class:
 
 ```ts
 // src/workflows/order.ts
-import { Query, Signal, Update, Validate, Workflow, useActivities } from '@norn/workflow';
+import { Query, Signal, Update, Validate, Workflow, useActivities } from '@norn-ts/workflow';
 import { PaymentActivities } from '../../.norn/activities.js';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}', searchAttributes: { CustomerId: 'keyword' } })
@@ -105,7 +105,7 @@ export class PaymentActivities {
 Temporal registers workflows by the **export names** of the bundle entry, so each export is named after the workflow type (`@Workflow({ name })`, or the class name). Only workflow files are imported. JSDoc comments on handlers become handler descriptions.
 
 ```ts
-import { implement } from '@norn/workflow';
+import { implement } from '@norn-ts/workflow';
 import { CartWorkflow as ShoppingCart$ } from '../src/workflows/cart.js';
 import { OrderWorkflow as OrderWorkflow$ } from '../src/workflows/order.js';
 
@@ -120,7 +120,7 @@ export const ShoppingCart = implement(ShoppingCart$, { descriptions: { pause: 'P
 Only `import type` of activity classes, so workflow bundles never contain activity code. `@Activity` options are copied as written; `@NonRetryable([X])` on the method (or else the class) adds `nonRetryable: ['X']` by class name. `@NonRetryable()` without arguments adds nothing here: the worker applies it at runtime.
 
 ```ts
-import { defineActivities } from '@norn/workflow';
+import { defineActivities } from '@norn-ts/workflow';
 import type { PaymentActivities as PaymentActivities$ } from '../src/activities/payment.js';
 
 export const PaymentActivities = defineActivities<PaymentActivities$>()({
@@ -137,7 +137,7 @@ export const PaymentActivities = defineActivities<PaymentActivities$>()({
 `import type` only. Handler maps go from method name to registered name, so `client.workflow(OrderWorkflow).signal('transferEvent', ...)` sends `transfer-event`. Inherited handlers (from a base class that `norn gen` can find through relative imports) are included.
 
 ```ts
-import { contract } from '@norn/core';
+import { contract } from '@norn-ts/core';
 import type { OrderWorkflow as OrderWorkflow$ } from '../src/workflows/order.js';
 
 export const OrderWorkflow = contract<typeof OrderWorkflow$>()({
@@ -156,8 +156,8 @@ export const OrderWorkflow = contract<typeof OrderWorkflow$>()({
 Every `@Service` and `@Activities` class with its constructor dependencies, plus your `providers`:
 
 ```ts
-import { createContainer } from '@norn/activity';
-import type { RegistryContainerOptions } from '@norn/worker';
+import { createContainer } from '@norn-ts/activity';
+import type { RegistryContainerOptions } from '@norn-ts/worker';
 import { PaymentActivities } from '../src/activities/payment.js';
 import { providers } from '../src/providers.js';
 import { Config, Db } from '../src/services/tokens.js';
@@ -189,7 +189,7 @@ The name is resolved through the file's imports (following re-exports and `index
 
 ```ts
 import { fileURLToPath } from 'node:url';
-import type { NornRegistry } from '@norn/worker';
+import type { NornRegistry } from '@norn-ts/worker';
 import { createNornContainer } from './container.js';
 
 const ext = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
@@ -203,7 +203,7 @@ export const registry = {
 } satisfies NornRegistry;
 ```
 
-Use it with `createWorker({ registry })` from `@norn/worker`.
+Use it with `createWorker({ registry })` from `@norn-ts/worker`.
 
 #### `.norn/search-attributes.json`
 
@@ -290,7 +290,7 @@ src/workflows.ts:5:24 - error norn(non-literal): @Workflow option "taskQueue" mu
   hint: norn gen reads decorators without running your code, so options must be written inline as literals: replace QUEUE with its value.
 ```
 
-Decorators are recognized when imported by name from `@norn/workflow` or `@norn/activity`, including aliases (`import { Workflow as W }`) and namespace imports (`@nw.Workflow(...)`). Decorators re-exported through your own modules are not recognized.
+Decorators are recognized when imported by name from `@norn-ts/workflow` or `@norn-ts/activity`, including aliases (`import { Workflow as W }`) and namespace imports (`@nw.Workflow(...)`). Decorators re-exported through your own modules are not recognized.
 
 ### Checks
 
@@ -326,7 +326,7 @@ All problems are collected and reported together, each with `file:line:col`.
 
 - a file that declares `@Activities` or `@Service` classes;
 - a Node built-in (`fs`, `node:crypto`, ...);
-- `@temporalio/activity`, `@temporalio/client`, `@temporalio/worker`, `@temporalio/testing`, `@norn/activity`, `@norn/worker`, `@norn/client`, `@norn/testing`, `@norn/hono` or `@norn/cli` (or their subpaths).
+- `@temporalio/activity`, `@temporalio/client`, `@temporalio/worker`, `@temporalio/testing`, `@norn-ts/activity`, `@norn-ts/worker`, `@norn-ts/client`, `@norn-ts/testing`, `@norn-ts/hono` or `@norn-ts/cli` (or their subpaths).
 
 `import type` and `export type` are fine. `import { type X } from '...'` is **not**: with only inline `type` specifiers, `verbatimModuleSyntax` keeps it as `import {} from '...'`, which still loads the module. `export ... from` and dynamic `import('...')` count as imports.
 
@@ -335,7 +335,7 @@ src/workflows/order.ts:2:1 - error norn(import-boundary): Workflow code must not
   hint: Use import type for types; workflows call activities through the generated activities file with useActivities().
 ```
 
-**Determinism.** In workflow code, references to the globals `setTimeout` (use `sleep()`), `setInterval`, `setImmediate`, `process`, `Temporal.Now`, `crypto`, `performance`, `WeakRef` and `FinalizationRegistry` are errors, including through `globalThis.` / `window.` / `self.` / `global.` and `const { Now } = Temporal`. Local variables (including hoisted `var`s), parameters and imports with those names are respected, and `Temporal` imported from `@js-temporal/polyfill` or `temporal-polyfill`, under any name, is still checked. `Date.now()` and `Math.random()` are fine: the sandbox makes them deterministic. For editor feedback, use the rules in `@norn/eslint-plugin`.
+**Determinism.** In workflow code, references to the globals `setTimeout` (use `sleep()`), `setInterval`, `setImmediate`, `process`, `Temporal.Now`, `crypto`, `performance`, `WeakRef` and `FinalizationRegistry` are errors, including through `globalThis.` / `window.` / `self.` / `global.` and `const { Now } = Temporal`. Local variables (including hoisted `var`s), parameters and imports with those names are respected, and `Temporal` imported from `@js-temporal/polyfill` or `temporal-polyfill`, under any name, is still checked. `Date.now()` and `Math.random()` are fine: the sandbox makes them deterministic. For editor feedback, use the rules in `@norn-ts/eslint-plugin`.
 
 ### Limits of syntax-only analysis
 
@@ -383,7 +383,7 @@ Writes `<out>/<workflowId>.json` (default `histories/`; characters unsafe in fil
 import { readFile } from 'node:fs/promises';
 import { Worker } from '@temporalio/worker';
 import { historyFromJSON } from '@temporalio/common/lib/proto-utils.js';
-import { bundleWorkflows } from '@norn/worker';
+import { bundleWorkflows } from '@norn-ts/worker';
 import { registry } from '../.norn/registry.js';
 
 const history = historyFromJSON(JSON.parse(await readFile('test/histories/order-123.json', 'utf8')));
@@ -396,15 +396,15 @@ Connects like `norn schedules sync`.
 
 ```sh
 norn bundle                                   # dist/workflow-bundle.js
-norn bundle --out build/workflows.js --codec  # with @norn/codec's payload converter
+norn bundle --out build/workflows.js --codec  # with @norn-ts/codec's payload converter
 ```
 
-Bundles `<outDir>/workflows.ts` (or `workflows.js` if you compiled `.norn/`) with `bundleWorkflows()` from `@norn/worker`: standard decorators, `.js`→`.ts` resolution and Norn's workflow interceptors (correlation IDs). `--codec` adds `payloadConverterPath` from `@norn/codec`, which workers using `createDataConverter()` need. Point workers at the file with `workflowBundle: { codePath }` or the `NORN_WORKFLOW_BUNDLE` environment variable.
+Bundles `<outDir>/workflows.ts` (or `workflows.js` if you compiled `.norn/`) with `bundleWorkflows()` from `@norn-ts/worker`: standard decorators, `.js`→`.ts` resolution and Norn's workflow interceptors (correlation IDs). `--codec` adds `payloadConverterPath` from `@norn-ts/codec`, which workers using `createDataConverter()` need. Point workers at the file with `workflowBundle: { codePath }` or the `NORN_WORKFLOW_BUNDLE` environment variable.
 
 ## Programmatic API
 
 ```ts
-import { generate, watch, defineConfig, formatError } from '@norn/cli';
+import { generate, watch, defineConfig, formatError } from '@norn-ts/cli';
 
 const result = await generate({ cwd, configPath, check, acceptRename, write });
 // { files: Record<path, content>, written: string[], stale: string[], errors: NornGenError[], root }
@@ -420,4 +420,4 @@ await watch({ cwd, signal: controller.signal, debounceMs: 100, onResult: (r) => 
 - `syncSchedules({ client, project, schedules, dryRun, prune })`, `pullHistories({ client, workflowIds, outDir })`, `bundle({ outDir, outFile, codec })`, `connect(env)`.
 - `main(argv, { cwd, env, stdout, stderr, signal })`: the CLI itself, resolving with the exit code.
 
-`schedules sync` and `histories pull` need `@temporalio/client` (and `@temporalio/common`); `bundle` needs `@norn/worker` and `@temporalio/worker` (plus `@norn/codec` for `--codec`). They are optional peer dependencies, loaded only by the commands that use them.
+`schedules sync` and `histories pull` need `@temporalio/client` (and `@temporalio/common`); `bundle` needs `@norn-ts/worker` and `@temporalio/worker` (plus `@norn-ts/codec` for `--codec`). They are optional peer dependencies, loaded only by the commands that use them.

@@ -1,5 +1,5 @@
 import type { Context, Env, Handler } from 'hono';
-import type { HandleTarget, NornClient } from '@norn/client';
+import type { HandleTarget, NornClient } from '@norn-ts/client';
 import {
   NornConfigError,
   NornError,
@@ -9,7 +9,7 @@ import {
   type RefResult,
   type WorkflowClosedError,
   type WorkflowNotFoundError,
-} from '@norn/core';
+} from '@norn-ts/core';
 import { respondWithError } from './errors.js';
 import { isPlainObject, isPositiveInteger, readBody } from './internal.js';
 

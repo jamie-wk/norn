@@ -116,7 +116,7 @@ export function emitWorkflows(analysis: Analysis, options: EmitOptions): string 
   const workflows = byName(analysis.workflows);
   if (workflows.length === 0) return file('export {};');
   const imports = new Imports();
-  imports.add('@norn/workflow', 'implement');
+  imports.add('@norn-ts/workflow', 'implement');
   const exports = workflows.map((wf) => {
     imports.add(importPath(options.outDir, wf.file, options.importExtension), wf.exportName, `${wf.name}$`);
     const descriptions = Object.keys(wf.descriptions).length > 0 ? { descriptions: wf.descriptions } : undefined;
@@ -130,7 +130,7 @@ export function emitActivities(analysis: Analysis, options: EmitOptions): string
   const classes = byClass(analysis.activities);
   if (classes.length === 0) return file('export {};');
   const imports = new Imports();
-  imports.add('@norn/workflow', 'defineActivities');
+  imports.add('@norn-ts/workflow', 'defineActivities');
   const blocks = classes.map((cls: ActivitiesModel) => {
     imports.add(importPath(options.outDir, cls.file, options.importExtension), cls.exportName, `${cls.className}$`, true);
     const methods = Object.fromEntries(cls.methods.map((m) => [m.method, m.options]));
@@ -158,7 +158,7 @@ export function emitContracts(analysis: Analysis, options: EmitOptions, targetFi
   const workflows = byName(analysis.workflows);
   if (workflows.length === 0) return file('export {};');
   const imports = new Imports();
-  imports.add('@norn/core', 'contract');
+  imports.add('@norn-ts/core', 'contract');
   const blocks = workflows.map((wf) => {
     imports.add(importPath(dirname(targetFile), wf.file, options.importExtension), wf.exportName, `${wf.name}$`, true);
     return `export const ${wf.name} = contract<typeof ${wf.name}$>()(${print(contractDefinition(wf), 0, 0, true)});`;
@@ -170,8 +170,8 @@ const RESERVED = new Set(['createContainer', 'RegistryContainerOptions', 'create
 
 export function emitContainer(analysis: Analysis, options: EmitOptions): string {
   const imports = new Imports();
-  imports.add('@norn/activity', 'createContainer');
-  imports.add('@norn/worker', 'RegistryContainerOptions', undefined, true);
+  imports.add('@norn-ts/activity', 'createContainer');
+  imports.add('@norn-ts/worker', 'RegistryContainerOptions', undefined, true);
   // One local name per (module, export); aliases only where names collide.
   const aliases = new Map<string, string>();
   const used = new Set(RESERVED);
@@ -247,7 +247,7 @@ export function emitRegistry(analysis: Analysis, options: EmitOptions): string {
   return file(
     [
       "import { fileURLToPath } from 'node:url';",
-      "import type { NornRegistry } from '@norn/worker';",
+      "import type { NornRegistry } from '@norn-ts/worker';",
       `import { createNornContainer } from ${quote(`./container${ext}`)};`,
     ].join('\n'),
     "// `.ts` when run from source (tests, tsx), `.js` once compiled.\nconst ext = import.meta.url.endsWith('.ts') ? '.ts' : '.js';",

@@ -29,4 +29,4 @@ export {
 } from './webhook.js';
 export { hmacSha256Verifier, hmacSha256, timingSafeEqual, type HmacSha256VerifierOptions } from './hmac.js';
 export { codecServer, DEFAULT_CODEC_ORIGINS, type CodecServerOptions, type JsonPayload } from './codec-server.js';
-export { getCorrelationId, runWithCorrelationId, type NornClient } from '@norn/client';
+export { getCorrelationId, runWithCorrelationId, type NornClient } from '@norn-ts/client';

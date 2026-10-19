@@ -1,4 +1,4 @@
-# @norn/workflow
+# @norn-ts/workflow
 
 Write [Temporal](https://temporal.io) workflows as decorated TypeScript classes with [Norn](https://jamie-wk.github.io/norn/). The class's `run()` method is the workflow, its decorated methods are signal, query and update handlers, and its fields are the workflow's state. Activities, child workflows and other workflows are called through typed proxies.
 
@@ -6,22 +6,22 @@ Write [Temporal](https://temporal.io) workflows as decorated TypeScript classes 
 - **`useActivities()`**, **`useChild()`**, **`useExternal()`**: typed calls to activities, child workflows and external workflows, without importing activity code into the sandbox.
 - **`continueAsNew()`**, **`asFailure()`**, **`setSearchAttributes()`**, **`transitions()`**, **`businessCalendar()`**: helpers for long-running workflows, error handling, visibility and state.
 
-Everything here runs inside Temporal's workflow sandbox: the package depends only on `@norn/core`, `@temporalio/workflow` and `@temporalio/common`, and imports no Node APIs. Keep using `sleep`, `condition`, `patched`, `uuid4` and friends from `@temporalio/workflow` directly; Norn does not wrap them.
+Everything here runs inside Temporal's workflow sandbox: the package depends only on `@norn-ts/core`, `@temporalio/workflow` and `@temporalio/common`, and imports no Node APIs. Keep using `sleep`, `condition`, `patched`, `uuid4` and friends from `@temporalio/workflow` directly; Norn does not wrap them.
 
 ## Install
 
 ```sh
-pnpm add @norn/workflow @temporalio/workflow @temporalio/common
+pnpm add @norn-ts/workflow @temporalio/workflow @temporalio/common
 ```
 
-Requires Node 22.18+ and TypeScript with **TC39 standard decorators** (`target` ES2022 or later). Do not enable `experimentalDecorators`: legacy decorators have a different signature and will not work. You also want `@norn/cli` (`norn gen` writes the activity references, contracts and workflow barrel used below) and `@norn/worker` to run the workflows.
+Requires Node 22.18+ and TypeScript with **TC39 standard decorators** (`target` ES2022 or later). Do not enable `experimentalDecorators`: legacy decorators have a different signature and will not work. You also want `@norn-ts/cli` (`norn gen` writes the activity references, contracts and workflow barrel used below) and `@norn-ts/worker` to run the workflows.
 
 ## Example
 
 ```ts
 // src/workflows/order.workflow.ts
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Update, Validate, Workflow, asFailure, setSearchAttributes, transitions, useActivities, useChild } from '@norn/workflow';
+import { Query, Signal, Update, Validate, Workflow, asFailure, setSearchAttributes, transitions, useActivities, useChild } from '@norn-ts/workflow';
 // generated, workflow-safe
 import { InventoryActivities, PaymentActivities } from '../../.norn/activities.js';
 import { InvalidItemError, PaymentDeclinedError, type LineItem, type OrderInput } from '../domain.js';
@@ -203,7 +203,7 @@ private readonly importer = useActivities(ImportActivities, {
 });
 ```
 
-Options are the `ActivityOptions` from `@norn/core` (`timeout`, `scheduleToClose`, `scheduleToStart`, `heartbeat`, `retries`, `retry`, `local`, `nonRetryable`, `taskQueue`, `summary`); `local: true` schedules a local activity. See `@norn/activity` for what each means.
+Options are the `ActivityOptions` from `@norn-ts/core` (`timeout`, `scheduleToClose`, `scheduleToStart`, `heartbeat`, `retries`, `retry`, `local`, `nonRetryable`, `taskQueue`, `summary`); `local: true` schedules a local activity. See `@norn-ts/activity` for what each means.
 
 `defineActivities<T>()({ prefix, methods })` creates the references in `.norn/activities.ts`; you only call it yourself for activities that are not `@Activities` classes. Method keys must be methods of `T`. `activityName(ref, method)` returns the registered name (`'payments.charge'`).
 
@@ -237,7 +237,7 @@ interface ChildHandle<T> {
 }
 ```
 
-`target` is a `@Workflow` class from the same bundle, or a contract (`.norn/contracts.ts` or `defineWorkflow()` from `@norn/core`) for a workflow implemented elsewhere. Input, output and signal arguments are typed from it; signals are named by method (class) or contract key. The child's ID comes from its ID template and the input, its task queue from its own declaration.
+`target` is a `@Workflow` class from the same bundle, or a contract (`.norn/contracts.ts` or `defineWorkflow()` from `@norn-ts/core`) for a workflow implemented elsewhere. Input, output and signal arguments are typed from it; signals are named by method (class) or contract key. The child's ID comes from its ID template and the input, its task queue from its own declaration.
 
 | `ChildOptions` | Description |
 | --- | --- |
@@ -271,7 +271,7 @@ await useExternal(LoyaltyWorkflow, { customerId: input.customerId }).signal('ord
 await useExternal(OrderWorkflow, { workflowId: 'order-o-42' }).cancel();
 ```
 
-Workflow code cannot signal-with-start; do that from an activity with `@norn/client`.
+Workflow code cannot signal-with-start; do that from an activity with `@norn-ts/client`.
 
 ## Helpers
 
@@ -323,7 +323,7 @@ Upserts custom search attributes declared in `@Workflow({ searchAttributes })`, 
 
 ### `transitions()` and `businessCalendar()`
 
-Re-exported from `@norn/core`: a deterministic state machine that ignores illegal moves, and banking-day arithmetic for timers. See the `@norn/core` README.
+Re-exported from `@norn-ts/core`: a deterministic state machine that ignores illegal moves, and banking-day arithmetic for timers. See the `@norn-ts/core` README.
 
 ## Under the hood
 
@@ -352,7 +352,7 @@ Handlers are inherited: a base class can declare signals and queries, and subcla
 | `setSearchAttributes(values)`, `SearchAttributeInput` | Search attributes |
 | `implement(cls, options?)`, `ImplementOptions`, `WorkflowFunction<C>`, `RunArgs<C>` | Workflow functions (generated code) |
 | `describeWorkflow(cls)`, `isWorkflowClass(value)`, `WorkflowDefinition`, `HandlerDefinition`, `VersioningBehavior` | Introspection |
-| `transitions`, `businessCalendar`, `Transitions`, `TransitionTable`, `BusinessCalendar`, `ActivityOptions`, `Duration` | Re-exported from `@norn/core` |
+| `transitions`, `businessCalendar`, `Transitions`, `TransitionTable`, `BusinessCalendar`, `ActivityOptions`, `Duration` | Re-exported from `@norn-ts/core` |
 
 ## License
 

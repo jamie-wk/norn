@@ -1,4 +1,4 @@
-# @norn/testing
+# @norn-ts/testing
 
 Test helpers for [Norn](https://jamie-wk.github.io/norn/) apps, at every level:
 
@@ -9,26 +9,26 @@ Test helpers for [Norn](https://jamie-wk.github.io/norn/) apps, at every level:
 | API routes | `createFakeClient()`: an in-memory `NornClient` with the real error rules | no |
 | Deploy safety | `assertReplays()` with recorded histories | no server; replays locally |
 
-Plus `@norn/testing/vite`, a Vite/Vitest plugin that compiles TC39 standard decorators, and `@norn/testing/vitest`, with `vi.fn()` mocks and a per-file `useTestEnv()`.
+Plus `@norn-ts/testing/vite`, a Vite/Vitest plugin that compiles TC39 standard decorators, and `@norn-ts/testing/vitest`, with `vi.fn()` mocks and a per-file `useTestEnv()`.
 
 ## Install
 
 ```sh
-pnpm add -D @norn/testing @temporalio/testing @temporalio/worker @temporalio/client @temporalio/common
-# for @norn/testing/vitest and @norn/testing/vite (optional peers):
+pnpm add -D @norn-ts/testing @temporalio/testing @temporalio/worker @temporalio/client @temporalio/common
+# for @norn-ts/testing/vitest and @norn-ts/testing/vite (optional peers):
 pnpm add -D vitest esbuild
 ```
 
-Requires Node 22.18+. `vitest` (3 or later) is needed only for `@norn/testing/vitest`, and `esbuild` only for `@norn/testing/vite`.
+Requires Node 22.18+. `vitest` (3 or later) is needed only for `@norn-ts/testing/vitest`, and `esbuild` only for `@norn-ts/testing/vite`.
 
-## Vitest setup: `@norn/testing/vite`
+## Vitest setup: `@norn-ts/testing/vite`
 
 Vite compiles TypeScript with Oxc, which leaves standard decorators in place, and Node cannot run them yet. `standardDecorators()` lowers them with esbuild before Vite's own transform:
 
 ```ts
 // vitest.config.ts
 import { defineConfig } from 'vitest/config';
-import { standardDecorators } from '@norn/testing/vite';
+import { standardDecorators } from '@norn-ts/testing/vite';
 
 export default defineConfig({
   plugins: [standardDecorators()],
@@ -49,7 +49,7 @@ Starts a Temporal server, a Norn client and, with a registry, a worker for your 
 
 ```ts
 import { expect, it } from 'vitest';
-import { createTestEnv, mockActivities } from '@norn/testing';
+import { createTestEnv, mockActivities } from '@norn-ts/testing';
 import { InventoryActivities, NotificationActivities, PaymentActivities } from '../.norn/activities.js';
 import { OrderWorkflow } from '../.norn/contracts.js';
 import { registry } from '../.norn/registry.js';
@@ -85,8 +85,8 @@ it('refunds when cancelled during the window', async () => {
 | `searchAttributes` | Search attributes to register in addition to the registry's. |
 | `taskQueues` | Poll a subset of the registry's queues. |
 | `worker` | `false` to skip the worker. |
-| `dataConverter` | Worker data converter, e.g. `createDataConverter()` from `@norn/codec`. |
-| `clientDataConverter` | Client data converter, e.g. `clientDataConverter()` from `@norn/codec`. |
+| `dataConverter` | Worker data converter, e.g. `createDataConverter()` from `@norn-ts/codec`. |
+| `clientDataConverter` | Client data converter, e.g. `clientDataConverter()` from `@norn-ts/codec`. |
 | `serverPath` | An existing `temporal` CLI (local) or test server (time-skipping) binary. Defaults to `NORN_TEMPORAL_CLI_PATH` / `NORN_TEMPORAL_TEST_SERVER_PATH`, otherwise the SDK downloads one. |
 | `logLevel` | SDK log level. Default `WARN`, or `NORN_TEST_LOG_LEVEL`. |
 
@@ -121,11 +121,11 @@ function mockActivities<R extends ActivitiesRef, const I extends ActivityImpls<R
 
 Replaces some methods of an activity reference (from `.norn/activities.ts`) with test functions, typed from the activity class: unknown method names and wrong parameter or return types are compile errors. Each mock records its arguments in `.calls`. Pass the result to `createTestEnv({ activities })`; mock only what you need. `activityMap(sources)` flattens mock sets and plain records into one `{ registeredName: fn }` map.
 
-## `@norn/testing/vitest`
+## `@norn-ts/testing/vitest`
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { mockActivities, useTestEnv } from '@norn/testing/vitest';
+import { mockActivities, useTestEnv } from '@norn-ts/testing/vitest';
 
 const notify = mockActivities(NotificationActivities, { email: async () => ({ messageId: 'm' }) });
 const env = useTestEnv({ registry, mode: 'time-skipping', activities: notify });
@@ -163,8 +163,8 @@ it('makes declined cards non-retryable', async () => {
 An in-memory `NornClient` for testing API routes without Temporal. It enforces the same rules and throws the same errors as a real server: `WorkflowAlreadyStartedError` for duplicates (honouring `ifRunning` and `ifClosed`), `WorkflowNotFoundError` for unknown IDs, `WorkflowClosedError` for signals, updates and cancels to finished workflows, and ID templates.
 
 ```ts
-import { createFakeClient } from '@norn/testing';
-import { UpdateRejectedError } from '@norn/client';
+import { createFakeClient } from '@norn-ts/testing';
+import { UpdateRejectedError } from '@norn-ts/client';
 
 const fake = createFakeClient();
 // e.g. app.use(temporal({ client: fake }))
@@ -199,7 +199,7 @@ expect((await app.request('/orders/o-1/items', { method: 'POST', body: '{"sku":"
 
 ```ts
 import { fileURLToPath } from 'node:url';
-import { assertReplays, loadHistories } from '@norn/testing';
+import { assertReplays, loadHistories } from '@norn-ts/testing';
 
 it('replays recorded production histories', async () => {
   const histories = await loadHistories(fileURLToPath(new URL('./histories', import.meta.url)));
@@ -218,8 +218,8 @@ it('replays recorded production histories', async () => {
 | `mockActivities(ref, impls)`, `activityMap(sources)`, `ActivityImpls`, `ActivitySource`, `MockedActivities`, `RecordedFn` | Activity mocks |
 | `createFakeClient()`, `FakeNornClient`, `FakeStub`, `FakeCall`, `FakeOp` | Fake client |
 | `assertReplays(histories, options)`, `loadHistories(dir)`, `RecordedHistory`, `ReplayOptions` | Replay tests |
-| `@norn/testing/vitest`: `mockActivities(ref, impls)`, `useTestEnv(options?)`, plus `createTestEnv`, `createFakeClient`, `TestEnv`, `TestEnvOptions`, `FakeNornClient` | Vitest helpers |
-| `@norn/testing/vite`: `standardDecorators(options?)`, `StandardDecoratorsOptions`, `DecoratorPlugin` | Decorator plugin |
+| `@norn-ts/testing/vitest`: `mockActivities(ref, impls)`, `useTestEnv(options?)`, plus `createTestEnv`, `createFakeClient`, `TestEnv`, `TestEnvOptions`, `FakeNornClient` | Vitest helpers |
+| `@norn-ts/testing/vite`: `standardDecorators(options?)`, `StandardDecoratorsOptions`, `DecoratorPlugin` | Decorator plugin |
 
 ## License
 

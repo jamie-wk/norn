@@ -12,8 +12,8 @@ export function fixture(name: string): string {
 }
 
 /**
- * Temporary projects live under packages/cli/test/.tmp so `@norn/*` imports (and the
- * `@norn/cli` self-reference in norn.config.ts) resolve exactly as they do for the fixtures.
+ * Temporary projects live under packages/cli/test/.tmp so `@norn-ts/*` imports (and the
+ * `@norn-ts/cli` self-reference in norn.config.ts) resolve exactly as they do for the fixtures.
  */
 export function tempDir(prefix = 'project'): string {
   const root = join(here, '.tmp');

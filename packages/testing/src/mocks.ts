@@ -1,4 +1,4 @@
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 
 type AnyFn = (...args: any[]) => any;
 

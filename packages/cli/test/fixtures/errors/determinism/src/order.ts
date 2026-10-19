@@ -1,4 +1,4 @@
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 
 function helper(process: { env: string }) {
   return process.env;

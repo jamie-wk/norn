@@ -1,4 +1,4 @@
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 import { env, total } from '../lib/index.js';
 
 @Workflow({ taskQueue: 'orders' })

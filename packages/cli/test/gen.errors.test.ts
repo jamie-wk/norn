@@ -104,8 +104,8 @@ describe('import boundaries', () => {
     expectError(errors, { code: 'import-boundary', file, line: 1, message: 'Node built-in "node:fs"' });
     expectError(errors, { code: 'import-boundary', file, line: 2, message: 'Node built-in "path"' });
     expectError(errors, { code: 'import-boundary', file, line: 3, message: '"@temporalio/client"' });
-    expectError(errors, { code: 'import-boundary', file, line: 4, message: '"@norn/activity"' });
-    expectError(errors, { code: 'import-boundary', file, line: 5, message: '"@norn/worker/sub/path"' });
+    expectError(errors, { code: 'import-boundary', file, line: 4, message: '"@norn-ts/activity"' });
+    expectError(errors, { code: 'import-boundary', file, line: 5, message: '"@norn-ts/worker/sub/path"' });
     expectError(errors, { code: 'import-boundary', file, line: 8, message: '"@temporalio/activity"' });
     expectError(errors, { code: 'import-boundary', file, line: 16, message: 'Node built-in "node:crypto"' });
     expect(errors).toHaveLength(7);
@@ -206,7 +206,7 @@ describe('workflow structure', () => {
 
   it('reports syntax errors with their location', async () => {
     const { project, removeDir } = await import('./helpers.ts');
-    const dir = project({ 'src/broken.ts': "import { Workflow } from '@norn/workflow';\n\nconst x = ;\n" });
+    const dir = project({ 'src/broken.ts': "import { Workflow } from '@norn-ts/workflow';\n\nconst x = ;\n" });
     try {
       const { errors } = await generate({ cwd: dir, write: false });
       expectError(errors, { code: 'parse-error', file: 'src/broken.ts', line: 3 });

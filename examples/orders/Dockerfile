@@ -12,7 +12,7 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Compile the packages, generate .norn, compile the worker and prebuild its workflow bundle.
 RUN pnpm build && pnpm --filter @norn/example-orders-worker build
-# Without auto-install-peers=false, deploy tries to fetch @norn/cli's optional @norn/* peers from npm.
+# Without auto-install-peers=false, deploy tries to fetch @norn-ts/cli's optional @norn-ts/* peers from npm.
 RUN export npm_config_auto_install_peers=false \
  && pnpm deploy --filter @norn/example-orders-worker --prod --legacy /out/worker \
  && cp -r examples/orders/worker/dist /out/worker/dist \
@@ -23,7 +23,7 @@ RUN export npm_config_auto_install_peers=false \
 RUN pnpm exec esbuild examples/orders/api/src/main.ts --bundle --platform=node --format=esm --target=node22 \
       --outfile=/out/api/dist/main.js \
       --external:@temporalio/* --external:hono --external:@hono/node-server \
-      --external:@norn/client --external:@norn/codec --external:@norn/core --external:@norn/hono
+      --external:@norn-ts/client --external:@norn-ts/codec --external:@norn-ts/core --external:@norn-ts/hono
 
 FROM node:24-bookworm-slim AS worker
 WORKDIR /app

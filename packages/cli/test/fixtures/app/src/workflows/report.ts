@@ -1,4 +1,4 @@
-import * as wf from '@norn/workflow';
+import * as wf from '@norn-ts/workflow';
 import { ReportActivities } from '../../.norn/activities.js';
 
 export interface ReportInput {

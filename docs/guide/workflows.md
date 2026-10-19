@@ -4,7 +4,7 @@ A Norn workflow is a class decorated with `@Workflow`. Its `run()` method is the
 
 ```ts
 import { sleep } from '@temporalio/workflow';
-import { Query, Signal, Workflow, useActivities } from '@norn/workflow';
+import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
 import { ReminderActivities } from '../../.norn/activities.js';
 
 export interface ReminderInput {
@@ -167,10 +167,10 @@ const approved = await condition(() => this.approved, '48 hours');
 await condition(() => this.items.length > 0);
 ```
 
-`sleep()` and `condition()` take milliseconds or the SDK's duration strings (`'90s'`, `'2 hours'`, `'3 days'`). Norn's own options accept the [`Duration`](https://github.com/jamie-wk/norn/tree/main/packages/core#durations) type, which also allows ISO 8601 (`'PT15M'`) and compound forms (`'1h30m'`); when you receive a Norn `Duration` in workflow input, convert it with `toMs()` from `@norn/core`:
+`sleep()` and `condition()` take milliseconds or the SDK's duration strings (`'90s'`, `'2 hours'`, `'3 days'`). Norn's own options accept the [`Duration`](https://github.com/jamie-wk/norn/tree/main/packages/core#durations) type, which also allows ISO 8601 (`'PT15M'`) and compound forms (`'1h30m'`); when you receive a Norn `Duration` in workflow input, convert it with `toMs()` from `@norn-ts/core`:
 
 ```ts
-import { toMs, type Duration } from '@norn/core';
+import { toMs, type Duration } from '@norn-ts/core';
 
 async run(input: { remindAfter: Duration }) {
   await sleep(toMs(input.remindAfter));
@@ -182,7 +182,7 @@ async run(input: { remindAfter: Duration }) {
 Declare the custom search attributes a workflow sets, then set them with `setSearchAttributes()`:
 
 ```ts
-import { Workflow, setSearchAttributes } from '@norn/workflow';
+import { Workflow, setSearchAttributes } from '@norn-ts/workflow';
 
 @Workflow({
   taskQueue: 'orders',
@@ -236,10 +236,10 @@ Only the concrete workflow class is decorated with `@Workflow`.
 
 ## State machines with `transitions()`
 
-Real workflows react to events that arrive late, twice or out of order (webhooks, user clicks, retries). `transitions()` from `@norn/workflow` is a tiny deterministic state machine that ignores illegal moves instead of corrupting state:
+Real workflows react to events that arrive late, twice or out of order (webhooks, user clicks, retries). `transitions()` from `@norn-ts/workflow` is a tiny deterministic state machine that ignores illegal moves instead of corrupting state:
 
 ```ts
-import { transitions } from '@norn/workflow';
+import { transitions } from '@norn-ts/workflow';
 
 private readonly status = transitions(
   {
@@ -266,7 +266,7 @@ The machine has `current`, `version` (incremented on every applied move, handy f
 `businessCalendar()` does deterministic banking-day arithmetic for timers such as ACH settlement windows:
 
 ```ts
-import { businessCalendar } from '@norn/workflow';
+import { businessCalendar } from '@norn-ts/workflow';
 
 const calendar = businessCalendar({ holidays: input.holidays, utcOffsetMinutes: -300 });
 await condition(() => this.settled, calendar.msUntilBusinessDays(Date.now(), 3));
@@ -282,4 +282,4 @@ It is pure arithmetic, so it is safe in workflow code; load the holiday list wit
 - `describeWorkflow(cls)` returns the validated definition: name, task queue, handlers, validators and options.
 - `isWorkflowClass(value)` checks for the `@Workflow` decorator.
 
-Decorated methods must be public, non-static and string-named; `@Workflow` validates its options when the class is defined and throws `NornConfigError` for bad values. See the [`@norn/workflow` README](https://github.com/jamie-wk/norn/tree/main/packages/workflow#readme).
+Decorated methods must be public, non-static and string-named; `@Workflow` validates its options when the class is defined and throws `NornConfigError` for bad values. See the [`@norn-ts/workflow` README](https://github.com/jamie-wk/norn/tree/main/packages/workflow#readme).

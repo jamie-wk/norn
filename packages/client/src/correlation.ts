@@ -1,9 +1,9 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { defaultPayloadConverter, type Payload } from '@temporalio/common';
 import type { WorkflowClientInterceptor } from '@temporalio/client';
-import { CORRELATION_HEADER } from '@norn/core';
+import { CORRELATION_HEADER } from '@norn-ts/core';
 
-// Shared with @norn/activity and @norn/worker through globalThis, so separate copies of the
+// Shared with @norn-ts/activity and @norn-ts/worker through globalThis, so separate copies of the
 // packages (or a bundler) still agree on the current correlation ID.
 const KEY = Symbol.for('norn.correlation');
 const globals = globalThis as Record<symbol, unknown>;

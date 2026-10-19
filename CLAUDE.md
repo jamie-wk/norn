@@ -1,8 +1,8 @@
 # Norn — notes for Claude Code
 
 Norn is an open-source (MIT, maintained by Jamie King, GitHub `jamie-wk/norn`) decorator-driven
-TypeScript framework on top of the Temporal TypeScript SDK 1.24, published as `@norn/*` on npm
-(the bare `norn` name is taken; fallback scope `@nornjs/*`). Docs go to https://jamie-wk.github.io/norn/.
+TypeScript framework on top of the Temporal TypeScript SDK 1.24, published as `@norn-ts/*` on npm
+(the `norn` and `nornjs` npm orgs are taken; the product, CLI and config are still called Norn). Docs go to https://jamie-wk.github.io/norn/.
 
 **Start with [HANDOFF.md](./HANDOFF.md)**: current status, known failures and the remaining work, in order.
 
@@ -15,7 +15,7 @@ TypeScript framework on top of the Temporal TypeScript SDK 1.24, published as `@
 - TC39 **standard** decorators only — never `experimentalDecorators`.
 - Keep type safety end to end: workflow IDs, handler args/results, search attributes and activity
   signatures are all checked at compile time. Don't loosen types to make something compile.
-- Dependency discipline: `@norn/core` has zero runtime deps; `@norn/workflow` depends only on core +
+- Dependency discipline: `@norn-ts/core` has zero runtime deps; `@norn-ts/workflow` depends only on core +
   `@temporalio/workflow|common`; nothing that runs in the workflow sandbox imports Node APIs.
   `pnpm check:deps` enforces this.
 

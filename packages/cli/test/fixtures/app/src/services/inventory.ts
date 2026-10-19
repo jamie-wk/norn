@@ -1,4 +1,4 @@
-import { Service } from '@norn/activity';
+import { Service } from '@norn-ts/activity';
 import { Db } from './tokens.js';
 
 /** Stock levels, one instance per activity execution. */

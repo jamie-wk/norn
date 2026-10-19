@@ -1,6 +1,6 @@
 import { serve } from '@hono/node-server';
-import { createClient } from '@norn/client';
-import { clientDataConverter, createEncryptionCodec } from '@norn/codec';
+import { createClient } from '@norn-ts/client';
+import { clientDataConverter, createEncryptionCodec } from '@norn-ts/codec';
 import { createApp } from './app.ts';
 
 const keys = process.env.NORN_ENCRYPTION_KEYS ? (JSON.parse(process.env.NORN_ENCRYPTION_KEYS) as Record<string, string>) : undefined;

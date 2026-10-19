@@ -1,4 +1,4 @@
-import { Service, token } from '@norn/activity';
+import { Service, token } from '@norn-ts/activity';
 import { HttpClient } from './http.ts';
 
 export interface Mailer {

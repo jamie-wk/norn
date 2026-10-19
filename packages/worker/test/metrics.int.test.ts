@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { createServer } from 'node:net';
 import type { TestWorkflowEnvironment } from '@temporalio/testing';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { createLocalEnv } from '../../../tooling/test-support/temporal.ts';
 import { bundleWorkflows, createWorker, installRuntime } from '../src/index.ts';
 import { registry } from './fixtures/registry.ts';

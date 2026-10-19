@@ -68,7 +68,7 @@ Bundles <outDir>/workflows.(ts|js) with Norn's bundler settings and workflow int
 
 Options:
   --out <file>      Output file. Defaults to dist/workflow-bundle.js.
-  --codec           Include @norn/codec's payload converter.
+  --codec           Include @norn-ts/codec's payload converter.
   --config <path>   Use this config file.`,
 };
 

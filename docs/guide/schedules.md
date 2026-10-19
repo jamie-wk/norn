@@ -3,7 +3,7 @@
 Temporal [schedules](https://docs.temporal.io/schedule) start a workflow on a calendar: every night at 02:00, every weekday at 09:00 in Chicago, the first of every month. In Norn you declare them next to the workflow with `@Schedule`, and `norn schedules sync` makes the server match your code.
 
 ```ts
-import { Schedule, Workflow, useActivities } from '@norn/workflow';
+import { Schedule, Workflow, useActivities } from '@norn-ts/workflow';
 import { NotificationActivities } from '../../.norn/activities.js';
 
 /** Emails the ops team every morning. */

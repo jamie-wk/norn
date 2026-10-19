@@ -1,5 +1,5 @@
-import { Activities, Activity, token } from '@norn/activity';
-import type { NornClient } from '@norn/client';
+import { Activities, Activity, token } from '@norn-ts/activity';
+import type { NornClient } from '@norn-ts/client';
 import { LoyaltyWorkflow } from '../../.norn/contracts.ts';
 
 export const TemporalClient = token<NornClient>('TemporalClient');

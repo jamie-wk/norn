@@ -1,4 +1,4 @@
-import { provide } from '@norn/activity';
+import { provide } from '@norn-ts/activity';
 import { Config, Db } from './services/tokens.js';
 
 class MemoryDb implements Db {

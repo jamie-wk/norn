@@ -7,7 +7,7 @@ import {
   setHandler,
   setWorkflowOptions,
 } from '@temporalio/workflow';
-import { type WorkflowClass, type WorkflowInput, type WorkflowOutput } from '@norn/core';
+import { type WorkflowClass, type WorkflowInput, type WorkflowOutput } from '@norn-ts/core';
 import { describeWorkflow, type HandlerDefinition, type UnfinishedPolicy, type WorkflowDefinition } from './definition.js';
 
 export interface ImplementOptions {

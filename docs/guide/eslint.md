@@ -1,9 +1,9 @@
 # ESLint rules
 
-`@norn/eslint-plugin` reports workflow-sandbox mistakes in your editor, as you type. `norn gen` performs the precise checks (it follows imports across files and knows exactly which classes are workflows); the ESLint rules are the fast, file-by-file approximation that catches most problems before you save.
+`@norn-ts/eslint-plugin` reports workflow-sandbox mistakes in your editor, as you type. `norn gen` performs the precise checks (it follows imports across files and knows exactly which classes are workflows); the ESLint rules are the fast, file-by-file approximation that catches most problems before you save.
 
 ```sh
-pnpm add -D @norn/eslint-plugin eslint @typescript-eslint/parser
+pnpm add -D @norn-ts/eslint-plugin eslint @typescript-eslint/parser
 ```
 
 Requires ESLint 9+ (flat config).
@@ -11,7 +11,7 @@ Requires ESLint 9+ (flat config).
 ```js
 // eslint.config.js
 import tsParser from '@typescript-eslint/parser';
-import norn from '@norn/eslint-plugin';
+import norn from '@norn-ts/eslint-plugin';
 
 export default [
   { files: ['**/*.ts'], languageOptions: { parser: tsParser } },
@@ -30,7 +30,7 @@ Use `@typescript-eslint/parser` (or another parser that understands TypeScript a
 To cover other files or pass options, configure the rules yourself:
 
 ```js
-import norn, { workflowFiles } from '@norn/eslint-plugin';
+import norn, { workflowFiles } from '@norn-ts/eslint-plugin';
 
 export default [
   { files: ['**/*.ts'], languageOptions: { parser: tsParser } },
@@ -68,7 +68,7 @@ Uses through `globalThis.`, `window.`, `self.` and `global.` are caught, as is `
 Reports imports that would load, in workflow code:
 
 1. **Node built-ins**: anything `module.isBuiltin()` accepts (`fs`, `fs/promises`, `node:test`, ...).
-2. **Packages that can't run in the sandbox**: `@temporalio/activity`, `@temporalio/client`, `@temporalio/worker`, `@temporalio/testing`, `@norn/activity`, `@norn/worker`, `@norn/client`, `@norn/testing`, `@norn/hono`, `@norn/cli` (and their subpaths), plus your `deny` list.
+2. **Packages that can't run in the sandbox**: `@temporalio/activity`, `@temporalio/client`, `@temporalio/worker`, `@temporalio/testing`, `@norn-ts/activity`, `@norn-ts/worker`, `@norn-ts/client`, `@norn-ts/testing`, `@norn-ts/hono`, `@norn-ts/cli` (and their subpaths), plus your `deny` list.
 3. **Activity and service modules**: specifiers matching `activityPatterns`.
 4. **Any other bare package not allowed**, only with `onlyAllowed: true`.
 
@@ -77,7 +77,7 @@ Reports imports that would load, in workflow code:
 | Option | Default | Description |
 | --- | --- | --- |
 | `activityPatterns` | see below | Globs matched against the import specifier. **Replaces** the defaults. |
-| `allow` | `[]` | Specifiers never reported, added to the built-in allow list (`@temporalio/workflow`, `@temporalio/common`, `@norn/workflow`, `@norn/core`). Each also allows its subpaths. Wins over everything. |
+| `allow` | `[]` | Specifiers never reported, added to the built-in allow list (`@temporalio/workflow`, `@temporalio/common`, `@norn-ts/workflow`, `@norn-ts/core`). Each also allows its subpaths. Wins over everything. |
 | `deny` | `[]` | Packages always reported, added to the built-in deny list. |
 | `onlyAllowed` | `false` | Report every bare package import that isn't allowed. |
 
@@ -100,7 +100,7 @@ import { Connection } from '@temporalio/client';
 // Fine
 import type { PaymentActivities as PaymentActivitiesClass } from '../activities/payment.activities.js';
 import { PaymentActivities } from '../../.norn/activities.js';
-import { Workflow, useActivities } from '@norn/workflow';
+import { Workflow, useActivities } from '@norn-ts/workflow';
 import { sleep } from '@temporalio/workflow';
 ```
 

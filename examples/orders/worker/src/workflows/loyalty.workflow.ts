@@ -1,5 +1,5 @@
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Workflow, continueAsNew, continueAsNewSuggested } from '@norn/workflow';
+import { Query, Signal, Workflow, continueAsNew, continueAsNewSuggested } from '@norn-ts/workflow';
 
 export interface LoyaltyInput {
   customerId: string;

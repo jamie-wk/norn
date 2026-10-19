@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MockActivityEnvironment } from '@temporalio/testing';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { activityMap, mockActivities } from '../src/index.ts';
 import { NotifyActivities } from './fixtures/refs.ts';
 

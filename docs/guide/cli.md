@@ -1,9 +1,9 @@
 # The norn CLI
 
-`@norn/cli` provides the `norn` command. Install it as a dev dependency and run it through your package manager (`pnpm norn gen`, `npx norn gen`).
+`@norn-ts/cli` provides the `norn` command. Install it as a dev dependency and run it through your package manager (`pnpm norn gen`, `npx norn gen`).
 
 ```sh
-pnpm add -D @norn/cli
+pnpm add -D @norn-ts/cli
 norn --help
 ```
 
@@ -62,7 +62,7 @@ See [Project layout & codegen](/guide/project-layout) for what is generated and 
 ### `norn.config.ts`
 
 ```ts
-import { defineConfig } from '@norn/cli';
+import { defineConfig } from '@norn-ts/cli';
 
 export default defineConfig({
   include: ['src/**/*.ts'],
@@ -97,7 +97,7 @@ Bundles `<outDir>/workflows.ts` (or `workflows.js`, if you compiled it) with Nor
 | Flag | Description |
 | --- | --- |
 | `--out <file>` | Output file. Defaults to `dist/workflow-bundle.js`. |
-| `--codec` | Include `@norn/codec`'s payload converter. |
+| `--codec` | Include `@norn-ts/codec`'s payload converter. |
 | `--config <path>` | Use this config file. |
 
 ## `norn schedules sync`

@@ -1,5 +1,5 @@
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Update, Validate, Workflow, asFailure, setSearchAttributes, transitions, useActivities, useChild } from '@norn/workflow';
+import { Query, Signal, Update, Validate, Workflow, asFailure, setSearchAttributes, transitions, useActivities, useChild } from '@norn-ts/workflow';
 import { InventoryActivities, LoyaltyActivities, NotificationActivities, PaymentActivities } from '../../.norn/activities.ts';
 import { InvalidItemError, OrderStateError, OutOfStockError, PaymentDeclinedError, itemError, type LineItem, type OrderInput, type OrderStatus, type OrderView } from '../domain.ts';
 import { ShipmentWorkflow } from './shipment.workflow.ts';

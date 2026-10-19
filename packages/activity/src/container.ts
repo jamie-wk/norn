@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Context, type Info } from '@temporalio/activity';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { describeActivities, describeService, type ActivitiesDefinition, type Scope } from './decorators.js';
 import { mapActivityError, validateErrorOptions, type ErrorMappingOptions } from './errors.js';
 import { keyName, isInjectionKey, type InjectionKey, type Resolved } from './tokens.js';

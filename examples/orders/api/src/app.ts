@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { PayloadCodec } from '@temporalio/common';
-import type { NornClient } from '@norn/client';
-import { codecServer, hmacSha256Verifier, nornErrorHandler, signalAction, temporal, temporalWebhook, timingSafeEqual, type NornEnv } from '@norn/hono';
+import type { NornClient } from '@norn-ts/client';
+import { codecServer, hmacSha256Verifier, nornErrorHandler, signalAction, temporal, temporalWebhook, timingSafeEqual, type NornEnv } from '@norn-ts/hono';
 import { LoyaltyWorkflow, OrderWorkflow } from '@norn/example-orders-contracts';
 
 export interface AppOptions {

@@ -1,7 +1,7 @@
 // Workflow tests: real workflow code on Temporal's time-skipping server, activities mocked.
 import { describe, expect, it } from 'vitest';
-import { createTestEnv, mockActivities } from '@norn/testing';
-import { UpdateRejectedError } from '@norn/core';
+import { createTestEnv, mockActivities } from '@norn-ts/testing';
+import { UpdateRejectedError } from '@norn-ts/core';
 import { InventoryActivities, LoyaltyActivities, NotificationActivities, PaymentActivities, ShippingActivities } from '../.norn/activities.ts';
 import { LoyaltyWorkflow, OrderWorkflow } from '../.norn/contracts.ts';
 import { registry } from '../.norn/registry.ts';

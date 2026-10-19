@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { Hono } from 'hono';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { hmacSha256, hmacSha256Verifier, temporal, temporalWebhook, timingSafeEqual, type NornEnv } from '../src/index.ts';
 import { fakeClient } from './helpers.ts';
 

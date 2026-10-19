@@ -1,4 +1,4 @@
-import { Activities, Activity, NonRetryable } from '@norn/activity';
+import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
 import { InvalidCardError } from '../errors.js';
 import { Config, TransferService } from '../services/index.js';
 

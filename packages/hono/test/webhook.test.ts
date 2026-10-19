@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Hono } from 'hono';
-import { NornConfigError } from '@norn/core';
-import { getCorrelationId } from '@norn/client';
+import { NornConfigError } from '@norn-ts/core';
+import { getCorrelationId } from '@norn-ts/client';
 import {
   nornErrorHandler,
   signalAction,

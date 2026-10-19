@@ -24,4 +24,4 @@ export {
   WorkflowNotFoundError,
   isNornError,
   type AnyWorkflowContract,
-} from '@norn/core';
+} from '@norn-ts/core';

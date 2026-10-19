@@ -1,4 +1,4 @@
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 import { Temporal as T } from 'temporal-polyfill';
 
 function hoisted() {

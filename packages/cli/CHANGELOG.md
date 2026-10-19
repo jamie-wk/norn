@@ -1,4 +1,4 @@
-# @norn/cli
+# @norn-ts/cli
 
 ## 1.0.0
 

@@ -1,5 +1,5 @@
 {
-  "name": "@norn/worker",
+  "name": "@norn-ts/worker",
   "version": "1.0.0",
   "description": "createWorker(): registration, bundling, versioning, graceful drain and health checks for Norn workers.",
   "license": "MIT",
@@ -53,8 +53,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@norn/core": "workspace:^",
-    "@norn/activity": "workspace:^"
+    "@norn-ts/core": "workspace:^",
+    "@norn-ts/activity": "workspace:^"
   },
   "peerDependencies": {
     "@temporalio/worker": "^1.24.0",
@@ -68,8 +68,8 @@
     "@temporalio/activity": "1.24.0",
     "@temporalio/common": "1.24.0",
     "@temporalio/testing": "1.24.0",
-    "@norn/workflow": "workspace:^",
-    "@norn/client": "workspace:^",
-    "@norn/codec": "workspace:^"
+    "@norn-ts/workflow": "workspace:^",
+    "@norn-ts/client": "workspace:^",
+    "@norn-ts/codec": "workspace:^"
   }
 }

@@ -14,7 +14,7 @@ Shared types and errors live in a workflow-safe module, with no I/O, so both the
 
 ```ts
 // src/invitations/domain.ts
-import type { Duration } from '@norn/core';
+import type { Duration } from '@norn-ts/core';
 
 export interface InvitationTerms {
   // "Electrical rough-in, building B"
@@ -81,7 +81,7 @@ The activities need a mailer and somewhere to store subcontracts. Both are inter
 
 ```ts
 // src/services/mailer.ts
-import { Service, token } from '@norn/activity';
+import { Service, token } from '@norn-ts/activity';
 import { InvalidRecipientError } from '../invitations/domain.js';
 import { AppConfig } from './config.js';
 
@@ -109,7 +109,7 @@ export class HttpMailer implements Mailer {
 
 ```ts
 // src/services/subcontracts.ts
-import { Service, token } from '@norn/activity';
+import { Service, token } from '@norn-ts/activity';
 import type { InvitationTerms } from '../invitations/domain.js';
 import { Db } from './db.js';
 
@@ -152,7 +152,7 @@ export class PgSubcontractRepository implements SubcontractRepository {
 
 ```ts
 // src/activities/invitation.activities.ts
-import { Activities, Activity, NonRetryable, idempotencyKey } from '@norn/activity';
+import { Activities, Activity, NonRetryable, idempotencyKey } from '@norn-ts/activity';
 import { InvalidRecipientError, type InvitationTerms } from '../invitations/domain.js';
 import { AppConfig } from '../services/config.js';
 import { Mailer } from '../services/mailer.js';
@@ -217,8 +217,8 @@ export class InvitationActivities {
 ```ts
 // src/workflows/subcontractor-invitation.workflow.ts
 import { condition } from '@temporalio/workflow';
-import { toMs } from '@norn/core';
-import { Query, Signal, Update, Validate, Workflow, setSearchAttributes, transitions, useActivities } from '@norn/workflow';
+import { toMs } from '@norn-ts/core';
+import { Query, Signal, Update, Validate, Workflow, setSearchAttributes, transitions, useActivities } from '@norn-ts/workflow';
 import { InvitationActivities } from '../../.norn/activities.js';
 import {
   InvalidTermsError,
@@ -392,7 +392,7 @@ Things worth noticing:
 ```ts
 // src/api/invitations.ts
 import { Hono } from 'hono';
-import type { NornEnv } from '@norn/hono';
+import type { NornEnv } from '@norn-ts/hono';
 import { SubcontractorInvitationWorkflow } from '../../.norn/contracts.js';
 import type { InvitationTerms, TermsChange } from '../invitations/domain.js';
 import { currentCompany, currentUser } from './auth.js';
@@ -452,7 +452,7 @@ Time-skipping makes a 14-day workflow a sub-second test:
 ```ts
 // test/subcontractor-invitation.test.ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { mockActivities, useTestEnv } from '@norn/testing/vitest';
+import { mockActivities, useTestEnv } from '@norn-ts/testing/vitest';
 import { InvitationActivities } from '../.norn/activities.js';
 import { SubcontractorInvitationWorkflow } from '../.norn/contracts.js';
 import { registry } from '../.norn/registry.js';

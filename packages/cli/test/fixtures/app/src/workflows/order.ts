@@ -1,5 +1,5 @@
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Update, Validate, Workflow, useActivities } from '@norn/workflow';
+import { Query, Signal, Update, Validate, Workflow, useActivities } from '@norn-ts/workflow';
 import { InventoryActivities, PaymentActivities } from '../../.norn/activities.js';
 import { InvalidOrderError } from '../errors.js';
 

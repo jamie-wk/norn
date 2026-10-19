@@ -27,7 +27,7 @@ export const defaultActivityPatterns: readonly string[] = [
 ];
 
 /** Packages that are always safe to import from workflow code. */
-export const defaultAllow: readonly string[] = ['@temporalio/workflow', '@temporalio/common', '@norn/workflow', '@norn/core'];
+export const defaultAllow: readonly string[] = ['@temporalio/workflow', '@temporalio/common', '@norn-ts/workflow', '@norn-ts/core'];
 
 /** Packages that cannot run in the Temporal workflow sandbox, reported even without `onlyAllowed`. */
 export const defaultDeny: readonly string[] = [
@@ -35,12 +35,12 @@ export const defaultDeny: readonly string[] = [
   '@temporalio/client',
   '@temporalio/worker',
   '@temporalio/testing',
-  '@norn/activity',
-  '@norn/worker',
-  '@norn/client',
-  '@norn/testing',
-  '@norn/hono',
-  '@norn/cli',
+  '@norn-ts/activity',
+  '@norn-ts/worker',
+  '@norn-ts/client',
+  '@norn-ts/testing',
+  '@norn-ts/hono',
+  '@norn-ts/cli',
 ];
 
 /** `specifier` is `name` or one of its subpaths. */

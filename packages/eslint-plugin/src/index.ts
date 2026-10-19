@@ -21,13 +21,13 @@ export interface NornPlugin extends ESLint.Plugin {
 }
 
 const plugin: NornPlugin = {
-  meta: { name: '@norn/eslint-plugin', version: '1.0.0' },
+  meta: { name: '@norn-ts/eslint-plugin', version: '1.0.0' },
   rules,
   configs: {} as NornPlugin['configs'],
 };
 
 plugin.configs.recommended = {
-  name: '@norn/eslint-plugin/recommended',
+  name: '@norn-ts/eslint-plugin/recommended',
   files: workflowFiles,
   plugins: { norn: plugin },
   rules: {

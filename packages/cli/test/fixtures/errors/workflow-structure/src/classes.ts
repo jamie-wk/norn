@@ -1,5 +1,5 @@
-import { Workflow } from '@norn/workflow';
-import { Activities, Activity, Service } from '@norn/activity';
+import { Workflow } from '@norn-ts/workflow';
+import { Activities, Activity, Service } from '@norn-ts/activity';
 
 @Activities({ prefix: 1 })
 export class EmptyActivities {}

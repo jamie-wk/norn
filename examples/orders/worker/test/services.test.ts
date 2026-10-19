@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { MockActivityEnvironment } from '@temporalio/testing';
 import { ApplicationFailure } from '@temporalio/common';
-import { createContainer, provide } from '@norn/activity';
+import { createContainer, provide } from '@norn-ts/activity';
 import { PaymentActivities } from '../src/activities/payment.activities.ts';
 import { AppConfig } from '../src/services/config.ts';
 import { HttpClient, HttpError } from '../src/services/http.ts';

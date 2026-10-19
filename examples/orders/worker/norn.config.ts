@@ -1,4 +1,4 @@
-import { defineConfig } from '@norn/cli';
+import { defineConfig } from '@norn-ts/cli';
 
 export default defineConfig({
   include: ['src/**/*.ts'],

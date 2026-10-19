@@ -9,8 +9,8 @@ import {
   type ContractOutput,
   type RefArgs,
   type RefResult,
-} from '@norn/core';
-import { resolveWorkflowId, type NornClient, type StartOptions, type WorkflowClient, type WorkflowHandle, type WorkflowStatus, type WorkflowSummary } from '@norn/client';
+} from '@norn-ts/core';
+import { resolveWorkflowId, type NornClient, type StartOptions, type WorkflowClient, type WorkflowHandle, type WorkflowStatus, type WorkflowSummary } from '@norn-ts/client';
 
 type Keys<R> = keyof R & string;
 type Args<R> = RefArgs<R> extends infer A extends unknown[] ? A : never;

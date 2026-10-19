@@ -1,5 +1,5 @@
 {
-  "name": "@norn/activity",
+  "name": "@norn-ts/activity",
   "version": "1.0.0",
   "description": "Activity and service decorators, error mapping and compile-time dependency injection for Norn.",
   "license": "MIT",
@@ -48,7 +48,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@norn/core": "workspace:^"
+    "@norn-ts/core": "workspace:^"
   },
   "peerDependencies": {
     "@temporalio/activity": "^1.24.0",

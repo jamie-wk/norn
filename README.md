@@ -53,7 +53,7 @@ With Norn:
 ```ts
 // src/workflows/order.workflow.ts
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Workflow, useActivities } from '@norn/workflow';
+import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
 // generated, workflow-safe
 import { PaymentActivities } from '../../.norn/activities.js';
 
@@ -85,7 +85,7 @@ export class OrderWorkflow {
 
 ```ts
 // src/activities/payment.activities.ts
-import { Activities, Activity, NonRetryable } from '@norn/activity';
+import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
 import { CardDeclinedError, PaymentGateway } from '../services/payment-gateway.js';
 
 @Activities({ prefix: 'payments.' })
@@ -131,9 +131,9 @@ Norn never hides Temporal: every wrapper exposes the SDK object underneath (`han
 ## Install
 
 ```sh
-pnpm add @norn/core @norn/workflow @norn/activity @norn/worker @norn/client \
+pnpm add @norn-ts/core @norn-ts/workflow @norn-ts/activity @norn-ts/worker @norn-ts/client \
   @temporalio/workflow @temporalio/activity @temporalio/worker @temporalio/client @temporalio/common
-pnpm add -D @norn/cli @norn/testing @norn/eslint-plugin @temporalio/testing typescript vitest esbuild
+pnpm add -D @norn-ts/cli @norn-ts/testing @norn-ts/eslint-plugin @temporalio/testing typescript vitest esbuild
 ```
 
 The Temporal SDK packages are peer dependencies, so your app controls the SDK version.
@@ -146,7 +146,7 @@ The Temporal SDK packages are peer dependencies, so your app controls the SDK ve
 
    ```ts
    // norn.config.ts
-   import { defineConfig } from '@norn/cli';
+   import { defineConfig } from '@norn-ts/cli';
 
    export default defineConfig({ include: ['src/**/*.ts'] });
    ```
@@ -163,7 +163,7 @@ The Temporal SDK packages are peer dependencies, so your app controls the SDK ve
 
    ```ts
    // src/worker.ts
-   import { createWorker } from '@norn/worker';
+   import { createWorker } from '@norn-ts/worker';
    import { registry } from '../.norn/registry.js';
 
    // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
@@ -175,14 +175,14 @@ The Temporal SDK packages are peer dependencies, so your app controls the SDK ve
 5. **Start workflows** from any API:
 
    ```ts
-   import { createClient } from '@norn/client';
+   import { createClient } from '@norn-ts/client';
    import { OrderWorkflow } from '../.norn/contracts.js';
 
    const norn = createClient();
    const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-1', cents: 1999 });
    ```
 
-6. **Test it** with `createTestEnv()` from `@norn/testing` and the `standardDecorators()` Vite plugin from `@norn/testing/vite`.
+6. **Test it** with `createTestEnv()` from `@norn-ts/testing` and the `standardDecorators()` Vite plugin from `@norn-ts/testing/vite`.
 
 The [Getting started guide](https://jamie-wk.github.io/norn/guide/getting-started) walks through all of this from an empty directory, and [`examples/orders`](./examples/orders) is a complete app: worker, generated contracts, a Hono API and tests.
 
@@ -190,16 +190,16 @@ The [Getting started guide](https://jamie-wk.github.io/norn/guide/getting-starte
 
 | Package | Description |
 | --- | --- |
-| [`@norn/core`](./packages/core) | Workflow-safe building blocks: contracts, durations, ID templates, errors with codes and HTTP statuses, `transitions()`, business-day calendars. Zero runtime dependencies. |
-| [`@norn/workflow`](./packages/workflow) | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `@Schedule`, `useActivities()`, `useChild()`, `useExternal()`, `continueAsNew()`, `asFailure()`, `setSearchAttributes()`. |
-| [`@norn/activity`](./packages/activity) | `@Activities`, `@Activity`, `@NonRetryable`, `@Service`, tokens, `provide()`, the dependency container, error mapping and activity context helpers. |
-| [`@norn/client`](./packages/client) | `createClient()`: typed start, execute, signal, query, update, with-start operations, list and count, with Norn error mapping and correlation IDs. |
-| [`@norn/worker`](./packages/worker) | `createWorker()`: one worker per task queue, bundling, health checks, graceful drain, worker versioning and Prometheus metrics. |
-| [`@norn/testing`](./packages/testing) | `createTestEnv()`, typed `mockActivities()`, `createFakeClient()`, `assertReplays()`, Vitest helpers and the standard-decorators Vite plugin. |
-| [`@norn/cli`](./packages/cli) | `norn gen` (syntax-only codegen and checks), `norn schedules sync`, `norn histories pull`, `norn bundle`. |
-| [`@norn/codec`](./packages/codec) | AES-256-GCM payload encryption with key rotation, and a payload converter for `bigint` and TC39 Temporal values. |
-| [`@norn/hono`](./packages/hono) | Hono middleware with a typed client and correlation IDs, an error handler, webhook-to-signal routing and a codec server. |
-| [`@norn/eslint-plugin`](./packages/eslint-plugin) | `norn/workflow-determinism` and `norn/no-activity-imports` for editor-time checks of workflow code. |
+| [`@norn-ts/core`](./packages/core) | Workflow-safe building blocks: contracts, durations, ID templates, errors with codes and HTTP statuses, `transitions()`, business-day calendars. Zero runtime dependencies. |
+| [`@norn-ts/workflow`](./packages/workflow) | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `@Schedule`, `useActivities()`, `useChild()`, `useExternal()`, `continueAsNew()`, `asFailure()`, `setSearchAttributes()`. |
+| [`@norn-ts/activity`](./packages/activity) | `@Activities`, `@Activity`, `@NonRetryable`, `@Service`, tokens, `provide()`, the dependency container, error mapping and activity context helpers. |
+| [`@norn-ts/client`](./packages/client) | `createClient()`: typed start, execute, signal, query, update, with-start operations, list and count, with Norn error mapping and correlation IDs. |
+| [`@norn-ts/worker`](./packages/worker) | `createWorker()`: one worker per task queue, bundling, health checks, graceful drain, worker versioning and Prometheus metrics. |
+| [`@norn-ts/testing`](./packages/testing) | `createTestEnv()`, typed `mockActivities()`, `createFakeClient()`, `assertReplays()`, Vitest helpers and the standard-decorators Vite plugin. |
+| [`@norn-ts/cli`](./packages/cli) | `norn gen` (syntax-only codegen and checks), `norn schedules sync`, `norn histories pull`, `norn bundle`. |
+| [`@norn-ts/codec`](./packages/codec) | AES-256-GCM payload encryption with key rotation, and a payload converter for `bigint` and TC39 Temporal values. |
+| [`@norn-ts/hono`](./packages/hono) | Hono middleware with a typed client and correlation IDs, an error handler, webhook-to-signal routing and a codec server. |
+| [`@norn-ts/eslint-plugin`](./packages/eslint-plugin) | `norn/workflow-determinism` and `norn/no-activity-imports` for editor-time checks of workflow code. |
 
 ## Using Norn with coding agents
 
@@ -247,7 +247,7 @@ Ground rules:
 - Write the failing test first, and cover both the happy and the sad paths.
 - TC39 standard decorators only; never `experimentalDecorators`.
 - Keep type safety end to end; don't loosen types to make something compile.
-- `@norn/core` has zero runtime dependencies, and nothing that runs in the workflow sandbox imports Node APIs (`pnpm check:deps` enforces this).
+- `@norn-ts/core` has zero runtime dependencies, and nothing that runs in the workflow sandbox imports Node APIs (`pnpm check:deps` enforces this).
 - Use pnpm, not npm or yarn. Add a changeset (`pnpm changeset`) for user-facing changes.
 
 ## License

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createClient } from '@norn/client';
+import { createClient } from '@norn-ts/client';
 import { LoyaltyWorkflow, OrderWorkflow } from '@norn/example-orders-contracts';
 import { startStack, type Stack } from '../src/stack.ts';
 import { newOrder, uid, waitForStatus } from '../src/helpers.ts';

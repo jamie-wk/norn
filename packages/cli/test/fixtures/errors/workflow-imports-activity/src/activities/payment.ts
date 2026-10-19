@@ -1,4 +1,4 @@
-import { Activities, Activity } from '@norn/activity';
+import { Activities, Activity } from '@norn-ts/activity';
 
 export const CURRENCY = 'USD';
 

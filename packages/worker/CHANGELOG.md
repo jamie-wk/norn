@@ -1,4 +1,4 @@
-# @norn/worker
+# @norn-ts/worker
 
 ## 1.0.0
 

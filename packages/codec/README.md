@@ -1,4 +1,4 @@
-# @norn/codec
+# @norn-ts/codec
 
 Payload encryption with key rotation, and a payload converter that round-trips `bigint` and TC39 Temporal API values, for [Norn](https://jamie-wk.github.io/norn/) and plain Temporal TypeScript apps.
 
@@ -11,7 +11,7 @@ The only runtime dependency is the peer `@temporalio/common`.
 ## Install
 
 ```sh
-pnpm add @norn/codec
+pnpm add @norn-ts/codec
 ```
 
 Requires Node 22.18+ (or any runtime with WebCrypto for the codec on its own).
@@ -20,14 +20,14 @@ Requires Node 22.18+ (or any runtime with WebCrypto for the codec on its own).
 
 | Import | Contents | Runtimes |
 | --- | --- | --- |
-| `@norn/codec` | Everything below, plus `createDataConverter`, `clientDataConverter`, `resolvePayloadConverterPath` and `NornCodecError` | Node (imports `node:url` for `resolvePayloadConverterPath()`) |
-| `@norn/codec/encryption` | `createEncryptionCodec`, `generateKey`, `EncryptionCodecOptions`, `ENCRYPTED_ENCODING`, `ENCRYPTION_KEY_ID_METADATA_KEY` | Any runtime with WebCrypto: Node, Bun, Deno, Cloudflare Workers, Vercel Edge (type-only imports from `@temporalio/common`, nothing at runtime) |
-| `@norn/codec/payload-converter` | `payloadConverter`, `NornJsonPayloadConverter`, `TEMPORAL_TYPES` | Anywhere `@temporalio/common` runs, including the workflow sandbox; this is the module `payloadConverterPath` points workers at |
+| `@norn-ts/codec` | Everything below, plus `createDataConverter`, `clientDataConverter`, `resolvePayloadConverterPath` and `NornCodecError` | Node (imports `node:url` for `resolvePayloadConverterPath()`) |
+| `@norn-ts/codec/encryption` | `createEncryptionCodec`, `generateKey`, `EncryptionCodecOptions`, `ENCRYPTED_ENCODING`, `ENCRYPTION_KEY_ID_METADATA_KEY` | Any runtime with WebCrypto: Node, Bun, Deno, Cloudflare Workers, Vercel Edge (type-only imports from `@temporalio/common`, nothing at runtime) |
+| `@norn-ts/codec/payload-converter` | `payloadConverter`, `NornJsonPayloadConverter`, `TEMPORAL_TYPES` | Anywhere `@temporalio/common` runs, including the workflow sandbox; this is the module `payloadConverterPath` points workers at |
 
-Use `@norn/codec/encryption` for codec servers on edge runtimes, so the bundle never pulls in `node:url` (no `nodejs_compat` flag needed on Cloudflare Workers):
+Use `@norn-ts/codec/encryption` for codec servers on edge runtimes, so the bundle never pulls in `node:url` (no `nodejs_compat` flag needed on Cloudflare Workers):
 
 ```ts
-import { createEncryptionCodec } from '@norn/codec/encryption';
+import { createEncryptionCodec } from '@norn-ts/codec/encryption';
 ```
 
 The codec still throws `NornCodecError` for bad keys and tampered payloads; check `error.name === 'NornCodecError'` if you need to tell them apart without importing the main entry.
@@ -37,7 +37,7 @@ The codec still throws `NornCodecError` for bad keys and tampered payloads; chec
 Generate a key once and store it in your secret manager:
 
 ```sh
-node -e "import('@norn/codec').then(m => console.log(m.generateKey()))"
+node -e "import('@norn-ts/codec').then(m => console.log(m.generateKey()))"
 ```
 
 ### Worker
@@ -45,7 +45,7 @@ node -e "import('@norn/codec').then(m => console.log(m.generateKey()))"
 ```ts
 import { fileURLToPath } from 'node:url';
 import { Worker } from '@temporalio/worker';
-import { createDataConverter } from '@norn/codec';
+import { createDataConverter } from '@norn-ts/codec';
 
 const keys = { '2026-10': process.env.NORN_KEY_2026_10! };
 
@@ -60,7 +60,7 @@ const worker = await Worker.create({
 `createDataConverter` returns `{ payloadConverterPath, payloadCodecs }`. The path makes the worker load the converter inside the workflow sandbox too, so workflows can receive and return `bigint`s. If you prebuild bundles with `bundleWorkflowCode`, pass it the same path:
 
 ```ts
-import { resolvePayloadConverterPath } from '@norn/codec';
+import { resolvePayloadConverterPath } from '@norn-ts/codec';
 await bundleWorkflowCode({ workflowsPath, payloadConverterPath: resolvePayloadConverterPath() });
 ```
 
@@ -68,7 +68,7 @@ await bundleWorkflowCode({ workflowsPath, payloadConverterPath: resolvePayloadCo
 
 ```ts
 import { Client } from '@temporalio/client';
-import { clientDataConverter } from '@norn/codec';
+import { clientDataConverter } from '@norn-ts/codec';
 
 const client = new Client({ connection, dataConverter: clientDataConverter({ keys, currentKeyId: '2026-10' }) });
 const total: bigint = await client.workflow.execute('sumInvoices', { taskQueue: 'orders', workflowId, args: [[1n, 2n]] });
@@ -80,7 +80,7 @@ Use `createEncryptionCodec` directly if you only want encryption (with Temporal'
 
 ### Codec server (Temporal UI / CLI)
 
-The Temporal UI and `temporal` CLI can decode payloads through a [codec server](https://docs.temporal.io/production-deployment/data-encryption). Use `codecServer()` from `@norn/hono`, which adds authentication, CORS, namespace checks and body limits:
+The Temporal UI and `temporal` CLI can decode payloads through a [codec server](https://docs.temporal.io/production-deployment/data-encryption). Use `codecServer()` from `@norn-ts/hono`, which adds authentication, CORS, namespace checks and body limits:
 
 ```ts
 app.route('/codec', codecServer({

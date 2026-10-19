@@ -1,5 +1,5 @@
 import { ApplicationFailure, TemporalFailure } from '@temporalio/common';
-import { NornConfigError, errorTypeOf } from '@norn/core';
+import { NornConfigError, errorTypeOf } from '@norn-ts/core';
 import type { ErrorClass } from './decorators.js';
 
 export type ErrorDecision = 'retryable' | 'non-retryable' | ApplicationFailure | undefined;

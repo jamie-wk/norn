@@ -8,8 +8,8 @@
     "test": "vitest run --project e2e --root .."
   },
   "dependencies": {
-    "@norn/client": "workspace:^",
-    "@norn/codec": "workspace:^",
+    "@norn-ts/client": "workspace:^",
+    "@norn-ts/codec": "workspace:^",
     "@norn/example-orders-contracts": "workspace:^",
     "@norn/example-orders-provider": "workspace:^",
     "@temporalio/client": "1.24.0",

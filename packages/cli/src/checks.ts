@@ -9,12 +9,12 @@ export const WORKER_ONLY_PACKAGES: readonly string[] = [
   '@temporalio/client',
   '@temporalio/worker',
   '@temporalio/testing',
-  '@norn/activity',
-  '@norn/worker',
-  '@norn/client',
-  '@norn/testing',
-  '@norn/hono',
-  '@norn/cli',
+  '@norn-ts/activity',
+  '@norn-ts/worker',
+  '@norn-ts/client',
+  '@norn-ts/testing',
+  '@norn-ts/hono',
+  '@norn-ts/cli',
 ];
 
 const workerOnly = (specifier: string) => WORKER_ONLY_PACKAGES.find((p) => specifier === p || specifier.startsWith(`${p}/`));

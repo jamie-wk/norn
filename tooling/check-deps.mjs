@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Dependency discipline for published packages:
 // - every bare import in src/ is declared (dependencies or peerDependencies; node: builtins aside)
-// - @norn/core has no runtime dependencies; @norn/workflow only depends on core + Temporal's workflow SDK
+// - @norn-ts/core has no runtime dependencies; @norn-ts/workflow only depends on core + Temporal's workflow SDK
 // - workflow-sandbox entry points import nothing Node-specific
-// - all @norn/* packages share one version, and metadata needed for publishing is present
+// - all @norn-ts/* packages share one version, and metadata needed for publishing is present
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import { join, relative } from 'node:path';
@@ -34,10 +34,10 @@ function packageName(specifier) {
 
 /** Packages whose code (or part of it) runs inside the Temporal workflow sandbox. */
 const SANDBOX = {
-  '@norn/core': ['src'],
-  '@norn/workflow': ['src'],
-  '@norn/worker': ['src/workflow-interceptors.ts'],
-  '@norn/codec': ['src/payload-converter.ts'],
+  '@norn-ts/core': ['src'],
+  '@norn-ts/workflow': ['src'],
+  '@norn-ts/worker': ['src/workflow-interceptors.ts'],
+  '@norn-ts/codec': ['src/payload-converter.ts'],
 };
 
 const versions = new Map();
@@ -83,10 +83,10 @@ for (const dir of readdirSync(packagesDir)) {
     }
   }
 
-  if (name === '@norn/core' && Object.keys(pkg.dependencies ?? {}).length > 0) fail(name, 'must have no runtime dependencies');
-  if (name === '@norn/workflow') {
-    const allowed = new Set(['@norn/core']);
-    for (const dep of Object.keys(pkg.dependencies ?? {})) if (!allowed.has(dep)) fail(name, `may only depend on @norn/core, found ${dep}`);
+  if (name === '@norn-ts/core' && Object.keys(pkg.dependencies ?? {}).length > 0) fail(name, 'must have no runtime dependencies');
+  if (name === '@norn-ts/workflow') {
+    const allowed = new Set(['@norn-ts/core']);
+    for (const dep of Object.keys(pkg.dependencies ?? {})) if (!allowed.has(dep)) fail(name, `may only depend on @norn-ts/core, found ${dep}`);
     for (const dep of Object.keys(pkg.peerDependencies ?? {})) {
       if (!['@temporalio/workflow', '@temporalio/common'].includes(dep)) fail(name, `unexpected peer dependency ${dep}`);
     }
@@ -94,7 +94,7 @@ for (const dir of readdirSync(packagesDir)) {
 }
 
 const distinct = new Set(versions.values());
-if (distinct.size > 1) errors.push(`@norn/* packages must share one version, found: ${[...versions].map(([n, v]) => `${n}@${v}`).join(', ')}`);
+if (distinct.size > 1) errors.push(`@norn-ts/* packages must share one version, found: ${[...versions].map(([n, v]) => `${n}@${v}`).join(', ')}`);
 
 if (errors.length) {
   console.error(`check-deps found ${errors.length} problem(s):\n${errors.map((e) => `  - ${e}`).join('\n')}`);

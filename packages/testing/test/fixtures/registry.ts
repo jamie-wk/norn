@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
-import { createContainer } from '@norn/activity';
-import { defineRegistry } from '@norn/worker';
+import { createContainer } from '@norn-ts/activity';
+import { defineRegistry } from '@norn-ts/worker';
 import { Mailer, NotifyActivities } from './activities.ts';
 
 export const registry = defineRegistry({

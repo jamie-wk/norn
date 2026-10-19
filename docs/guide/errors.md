@@ -4,7 +4,7 @@ Errors cross three boundaries in a Temporal application: from an activity to its
 
 ## Norn's error classes
 
-Every client-facing error extends `NornError` from `@norn/core` (re-exported by `@norn/client`), which has a `code`, an HTTP `status`, `details`, and the original SDK error as `cause`. `toJSON()` returns a response-safe `{ code, message, details }` without stack or cause.
+Every client-facing error extends `NornError` from `@norn-ts/core` (re-exported by `@norn-ts/client`), which has a `code`, an HTTP `status`, `details`, and the original SDK error as `cause`. `toJSON()` returns a response-safe `{ code, message, details }` without stack or cause.
 
 | Class | `code` | `status` | When |
 | --- | --- | --- | --- |
@@ -17,12 +17,12 @@ Every client-facing error extends `NornError` from `@norn/core` (re-exported by 
 | `WorkflowFailedError` | `WORKFLOW_FAILED` | 500 | `result()` or `execute()` on a workflow that failed, was cancelled, terminated or timed out. Has `workflowId` and `failureType`. |
 | `TemporalUnavailableError` | `TEMPORAL_UNAVAILABLE` | 503 | The server could not be reached or is rate limiting (gRPC `UNAVAILABLE`, `DEADLINE_EXCEEDED` or `RESOURCE_EXHAUSTED`), or a worker could not connect at startup. |
 
-`@norn/hono`'s error handler adds `INTERNAL` (500) for unexpected errors and `WEBHOOK_UNVERIFIED` (401) / `WEBHOOK_INVALID_BODY` (400) for webhooks. `@norn/codec` throws `NornCodecError`, a plain `Error` subclass, for key and payload problems.
+`@norn-ts/hono`'s error handler adds `INTERNAL` (500) for unexpected errors and `WEBHOOK_UNVERIFIED` (401) / `WEBHOOK_INVALID_BODY` (400) for webhooks. `@norn-ts/codec` throws `NornCodecError`, a plain `Error` subclass, for key and payload problems.
 
 You can create your own `NornError`s for domain failures your API returns, and the Hono handler maps them like the built-in ones:
 
 ```ts
-import { NornError } from '@norn/core';
+import { NornError } from '@norn-ts/core';
 
 throw new NornError('INVITATION_EXPIRED', 410, 'This invitation has expired', { details: { invitationId } });
 ```
@@ -94,7 +94,7 @@ The order is: Temporal failures pass through, then `@NonRetryable`, then `map`, 
 When an activity finally fails (non-retryable, or out of retries), the workflow receives an `ActivityFailure` whose `cause` is the `ApplicationFailure`. `asFailure(error, ErrorClassOrName)` walks the cause chain and returns the matching `ApplicationFailure`, or `undefined`:
 
 ```ts
-import { asFailure, isFailure } from '@norn/workflow';
+import { asFailure, isFailure } from '@norn-ts/workflow';
 import { PaymentDeclinedError } from '../domain.js';
 
 try {
@@ -125,10 +125,10 @@ On the client, `result()` throws `WorkflowFailedError` whose `failureType` is th
 
 ## Client errors
 
-`@norn/client` converts Temporal client errors with `toNornError()`, so API code can branch on classes (or `code`) instead of SDK internals:
+`@norn-ts/client` converts Temporal client errors with `toNornError()`, so API code can branch on classes (or `code`) instead of SDK internals:
 
 ```ts
-import { UpdateRejectedError, WorkflowAlreadyStartedError, WorkflowClosedError } from '@norn/client';
+import { UpdateRejectedError, WorkflowAlreadyStartedError, WorkflowClosedError } from '@norn-ts/client';
 
 try {
   await norn.workflow(PaymentWorkflow).get({ paymentId }).update('cancel', { by: userId });
@@ -143,7 +143,7 @@ try {
 
 Signals, updates, cancels and terminates to a workflow that no longer runs come back from the server as "not found". Norn checks whether the workflow exists: if it does and is closed you get `WorkflowClosedError` (409), and only a workflow that never existed gives `WorkflowNotFoundError` (404).
 
-With [`@norn/hono`](/guide/hono), `app.onError(nornErrorHandler())` turns all of these into JSON responses:
+With [`@norn-ts/hono`](/guide/hono), `app.onError(nornErrorHandler())` turns all of these into JSON responses:
 
 ```json
 { "error": { "code": "UPDATE_REJECTED", "message": "Too late to cancel", "details": { "workflowId": "payment-p_1", "update": "cancel", "failureType": "AlreadySubmittedError" }, "correlationId": "4f6c..." } }

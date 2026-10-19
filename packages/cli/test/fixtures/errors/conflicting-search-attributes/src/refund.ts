@@ -1,4 +1,4 @@
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 
 @Workflow({ taskQueue: 'orders', searchAttributes: { CustomerId: 'text', Total: 'double' } })
 export class RefundWorkflow {

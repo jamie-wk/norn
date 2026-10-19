@@ -1,5 +1,5 @@
 import { proxyActivities, proxyLocalActivities } from '@temporalio/workflow';
-import { NornConfigError, toActivityOptions, type ActivityOptions } from '@norn/core';
+import { NornConfigError, toActivityOptions, type ActivityOptions } from '@norn-ts/core';
 
 /** Public method names of an activity class. */
 export type ActivityMethodKey<T> = { [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never }[keyof T] & string;

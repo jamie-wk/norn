@@ -1,5 +1,5 @@
-import type { ScheduleOverlap, SearchAttributeType } from '@norn/core';
-import type { Container, ErrorMappingOptions, InjectionKey } from '@norn/activity';
+import type { ScheduleOverlap, SearchAttributeType } from '@norn-ts/core';
+import type { Container, ErrorMappingOptions, InjectionKey } from '@norn-ts/activity';
 
 export type { ScheduleOverlap };
 

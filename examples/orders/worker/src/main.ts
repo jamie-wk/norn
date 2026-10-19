@@ -1,5 +1,5 @@
-import { createDataConverter } from '@norn/codec';
-import { createWorker, installRuntime } from '@norn/worker';
+import { createDataConverter } from '@norn-ts/codec';
+import { createWorker, installRuntime } from '@norn-ts/worker';
 import { registry } from '../.norn/registry.ts';
 
 installRuntime();

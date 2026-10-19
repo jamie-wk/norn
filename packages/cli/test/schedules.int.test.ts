@@ -3,7 +3,7 @@ import type { TestWorkflowEnvironment } from '@temporalio/testing';
 import { createLocalEnv } from '../../../tooling/test-support/temporal.ts';
 import { main } from '../src/cli.ts';
 import { syncSchedules, HASH_MEMO } from '../src/schedules.ts';
-import type { ScheduleSpec } from '@norn/worker';
+import type { ScheduleSpec } from '@norn-ts/worker';
 import { project, removeDir, writeFiles } from './helpers.ts';
 
 let env: TestWorkflowEnvironment;

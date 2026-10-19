@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MockActivityEnvironment } from '@temporalio/testing';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { activityInfo, getCorrelationId, heartbeat, idempotencyKey, lastHeartbeat, runWithCorrelationId } from '../src/index.ts';
 
 describe('idempotencyKey', () => {

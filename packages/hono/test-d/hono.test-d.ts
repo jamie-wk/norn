@@ -1,6 +1,6 @@
 import { expectTypeOf } from 'vitest';
 import { Hono } from 'hono';
-import type { NornClient } from '@norn/client';
+import type { NornClient } from '@norn-ts/client';
 import {
   codecServer,
   nornErrorHandler,

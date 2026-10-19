@@ -61,7 +61,7 @@ Or run everything in containers: `docker compose -f e2e/docker-compose.yml up --
 ## Tests
 
 - `worker/test/order.workflow.int.test.ts` — workflow behavior on the time-skipping server with
-  typed activity mocks (`@norn/testing`).
+  typed activity mocks (`@norn-ts/testing`).
 - `worker/test/services.test.ts` — activities and services through the real container, with a fake
   HTTP layer.
 - `api/test/app.test.ts` — API routes against `createFakeClient()`, no Temporal needed.

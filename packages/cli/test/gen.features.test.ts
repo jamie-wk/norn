@@ -13,8 +13,8 @@ async function gen(files: Record<string, string>) {
 describe('decorator recognition', () => {
   it('follows import aliases and namespace imports, and ignores other decorators', async () => {
     const { errors, files } = await gen({
-      'src/w.ts': `import { Workflow as Flow, Signal as On } from '@norn/workflow';
-import * as nw from '@norn/workflow';
+      'src/w.ts': `import { Workflow as Flow, Signal as On } from '@norn-ts/workflow';
+import * as nw from '@norn-ts/workflow';
 import { Injectable } from 'some-di';
 
 @Injectable()
@@ -25,7 +25,7 @@ export class AliasWorkflow {
   async run() {}
 }
 `,
-      'src/t.ts': `import type { Workflow } from '@norn/workflow';
+      'src/t.ts': `import type { Workflow } from '@norn-ts/workflow';
 // A type-only import cannot decorate anything at runtime, so this class is not a workflow.
 declare const Workflow: (o: unknown) => (c: unknown) => void;
 @Workflow({ taskQueue: 'q' })
@@ -40,7 +40,7 @@ export class NotDetected { async run() {} }
 
   it('strips JSDoc tags from handler descriptions and prefers explicit descriptions', async () => {
     const { errors, files } = await gen({
-      'src/w.ts': `import { Workflow, Signal } from '@norn/workflow';
+      'src/w.ts': `import { Workflow, Signal } from '@norn-ts/workflow';
 
 @Workflow({ taskQueue: 'q' })
 export class DocWorkflow {
@@ -68,8 +68,8 @@ export class DocWorkflow {
 describe('dependencies', () => {
   it('resolves namespace-qualified types, default values and local tokens', async () => {
     const { errors, files } = await gen({
-      'src/tokens.ts': "import { token } from '@norn/activity';\nexport interface Db { q(): void }\nexport const Db = token<Db>('Db');\n",
-      'src/svc.ts': `import { Service, token } from '@norn/activity';
+      'src/tokens.ts': "import { token } from '@norn-ts/activity';\nexport interface Db { q(): void }\nexport const Db = token<Db>('Db');\n",
+      'src/svc.ts': `import { Service, token } from '@norn-ts/activity';
 import * as tokens from './tokens.js';
 import * as pg from 'pg';
 
@@ -92,7 +92,7 @@ export class Repo {
 
   it('inherits @Activity methods and the constructor from a base class', async () => {
     const { errors, files } = await gen({
-      'src/base.ts': `import { Activity, NonRetryable } from '@norn/activity';
+      'src/base.ts': `import { Activity, NonRetryable } from '@norn-ts/activity';
 import { Db } from './db.js';
 export class BaseActivities {
   constructor(protected readonly db: Db) {}
@@ -100,7 +100,7 @@ export class BaseActivities {
 }
 `,
       'src/db.ts': '@Reflectable()\nexport class Db {}\ndeclare function Reflectable(): (c: unknown) => void;\n',
-      'src/acts.ts': `import { Activities, Activity } from '@norn/activity';
+      'src/acts.ts': `import { Activities, Activity } from '@norn-ts/activity';
 import { BaseActivities } from './base.js';
 @Activities({ prefix: 'x.' })
 export class XActivities extends BaseActivities {
@@ -116,7 +116,7 @@ export class XActivities extends BaseActivities {
 
   it('uses inject over parameter types and checks every entry', async () => {
     const { errors } = await gen({
-      'src/acts.ts': `import { Activities, Activity } from '@norn/activity';
+      'src/acts.ts': `import { Activities, Activity } from '@norn-ts/activity';
 @Activities({ inject: [Nowhere, 'Db'] })
 export class Acts {
   constructor(x: string) {}
@@ -130,7 +130,7 @@ export class Acts {
 
   it('requires local dependency values to be exported', async () => {
     const { errors } = await gen({
-      'src/svc.ts': `import { Service } from '@norn/activity';
+      'src/svc.ts': `import { Service } from '@norn-ts/activity';
 class Hidden {}
 @Service()
 export class Svc {
@@ -146,7 +146,7 @@ export class Svc {
 describe('option validation', () => {
   it('rejects unknown and mistyped options', async () => {
     const { errors } = await gen({
-      'src/acts.ts': `import { Activities, Activity, Service } from '@norn/activity';
+      'src/acts.ts': `import { Activities, Activity, Service } from '@norn-ts/activity';
 @Activities()
 export class Acts {
   @Activity({ timout: '1s' }) async a() {}
@@ -156,7 +156,7 @@ export class Acts {
 @Service({ provides: 'Token' })
 export class Svc {}
 `,
-      'src/w.ts': `import { Workflow, Signal, Update } from '@norn/workflow';
+      'src/w.ts': `import { Workflow, Signal, Update } from '@norn-ts/workflow';
 @Workflow({ taskQueue: 'q', retries: 3, description: 'W' })
 export class W {
   @Signal({ unfinishedPolicy: 'explode', dedupeBy: 'id' }) s() {}
@@ -184,7 +184,7 @@ export class W {
 
   it('allows functions only for dedupeBy', async () => {
     const { errors } = await gen({
-      'src/acts.ts': `import { Activities, Activity } from '@norn/activity';
+      'src/acts.ts': `import { Activities, Activity } from '@norn-ts/activity';
 @Activities()
 export class Acts {
   @Activity({ name: () => 'x' }) async a() {}

@@ -1,5 +1,5 @@
 import { condition, sleep } from '@temporalio/workflow';
-import { Query, Signal, Workflow, useActivities } from '@norn/workflow';
+import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
 import { NotifyActivities } from './refs.ts';
 
 @Workflow({ taskQueue: 'testing-q', id: 'reminder-{userId}' })

@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Context, type Info } from '@temporalio/activity';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 
 function current(fn: string): Context {
   try {
@@ -42,8 +42,8 @@ export function cancellationSignal(): AbortSignal {
   return current('cancellationSignal()').cancellationSignal;
 }
 
-// Correlation IDs are shared through a process-wide AsyncLocalStorage so @norn/client (API side)
-// and @norn/activity (worker side) agree even when installed as separate copies.
+// Correlation IDs are shared through a process-wide AsyncLocalStorage so @norn-ts/client (API side)
+// and @norn-ts/activity (worker side) agree even when installed as separate copies.
 const KEY = Symbol.for('norn.correlation');
 type Store = AsyncLocalStorage<string>;
 const correlation: Store = ((globalThis as Record<symbol, unknown>)[KEY] as Store | undefined) ??

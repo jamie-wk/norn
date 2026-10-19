@@ -22,7 +22,7 @@ import {
   WorkflowAlreadyStartedError,
   WorkflowFailedError,
   WorkflowNotFoundError,
-} from '@norn/core';
+} from '@norn-ts/core';
 
 export interface ErrorContext {
   workflowId: string;

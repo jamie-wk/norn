@@ -12,7 +12,7 @@ describe('workflow code checks', () => {
     expect(TEMPORAL_POLYFILL.source).toBe(temporalPolyfill.source);
   });
 
-  it('validate names with the same identifier rule as @norn/core', () => {
+  it('validate names with the same identifier rule as @norn-ts/core', () => {
     expect(CLI_IDENTIFIER.source).toBe(IDENTIFIER.source);
   });
 });

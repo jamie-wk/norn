@@ -1,4 +1,4 @@
-import { Workflow, Signal, Update, Validate } from '@norn/workflow';
+import { Workflow, Signal, Update, Validate } from '@norn-ts/workflow';
 
 @Workflow({ taskQueue: 'orders' })
 export class OrderWorkflow {

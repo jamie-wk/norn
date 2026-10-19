@@ -1,4 +1,4 @@
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 
 /** A dependency key for values that are not classes, such as interfaces or configuration. */
 export interface Token<T = unknown> {

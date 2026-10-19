@@ -1,4 +1,4 @@
-import { Workflow, asFailure, useActivities, useChild } from '@norn/workflow';
+import { Workflow, asFailure, useActivities, useChild } from '@norn-ts/workflow';
 import { GreetActivities } from './refs.ts';
 
 @Workflow({ taskQueue: 'w-reports' })

@@ -18,10 +18,10 @@ HTTP request (x-correlation-id: req-7)
 
 ### On the API side
 
-`runWithCorrelationId(id, fn)` from `@norn/client` sets the ID for everything inside `fn`, using `AsyncLocalStorage`, and the client adds it to every outbound start, signal, signal-with-start, query, update and update-with-start:
+`runWithCorrelationId(id, fn)` from `@norn-ts/client` sets the ID for everything inside `fn`, using `AsyncLocalStorage`, and the client adds it to every outbound start, signal, signal-with-start, query, update and update-with-start:
 
 ```ts
-import { getCorrelationId, runWithCorrelationId } from '@norn/client';
+import { getCorrelationId, runWithCorrelationId } from '@norn-ts/client';
 
 app.use(async (req, res, next) => {
   const id = (req.headers['x-correlation-id'] as string | undefined) ?? crypto.randomUUID();
@@ -36,10 +36,10 @@ You can also pass `correlationId` per call in the start options. Turn the client
 
 ### On the worker side
 
-`createWorker()` installs Norn's workflow interceptors (bundled into the workflow sandbox) and an activity interceptor. Inside an activity, and anything it calls, `getCorrelationId()` from `@norn/activity` returns the ID:
+`createWorker()` installs Norn's workflow interceptors (bundled into the workflow sandbox) and an activity interceptor. Inside an activity, and anything it calls, `getCorrelationId()` from `@norn-ts/activity` returns the ID:
 
 ```ts
-import { getCorrelationId } from '@norn/activity';
+import { getCorrelationId } from '@norn-ts/activity';
 
 @Service()
 export class HttpClient {
@@ -59,20 +59,20 @@ Add it to your logger so every log line from an activity can be joined with the 
 
 ```ts
 import pino from 'pino';
-import { activityInfo, getCorrelationId } from '@norn/activity';
+import { activityInfo, getCorrelationId } from '@norn-ts/activity';
 
 export const RequestLog = token<pino.Logger>('RequestLog');
 provide(RequestLog, () => root.child({ correlationId: getCorrelationId(), activity: activityInfo().activityType, workflowId: activityInfo().workflowExecution?.workflowId }), { scope: 'activity' });
 ```
 
-Because `@norn/client` and `@norn/activity` share one `AsyncLocalStorage` through a global symbol, a client call made from inside an activity carries the same ID onward, even if the packages are installed as separate copies.
+Because `@norn-ts/client` and `@norn-ts/activity` share one `AsyncLocalStorage` through a global symbol, a client call made from inside an activity carries the same ID onward, even if the packages are installed as separate copies.
 
 ## Metrics
 
 Call `installRuntime()` once at worker startup, before creating the worker:
 
 ```ts
-import { createWorker, installRuntime } from '@norn/worker';
+import { createWorker, installRuntime } from '@norn-ts/worker';
 
 // or NORN_METRICS_ADDRESS
 installRuntime({ metricsAddress: '0.0.0.0:9464' });
@@ -100,7 +100,7 @@ import { OpenTelemetryPlugin } from '@temporalio/interceptors-opentelemetry';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { createWorker } from '@norn/worker';
+import { createWorker } from '@norn-ts/worker';
 import { registry } from '../.norn/registry.js';
 
 const otel = new OpenTelemetryPlugin({

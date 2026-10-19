@@ -50,10 +50,10 @@ importers:
 
   e2e:
     dependencies:
-      '@norn/client':
+      '@norn-ts/client':
         specifier: workspace:^
         version: link:../packages/client
-      '@norn/codec':
+      '@norn-ts/codec':
         specifier: workspace:^
         version: link:../packages/codec
       '@norn/example-orders-contracts':
@@ -74,21 +74,21 @@ importers:
       '@hono/node-server':
         specifier: ^2.1.5
         version: 2.1.5(hono@4.13.13)
-      '@norn/client':
+      '@norn-ts/client':
         specifier: workspace:^
         version: link:../../../packages/client
-      '@norn/codec':
+      '@norn-ts/codec':
         specifier: workspace:^
         version: link:../../../packages/codec
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../../../packages/core
+      '@norn-ts/hono':
+        specifier: workspace:^
+        version: link:../../../packages/hono
       '@norn/example-orders-contracts':
         specifier: workspace:^
         version: link:../contracts
-      '@norn/hono':
-        specifier: workspace:^
-        version: link:../../../packages/hono
       '@temporalio/client':
         specifier: 1.24.0
         version: 1.24.0
@@ -99,13 +99,13 @@ importers:
         specifier: 4.13.13
         version: 4.13.13
     devDependencies:
-      '@norn/testing':
+      '@norn-ts/testing':
         specifier: workspace:^
         version: link:../../../packages/testing
 
   examples/orders/contracts:
     dependencies:
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../../../packages/core
 
@@ -113,22 +113,22 @@ importers:
 
   examples/orders/worker:
     dependencies:
-      '@norn/activity':
+      '@norn-ts/activity':
         specifier: workspace:^
         version: link:../../../packages/activity
-      '@norn/client':
+      '@norn-ts/client':
         specifier: workspace:^
         version: link:../../../packages/client
-      '@norn/codec':
+      '@norn-ts/codec':
         specifier: workspace:^
         version: link:../../../packages/codec
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../../../packages/core
-      '@norn/worker':
+      '@norn-ts/worker':
         specifier: workspace:^
         version: link:../../../packages/worker
-      '@norn/workflow':
+      '@norn-ts/workflow':
         specifier: workspace:^
         version: link:../../../packages/workflow
       '@temporalio/activity':
@@ -147,10 +147,10 @@ importers:
         specifier: 1.24.0
         version: 1.24.0
     devDependencies:
-      '@norn/cli':
+      '@norn-ts/cli':
         specifier: workspace:^
         version: link:../../../packages/cli
-      '@norn/testing':
+      '@norn-ts/testing':
         specifier: workspace:^
         version: link:../../../packages/testing
       '@temporalio/testing':
@@ -159,7 +159,7 @@ importers:
 
   packages/activity:
     dependencies:
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:
@@ -182,22 +182,22 @@ importers:
         specifier: ^0.2.17
         version: 0.2.17
     devDependencies:
-      '@norn/activity':
+      '@norn-ts/activity':
         specifier: workspace:^
         version: link:../activity
-      '@norn/client':
+      '@norn-ts/client':
         specifier: workspace:^
         version: link:../client
-      '@norn/codec':
+      '@norn-ts/codec':
         specifier: workspace:^
         version: link:../codec
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../core
-      '@norn/worker':
+      '@norn-ts/worker':
         specifier: workspace:^
         version: link:../worker
-      '@norn/workflow':
+      '@norn-ts/workflow':
         specifier: workspace:^
         version: link:../workflow
       '@temporalio/client':
@@ -218,11 +218,11 @@ importers:
 
   packages/client:
     dependencies:
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:
-      '@norn/workflow':
+      '@norn-ts/workflow':
         specifier: workspace:^
         version: link:../workflow
       '@temporalio/client':
@@ -272,17 +272,17 @@ importers:
 
   packages/hono:
     dependencies:
-      '@norn/client':
+      '@norn-ts/client':
         specifier: workspace:^
         version: link:../client
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:
-      '@norn/codec':
+      '@norn-ts/codec':
         specifier: workspace:^
         version: link:../codec
-      '@norn/workflow':
+      '@norn-ts/workflow':
         specifier: workspace:^
         version: link:../workflow
       '@temporalio/client':
@@ -303,20 +303,20 @@ importers:
 
   packages/testing:
     dependencies:
-      '@norn/activity':
+      '@norn-ts/activity':
         specifier: workspace:^
         version: link:../activity
-      '@norn/client':
+      '@norn-ts/client':
         specifier: workspace:^
         version: link:../client
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../core
-      '@norn/worker':
+      '@norn-ts/worker':
         specifier: workspace:^
         version: link:../worker
     devDependencies:
-      '@norn/workflow':
+      '@norn-ts/workflow':
         specifier: workspace:^
         version: link:../workflow
       '@temporalio/client':
@@ -343,20 +343,20 @@ importers:
 
   packages/worker:
     dependencies:
-      '@norn/activity':
+      '@norn-ts/activity':
         specifier: workspace:^
         version: link:../activity
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:
-      '@norn/client':
+      '@norn-ts/client':
         specifier: workspace:^
         version: link:../client
-      '@norn/codec':
+      '@norn-ts/codec':
         specifier: workspace:^
         version: link:../codec
-      '@norn/workflow':
+      '@norn-ts/workflow':
         specifier: workspace:^
         version: link:../workflow
       '@temporalio/activity':
@@ -377,7 +377,7 @@ importers:
 
   packages/workflow:
     dependencies:
-      '@norn/core':
+      '@norn-ts/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:

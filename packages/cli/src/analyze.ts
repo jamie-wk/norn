@@ -1,4 +1,4 @@
-import type { ScheduleOverlap } from '@norn/worker';
+import type { ScheduleOverlap } from '@norn-ts/worker';
 import type { NornGenError, NornGenErrorCode } from './errors.js';
 import { Fn, Ref, evaluateLiteral, isObject, type Literal, type LiteralContext, type LiteralObject } from './literal.js';
 import { isRelative, type Project } from './project.js';
@@ -100,12 +100,12 @@ export interface Analysis {
 }
 
 const PACKAGES: Record<string, ReadonlySet<string>> = {
-  '@norn/workflow': new Set(['Workflow', 'Signal', 'Query', 'Update', 'Validate', 'Schedule']),
-  '@norn/activity': new Set(['Activities', 'Activity', 'NonRetryable', 'Service']),
+  '@norn-ts/workflow': new Set(['Workflow', 'Signal', 'Query', 'Update', 'Validate', 'Schedule']),
+  '@norn-ts/activity': new Set(['Activities', 'Activity', 'NonRetryable', 'Service']),
 };
 const HANDLER_KINDS = { Signal: 'signal', Query: 'query', Update: 'update' } as const;
 type HandlerKind = (typeof HANDLER_KINDS)[keyof typeof HANDLER_KINDS];
-// A copy of @norn/core's IDENTIFIER: the CLI has no runtime dependency on core (checks.test.ts keeps them equal).
+// A copy of @norn-ts/core's IDENTIFIER: the CLI has no runtime dependency on core (checks.test.ts keeps them equal).
 export const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
 const WORKFLOW_KEYS = new Set(['taskQueue', 'name', 'id', 'versioning', 'searchAttributes', 'failOn', 'drainHandlers']);

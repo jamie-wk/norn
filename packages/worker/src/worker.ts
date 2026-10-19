@@ -5,8 +5,8 @@ import {
   type WorkerOptions,
   type WorkerPlugin,
 } from '@temporalio/worker';
-import { NornConfigError, TemporalUnavailableError } from '@norn/core';
-import type { Container } from '@norn/activity';
+import { NornConfigError, TemporalUnavailableError } from '@norn-ts/core';
+import type { Container } from '@norn-ts/activity';
 import { correlationActivityInterceptor } from './activity-interceptors.js';
 import { bundleWorkflows } from './bundle.js';
 import { resolveWorkerConfig, type ResolvedWorkerConfig, type WorkerConfigOptions } from './config.js';
@@ -25,7 +25,7 @@ export interface CreateWorkerOptions extends WorkerConfigOptions {
    * `NORN_WORKFLOW_BUNDLE`, otherwise the registry's workflows are bundled at startup.
    */
   workflowBundle?: { code: string } | { codePath: string };
-  /** E.g. `createDataConverter()` from `@norn/codec`. */
+  /** E.g. `createDataConverter()` from `@norn-ts/codec`. */
   dataConverter?: WorkerOptions['dataConverter'];
   plugins?: WorkerPlugin[];
   /** Replace registered activities by name, typically with mocks in tests. Names must exist in the registry. */

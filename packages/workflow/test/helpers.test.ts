@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { Workflow, implement, setSearchAttributes } from '../src/index.ts';
 
 const upserts = vi.hoisted(() => [] as unknown[]);

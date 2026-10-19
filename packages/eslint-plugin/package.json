@@ -1,5 +1,5 @@
 {
-  "name": "@norn/eslint-plugin",
+  "name": "@norn-ts/eslint-plugin",
   "version": "1.0.0",
   "description": "ESLint rules that keep Norn workflow code deterministic and free of activity imports.",
   "license": "MIT",

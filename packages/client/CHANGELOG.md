@@ -1,4 +1,4 @@
-# @norn/client
+# @norn-ts/client
 
 ## 1.0.0
 

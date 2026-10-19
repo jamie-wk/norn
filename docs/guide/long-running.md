@@ -6,7 +6,7 @@ Temporal workflows can run for months or years, but each **run** accumulates an 
 
 ```ts
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Workflow, continueAsNew, continueAsNewSuggested } from '@norn/workflow';
+import { Query, Signal, Workflow, continueAsNew, continueAsNewSuggested } from '@norn-ts/workflow';
 
 export interface LoyaltyInput {
   customerId: string;

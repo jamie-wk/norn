@@ -1,4 +1,4 @@
-import { Activities, Activity, NonRetryable } from '@norn/activity';
+import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
 import { PaymentDeclinedError } from '../domain.ts';
 import { PaymentGateway } from '../services/payment-gateway.ts';
 

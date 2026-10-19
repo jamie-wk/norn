@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 // Encryption keys are set per process stack; the Compose stack runs one fixed configuration.
 const compose = process.env.E2E_TARGET === 'compose';
-import { generateKey } from '@norn/codec';
+import { generateKey } from '@norn-ts/codec';
 import { CODEC_TOKEN, startStack, type Stack } from '../src/stack.ts';
 import { newOrder, waitForStatus } from '../src/helpers.ts';
 

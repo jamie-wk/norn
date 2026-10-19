@@ -1,9 +1,9 @@
 # Client
 
-`@norn/client` is a typed wrapper around the Temporal client. You give it a contract (from `.norn/contracts.ts`), and every call is checked against the workflow class: inputs, outputs, handler names and arguments, search attributes, ID template fields.
+`@norn-ts/client` is a typed wrapper around the Temporal client. You give it a contract (from `.norn/contracts.ts`), and every call is checked against the workflow class: inputs, outputs, handler names and arguments, search attributes, ID template fields.
 
 ```ts
-import { createClient } from '@norn/client';
+import { createClient } from '@norn-ts/client';
 import { OrderWorkflow } from '../.norn/contracts.js';
 
 const norn = createClient();
@@ -35,7 +35,7 @@ const norn = createClient({
 | `connectTimeout` | A `Duration`. |
 | `connection` | An existing `Connection` to use instead of opening one. |
 | `client` | An existing Temporal `Client` to wrap (for example a test environment's). Its interceptors are used as they are. |
-| `dataConverter` | For encrypted payloads, `clientDataConverter()` from [`@norn/codec`](/guide/encryption). |
+| `dataConverter` | For encrypted payloads, `clientDataConverter()` from [`@norn-ts/codec`](/guide/encryption). |
 | `interceptors` | Extra client interceptors, after Norn's correlation interceptor. |
 | `correlation` | Add the [correlation ID](/guide/observability#correlation-ids) header to outbound calls. Default `true`. |
 
@@ -178,7 +178,7 @@ On Temporal Cloud, add them in the namespace settings or with `tcld`. In tests, 
 Every call made inside `runWithCorrelationId(id, fn)` carries `id` in a header; workers pass it to activities, children and continue-as-new runs, so one ID ties an HTTP request to every activity it causes:
 
 ```ts
-import { getCorrelationId, runWithCorrelationId } from '@norn/client';
+import { getCorrelationId, runWithCorrelationId } from '@norn-ts/client';
 
 await runWithCorrelationId(req.headers['x-request-id'] ?? crypto.randomUUID(), async () => {
   await norn.workflow(OrderWorkflow).start(input);
@@ -191,10 +191,10 @@ The Hono middleware does this for every request. See [Observability](/guide/obse
 
 ## Manual contracts {#manual-contracts}
 
-For a workflow that isn't defined in this codebase (implemented by another team, in another service, or in another language), write the contract by hand with `defineWorkflow()` from `@norn/core`:
+For a workflow that isn't defined in this codebase (implemented by another team, in another service, or in another language), write the contract by hand with `defineWorkflow()` from `@norn-ts/core`:
 
 ```ts
-import { defineWorkflow, query, signal, type, update } from '@norn/core';
+import { defineWorkflow, query, signal, type, update } from '@norn-ts/core';
 
 export const Fulfilment = defineWorkflow({
   // the workflow type the other side registers
@@ -214,4 +214,4 @@ export const Fulfilment = defineWorkflow({
 
 ## Errors
 
-Client calls throw the [Norn error classes](/guide/errors#norn-s-error-classes): `WorkflowAlreadyStartedError` (409), `WorkflowNotFoundError` (404), `WorkflowClosedError` (409), `UpdateRejectedError` (422), `QueryFailedError` (500), `WorkflowFailedError` (500) and `TemporalUnavailableError` (503). They are re-exported from `@norn/client`.
+Client calls throw the [Norn error classes](/guide/errors#norn-s-error-classes): `WorkflowAlreadyStartedError` (409), `WorkflowNotFoundError` (404), `WorkflowClosedError` (409), `UpdateRejectedError` (422), `QueryFailedError` (500), `WorkflowFailedError` (500) and `TemporalUnavailableError` (503). They are re-exported from `@norn-ts/client`.

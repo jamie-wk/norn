@@ -1,6 +1,6 @@
 // What `norn gen` writes to .norn/registry.ts, by hand.
 import { fileURLToPath } from 'node:url';
-import { createContainer, provide } from '@norn/activity';
+import { createContainer, provide } from '@norn-ts/activity';
 import { defineRegistry } from '../../src/index.ts';
 import { Config, GreetActivities, Greeter } from './activities.ts';
 

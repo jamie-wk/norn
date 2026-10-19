@@ -12,7 +12,7 @@ function temp(files: Record<string, string>): string {
   return dir;
 }
 
-const workflow = (name: string, queue = 'q') => `import { Workflow } from '@norn/workflow';
+const workflow = (name: string, queue = 'q') => `import { Workflow } from '@norn-ts/workflow';
 
 @Workflow({ taskQueue: '${queue}' })
 export class ${name} {
@@ -61,7 +61,7 @@ describe('configuration', () => {
 
   it('loads an explicit --config path and resolves paths against its directory', async () => {
     const dir = temp({
-      'config/custom.config.ts': `import { defineConfig } from '@norn/cli';\nexport default defineConfig({ include: ['../src/**/*.ts'], outDir: '../out' });\n`,
+      'config/custom.config.ts': `import { defineConfig } from '@norn-ts/cli';\nexport default defineConfig({ include: ['../src/**/*.ts'], outDir: '../out' });\n`,
       'src/a.ts': workflow('AWorkflow'),
     });
     const result = await generate({ cwd: dir, configPath: 'config/custom.config.ts', write: false });
@@ -139,9 +139,9 @@ describe('configuration', () => {
 
   it('aliases dependency keys that share a name across modules', async () => {
     const dir = temp({
-      'src/a/config.ts': "import { token } from '@norn/activity';\nexport interface Config { a: 1 }\nexport const Config = token<Config>('AConfig');\n",
-      'src/b/config.ts': "import { token } from '@norn/activity';\nexport interface Config { b: 1 }\nexport const Config = token<Config>('BConfig');\n",
-      'src/acts.ts': `import { Activities, Activity } from '@norn/activity';
+      'src/a/config.ts': "import { token } from '@norn-ts/activity';\nexport interface Config { a: 1 }\nexport const Config = token<Config>('AConfig');\n",
+      'src/b/config.ts': "import { token } from '@norn-ts/activity';\nexport interface Config { b: 1 }\nexport const Config = token<Config>('BConfig');\n",
+      'src/acts.ts': `import { Activities, Activity } from '@norn-ts/activity';
 import type { Config } from './a/config.js';
 import type { Config as OtherConfig } from './b/config.js';
 import { Pool } from 'pg';

@@ -6,7 +6,7 @@ export interface BundleOptions {
   outDir: string;
   /** Where to write the bundle. */
   outFile: string;
-  /** Include `@norn/codec`'s payload converter (bigint and JS Temporal types). */
+  /** Include `@norn-ts/codec`'s payload converter (bigint and JS Temporal types). */
   codec?: boolean;
 }
 
@@ -19,22 +19,22 @@ export function workflowsEntry(outDir: string): string | undefined {
   return undefined;
 }
 
-/** Bundles the generated workflows with `bundleWorkflows()` from `@norn/worker`. */
+/** Bundles the generated workflows with `bundleWorkflows()` from `@norn-ts/worker`. */
 export async function bundle(options: BundleOptions): Promise<{ code: string; outFile: string; workflowsPath: string }> {
   const workflowsPath = workflowsEntry(options.outDir);
   if (!workflowsPath) throw new Error(`No workflows barrel in ${options.outDir}. Run norn gen first.`);
-  let worker: typeof import('@norn/worker');
+  let worker: typeof import('@norn-ts/worker');
   try {
-    worker = await import('@norn/worker');
+    worker = await import('@norn-ts/worker');
   } catch (error) {
-    throw new Error(`norn bundle needs @norn/worker and @temporalio/worker. (${(error as Error).message})`, { cause: error });
+    throw new Error(`norn bundle needs @norn-ts/worker and @temporalio/worker. (${(error as Error).message})`, { cause: error });
   }
   let payloadConverterPath: string | undefined;
   if (options.codec) {
     try {
-      payloadConverterPath = (await import('@norn/codec')).resolvePayloadConverterPath();
+      payloadConverterPath = (await import('@norn-ts/codec')).resolvePayloadConverterPath();
     } catch (error) {
-      throw new Error(`--codec needs @norn/codec. (${(error as Error).message})`, { cause: error });
+      throw new Error(`--codec needs @norn-ts/codec. (${(error as Error).message})`, { cause: error });
     }
   }
   const outFile = resolve(options.outFile);

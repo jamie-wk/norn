@@ -24,19 +24,19 @@ describe('plugin', () => {
 
   it('exports the default workflow file globs and option defaults', () => {
     expect(workflowFiles).toEqual(['**/*.workflow.ts', '**/workflows/**/*.ts', '**/.norn/workflows.ts']);
-    expect(defaultAllow).toEqual(['@temporalio/workflow', '@temporalio/common', '@norn/workflow', '@norn/core']);
+    expect(defaultAllow).toEqual(['@temporalio/workflow', '@temporalio/common', '@norn-ts/workflow', '@norn-ts/core']);
     expect(defaultActivityPatterns).toContain('**/activities/**');
     expect(defaultDeny).toEqual([
       '@temporalio/activity',
       '@temporalio/client',
       '@temporalio/worker',
       '@temporalio/testing',
-      '@norn/activity',
-      '@norn/worker',
-      '@norn/client',
-      '@norn/testing',
-      '@norn/hono',
-      '@norn/cli',
+      '@norn-ts/activity',
+      '@norn-ts/worker',
+      '@norn-ts/client',
+      '@norn-ts/testing',
+      '@norn-ts/hono',
+      '@norn-ts/cli',
     ]);
   });
 });
@@ -45,7 +45,7 @@ describe('configs.recommended', () => {
   const recommended = plugin.configs.recommended;
 
   it('registers both rules at error for the workflow file globs', () => {
-    expect(recommended.name).toBe('@norn/eslint-plugin/recommended');
+    expect(recommended.name).toBe('@norn-ts/eslint-plugin/recommended');
     expect(recommended.files).toEqual(workflowFiles);
     expect(recommended.plugins).toEqual({ norn: plugin });
     expect(recommended.rules).toEqual({
@@ -58,7 +58,7 @@ describe('configs.recommended', () => {
   const config: Linter.Config[] = [{ files: ['**/*.ts'], languageOptions: { parser: tsParser } }, recommended];
   const code = `
 import { readFileSync } from 'node:fs';
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 
 @Workflow()
 export class Orders {

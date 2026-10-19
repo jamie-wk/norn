@@ -1,5 +1,5 @@
 {
-  "name": "@norn/testing",
+  "name": "@norn-ts/testing",
   "version": "1.0.0",
   "description": "Test helpers for Norn: time-skipping test environments, typed activity mocks, a fake client and replay checks.",
   "license": "MIT",
@@ -58,10 +58,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@norn/core": "workspace:^",
-    "@norn/client": "workspace:^",
-    "@norn/worker": "workspace:^",
-    "@norn/activity": "workspace:^"
+    "@norn-ts/core": "workspace:^",
+    "@norn-ts/client": "workspace:^",
+    "@norn-ts/worker": "workspace:^",
+    "@norn-ts/activity": "workspace:^"
   },
   "peerDependencies": {
     "@temporalio/testing": "^1.24.0",
@@ -85,7 +85,7 @@
     "@temporalio/client": "1.24.0",
     "@temporalio/common": "1.24.0",
     "@temporalio/workflow": "1.24.0",
-    "@norn/workflow": "workspace:^",
+    "@norn-ts/workflow": "workspace:^",
     "vitest": "5.0.5",
     "esbuild": "0.28.2"
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { Query, Signal, Update, Validate, Workflow, describeWorkflow, isWorkflowClass } from '../src/index.ts';
 
 class InvalidItemError extends Error {}

@@ -4,7 +4,7 @@
  */
 import type { Payload } from '@temporalio/common';
 import type { WorkflowInterceptors } from '@temporalio/workflow';
-import { CORRELATION_HEADER } from '@norn/core';
+import { CORRELATION_HEADER } from '@norn-ts/core';
 
 type WithHeaders = { headers: Record<string, Payload> };
 

@@ -39,4 +39,4 @@ export {
   type BusinessCalendar,
   type ActivityOptions,
   type Duration,
-} from '@norn/core';
+} from '@norn-ts/core';

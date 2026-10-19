@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { MockActivityEnvironment } from '@temporalio/testing';
 import { ApplicationFailure } from '@temporalio/common';
-import { NornConfigError } from '@norn/core';
+import { NornConfigError } from '@norn-ts/core';
 import { Activities, Activity, NonRetryable, Service, createContainer, provide, token } from '../src/index.ts';
 
 class Db {

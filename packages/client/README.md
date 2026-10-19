@@ -1,6 +1,6 @@
-# @norn/client
+# @norn-ts/client
 
-A typed Temporal client for [Norn](https://jamie-wk.github.io/norn/). Give it a contract (from `.norn/contracts.ts`, or `defineWorkflow()` from `@norn/core`) and every call is checked at compile time against the workflow: input and output, ID template fields, signal, query and update names and arguments, and search attributes. Temporal errors come back as Norn errors with stable codes and HTTP statuses.
+A typed Temporal client for [Norn](https://jamie-wk.github.io/norn/). Give it a contract (from `.norn/contracts.ts`, or `defineWorkflow()` from `@norn-ts/core`) and every call is checked at compile time against the workflow: input and output, ID template fields, signal, query and update names and arguments, and search attributes. Temporal errors come back as Norn errors with stable codes and HTTP statuses.
 
 - **`createClient()`**: a lazy connection configured from options or `TEMPORAL_*` environment variables, with correlation IDs on every outbound call.
 - **`norn.workflow(Contract)`**: `start`, `execute`, `get`, `signalWithStart`, `updateWithStart`, `list` and `count`; handles with `signal`, `query`, `update`, `result`, `cancel`, `terminate` and `describe`.
@@ -11,7 +11,7 @@ API code never imports worker code: generated contracts import workflow classes 
 ## Install
 
 ```sh
-pnpm add @norn/client @temporalio/client @temporalio/common
+pnpm add @norn-ts/client @temporalio/client @temporalio/common
 ```
 
 Requires Node 22.18+ (the Temporal client uses gRPC; Bun and Deno work with Node compatibility).
@@ -19,7 +19,7 @@ Requires Node 22.18+ (the Temporal client uses gRPC; Bun and Deno work with Node
 ## Usage
 
 ```ts
-import { createClient } from '@norn/client';
+import { createClient } from '@norn-ts/client';
 import { OrderWorkflow } from './.norn/contracts.js';
 
 // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
@@ -67,7 +67,7 @@ interface NornClient extends AsyncDisposable {
 | `connectTimeout` | SDK default | A `Duration`. |
 | `connection` | lazy connection | An existing `Connection`. Norn does not close connections it did not open. |
 | `client` | new client | An existing Temporal `Client` to wrap, such as a test environment's. Its interceptors are used as-is (no correlation interceptor is added). |
-| `dataConverter` | SDK default | For example `clientDataConverter()` from `@norn/codec`. |
+| `dataConverter` | SDK default | For example `clientDataConverter()` from `@norn-ts/codec`. |
 | `interceptors` | `[]` | Extra workflow client interceptors, after Norn's correlation interceptor. |
 | `correlation` | `true` | Add the correlation ID header to outbound calls. |
 
@@ -134,7 +134,7 @@ const { handle, result } = await norn.workflow(CartWorkflow).updateWithStart({ c
 
 ## Errors
 
-Every call converts Temporal errors with `toNornError()`. The classes come from `@norn/core` and are re-exported here:
+Every call converts Temporal errors with `toNornError()`. The classes come from `@norn-ts/core` and are re-exported here:
 
 | Error | `code` | `status` | When |
 | --- | --- | --- | --- |
@@ -149,7 +149,7 @@ Every call converts Temporal errors with `toNornError()`. The classes come from 
 Temporal reports signals, updates and cancels to a finished workflow as "not found"; Norn describes the workflow to tell a closed one (409) from one that never existed (404).
 
 ```ts
-import { UpdateRejectedError, WorkflowClosedError } from '@norn/client';
+import { UpdateRejectedError, WorkflowClosedError } from '@norn-ts/client';
 
 try {
   await norn.workflow(PaymentWorkflow).get({ paymentId }).update('cancel', { by: userId });
@@ -160,17 +160,17 @@ try {
 }
 ```
 
-`toNornError(error, ctx)` converts any Temporal client error (returning unknown errors unchanged, including gRPC errors from other services), and `failureTypeOf(cause)` names a failure the same way `WorkflowFailedError` does. With `@norn/hono`, `nornErrorHandler()` turns all of these into JSON responses.
+`toNornError(error, ctx)` converts any Temporal client error (returning unknown errors unchanged, including gRPC errors from other services), and `failureTypeOf(cause)` names a failure the same way `WorkflowFailedError` does. With `@norn-ts/hono`, `nornErrorHandler()` turns all of these into JSON responses.
 
 ## Correlation IDs
 
 ```ts
-import { getCorrelationId, runWithCorrelationId } from '@norn/client';
+import { getCorrelationId, runWithCorrelationId } from '@norn-ts/client';
 
 await runWithCorrelationId(requestId, () => norn.workflow(OrderWorkflow).start(input));
 ```
 
-Every start, signal, signal-with-start, query, update and update-with-start inside `runWithCorrelationId(id, fn)` carries `id` in the `norn-correlation-id` header. Norn workers forward it to activities, child workflows and continue-as-new runs, and `getCorrelationId()` from `@norn/activity` returns it inside activities. `correlationInterceptor()` is the client interceptor that adds the header, for use with a plain Temporal `Client`. The `@norn/hono` middleware sets the ID for every request.
+Every start, signal, signal-with-start, query, update and update-with-start inside `runWithCorrelationId(id, fn)` carries `id` in the `norn-correlation-id` header. Norn workers forward it to activities, child workflows and continue-as-new runs, and `getCorrelationId()` from `@norn-ts/activity` returns it inside activities. `correlationInterceptor()` is the client interceptor that adds the header, for use with a plain Temporal `Client`. The `@norn-ts/hono` middleware sets the ID for every request.
 
 ## Lower-level helpers
 
@@ -187,7 +187,7 @@ Every start, signal, signal-with-start, query, update and update-with-start insi
 | `StartOptions<C>`, `IfRunning`, `IfClosed` | Start option types |
 | `startOptions(contract, input, options?)`, `toTypedSearchAttributes(contract, values)`, `resolveWorkflowId(contract, input, explicit?)` | Option helpers |
 | `toNornError(error, ctx)`, `failureTypeOf(cause)`, `ErrorContext` | Error conversion |
-| `NornError`, `WorkflowAlreadyStartedError`, `WorkflowNotFoundError`, `WorkflowClosedError`, `UpdateRejectedError`, `QueryFailedError`, `WorkflowFailedError`, `TemporalUnavailableError`, `isNornError`, `AnyWorkflowContract` | Re-exported from `@norn/core` |
+| `NornError`, `WorkflowAlreadyStartedError`, `WorkflowNotFoundError`, `WorkflowClosedError`, `UpdateRejectedError`, `QueryFailedError`, `WorkflowFailedError`, `TemporalUnavailableError`, `isNornError`, `AnyWorkflowContract` | Re-exported from `@norn-ts/core` |
 | `runWithCorrelationId(id, fn)`, `getCorrelationId()`, `correlationInterceptor()` | Correlation IDs |
 
 ## License

@@ -7,7 +7,7 @@ const strict = [{ strict: true }];
 /** A Norn workflow class, so every case also proves the parser handles TC39 decorators. */
 const inWorkflow = (body: string) => `
 import { condition, sleep, workflowInfo, uuid4 } from '@temporalio/workflow';
-import { Signal, Workflow } from '@norn/workflow';
+import { Signal, Workflow } from '@norn-ts/workflow';
 
 @Workflow({ taskQueue: 'orders' })
 export class OrderWorkflow {
@@ -181,7 +181,7 @@ ruleTester.run('workflow-determinism', rule, {
     // Several problems in one decorated class body, including inside handlers and field initialisers.
     {
       code: `
-import { Query, Workflow } from '@norn/workflow';
+import { Query, Workflow } from '@norn-ts/workflow';
 
 @Workflow()
 export class Clock {

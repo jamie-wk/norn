@@ -109,7 +109,7 @@ You can also download a history from the Temporal UI or with `temporal workflow 
 // test/replay.test.ts
 import { fileURLToPath } from 'node:url';
 import { it } from 'vitest';
-import { assertReplays, loadHistories } from '@norn/testing';
+import { assertReplays, loadHistories } from '@norn-ts/testing';
 import { registry } from '../.norn/registry.js';
 
 it('replays recorded production histories', async () => {

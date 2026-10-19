@@ -1,13 +1,13 @@
 import { afterAll, beforeAll, vi, type Mock } from 'vitest';
-import type { AnyWorkflowContract, Duration } from '@norn/core';
-import type { WorkflowClient } from '@norn/client';
+import type { AnyWorkflowContract, Duration } from '@norn-ts/core';
+import type { WorkflowClient } from '@norn-ts/client';
 import { createTestEnv, type TestEnv, type TestEnvOptions } from './env.js';
 import { buildMocks, type ActivitiesRefLike, type ActivityImpls, type MethodFn, type MockedActivities, type RefInstance } from './mocks.js';
 
 type AnyFn = (...args: any[]) => any;
 
 /**
- * Like `mockActivities()` from `@norn/testing`, but every mock is a `vi.fn()`, so you can use
+ * Like `mockActivities()` from `@norn-ts/testing`, but every mock is a `vi.fn()`, so you can use
  * `toHaveBeenCalledWith` and friends.
  */
 export function mockActivities<R extends ActivitiesRefLike<any, any>, const I extends ActivityImpls<R>>(

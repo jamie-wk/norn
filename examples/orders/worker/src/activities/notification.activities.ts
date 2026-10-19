@@ -1,4 +1,4 @@
-import { Activities, Activity, idempotencyKey } from '@norn/activity';
+import { Activities, Activity, idempotencyKey } from '@norn-ts/activity';
 import { Mailer } from '../services/mailer.ts';
 
 @Activities({ prefix: 'notify.' })

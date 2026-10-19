@@ -5,9 +5,9 @@ import { Hono } from 'hono';
 import { Client } from '@temporalio/client';
 import { defaultPayloadConverter, type Payload } from '@temporalio/common';
 import type { TestWorkflowEnvironment } from '@temporalio/testing';
-import { clientDataConverter, generateKey } from '@norn/codec';
-import { createClient, type NornClient } from '@norn/client';
-import { CORRELATION_HEADER } from '@norn/core';
+import { clientDataConverter, generateKey } from '@norn-ts/codec';
+import { createClient, type NornClient } from '@norn-ts/client';
+import { CORRELATION_HEADER } from '@norn-ts/core';
 import { createLocalEnv, startWorkers, type RunningWorkers } from '../../../tooling/test-support/temporal.ts';
 import {
   codecServer,

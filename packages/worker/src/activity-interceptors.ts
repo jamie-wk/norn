@@ -1,7 +1,7 @@
 import { defaultPayloadConverter } from '@temporalio/common';
 import type { ActivityInterceptorsFactory } from '@temporalio/worker';
-import { CORRELATION_HEADER } from '@norn/core';
-import { runWithCorrelationId } from '@norn/activity';
+import { CORRELATION_HEADER } from '@norn-ts/core';
+import { runWithCorrelationId } from '@norn-ts/activity';
 
 /** Runs each activity with the correlation ID its workflow carried, so logs and outbound calls can use it. */
 export const correlationActivityInterceptor: ActivityInterceptorsFactory = () => ({

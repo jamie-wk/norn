@@ -1,8 +1,8 @@
 // API tests with the fake client: no Temporal server, but the same 404/409/422 behavior.
 import { describe, expect, it } from 'vitest';
 import { createHmac } from 'node:crypto';
-import { createFakeClient } from '@norn/testing';
-import { UpdateRejectedError } from '@norn/core';
+import { createFakeClient } from '@norn-ts/testing';
+import { UpdateRejectedError } from '@norn-ts/core';
 import { OrderWorkflow } from '@norn/example-orders-contracts';
 import { createApp } from '../src/app.ts';
 

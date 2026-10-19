@@ -1,7 +1,7 @@
 /**
  * Repo-internal helpers for integration tests that need a real Temporal server.
  *
- * Reuses @norn/testing's runtime setup, bundle cache and search-attribute wait. Uses an existing
+ * Reuses @norn-ts/testing's runtime setup, bundle cache and search-attribute wait. Uses an existing
  * `temporal` binary when NORN_TEMPORAL_CLI_PATH is set, and otherwise lets the SDK download one.
  */
 import { TestWorkflowEnvironment } from '@temporalio/testing';

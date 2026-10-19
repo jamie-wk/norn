@@ -1,4 +1,4 @@
-import { Schedule, Workflow, useActivities } from '@norn/workflow';
+import { Schedule, Workflow, useActivities } from '@norn-ts/workflow';
 import { NotificationActivities } from '../../.norn/activities.ts';
 
 /** Emails the ops team every morning. Created by `norn schedules sync`. */

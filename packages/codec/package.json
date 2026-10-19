@@ -1,5 +1,5 @@
 {
-  "name": "@norn/codec",
+  "name": "@norn-ts/codec",
   "version": "1.0.0",
   "description": "Payload encryption with key rotation and a payload converter for bigint and JS Temporal types.",
   "license": "MIT",

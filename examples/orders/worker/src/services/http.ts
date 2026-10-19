@@ -1,4 +1,4 @@
-import { Service, cancellationSignal, getCorrelationId } from '@norn/activity';
+import { Service, cancellationSignal, getCorrelationId } from '@norn-ts/activity';
 import { AppConfig } from './config.ts';
 
 /** A non-2xx response. `status` lets the container treat 4xx as final and 5xx as retryable. */

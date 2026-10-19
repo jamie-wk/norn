@@ -1,4 +1,4 @@
-import { token } from '@norn/activity';
+import { token } from '@norn-ts/activity';
 
 export interface Db {
   get(key: string): Promise<number | undefined>;

@@ -24,7 +24,7 @@ import {
   type RefArgs,
   type RefResult,
   type SearchAttributeValues,
-} from '@norn/core';
+} from '@norn-ts/core';
 import { correlationInterceptor, runWithCorrelationId } from './correlation.js';
 import { toNornError, type ErrorContext } from './errors.js';
 import { resolveWorkflowId, startOptions, type StartOptions } from './options.js';
@@ -45,7 +45,7 @@ export interface ClientOptions {
   apiKey?: string;
   tls?: ConnectionOptions['tls'];
   connectTimeout?: Duration;
-  /** Use `clientDataConverter()` from `@norn/codec` for encrypted payloads. */
+  /** Use `clientDataConverter()` from `@norn-ts/codec` for encrypted payloads. */
   dataConverter?: DataConverter;
   interceptors?: WorkflowClientInterceptor[];
   /** Add the correlation ID header to outbound calls. Default true. */

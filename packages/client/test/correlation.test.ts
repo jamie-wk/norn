@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultPayloadConverter } from '@temporalio/common';
-import { CORRELATION_HEADER } from '@norn/core';
+import { CORRELATION_HEADER } from '@norn-ts/core';
 import { correlationInterceptor, getCorrelationId, runWithCorrelationId } from '../src/index.ts';
 
 const interceptor = correlationInterceptor();

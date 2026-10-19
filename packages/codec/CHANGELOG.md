@@ -1,4 +1,4 @@
-# @norn/codec
+# @norn-ts/codec
 
 ## 1.0.0
 

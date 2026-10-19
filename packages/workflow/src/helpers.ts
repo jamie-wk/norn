@@ -6,7 +6,7 @@ import {
   workflowInfo,
 } from '@temporalio/workflow';
 import { ApplicationFailure, defineSearchAttributeKey } from '@temporalio/common';
-import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, type SearchAttributeType } from '@norn/core';
+import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, type SearchAttributeType } from '@norn-ts/core';
 import { definitionFor } from './implement.js';
 
 export interface ContinueAsNewOptions {

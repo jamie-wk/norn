@@ -1,5 +1,5 @@
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Update, Validate, Workflow } from '@norn/workflow';
+import { Query, Signal, Update, Validate, Workflow } from '@norn-ts/workflow';
 
 export class InvalidNoteError extends Error {
   override name = 'InvalidNoteError';

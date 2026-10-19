@@ -24,16 +24,16 @@ pnpm pkg set type=module
 Install Norn and the Temporal SDK packages it builds on (they are peer dependencies, so your app controls the SDK version):
 
 ```sh
-pnpm add @norn/core @norn/workflow @norn/activity @norn/worker @norn/client \
+pnpm add @norn-ts/core @norn-ts/workflow @norn-ts/activity @norn-ts/worker @norn-ts/client \
   @temporalio/workflow @temporalio/activity @temporalio/worker @temporalio/client @temporalio/common
-pnpm add -D @norn/cli @norn/testing @norn/eslint-plugin @temporalio/testing \
+pnpm add -D @norn-ts/cli @norn-ts/testing @norn-ts/eslint-plugin @temporalio/testing \
   typescript vitest esbuild @types/node
 ```
 
 For the HTTP part of this guide, also add Hono:
 
 ```sh
-pnpm add @norn/hono hono @hono/node-server
+pnpm add @norn-ts/hono hono @hono/node-server
 ```
 
 ## 2. TypeScript {#typescript}
@@ -83,7 +83,7 @@ Node's built-in type stripping does not support decorators, because they are not
 
 ```ts
 // norn.config.ts
-import { defineConfig } from '@norn/cli';
+import { defineConfig } from '@norn-ts/cli';
 
 export default defineConfig({
   include: ['src/**/*.ts'],
@@ -98,7 +98,7 @@ Activities talk to the outside world through services. Declare the interface, an
 
 ```ts
 // src/services/payment-gateway.ts
-import { Service, token } from '@norn/activity';
+import { Service, token } from '@norn-ts/activity';
 
 export interface Charge {
   id: string;
@@ -134,7 +134,7 @@ Error classes set `name` explicitly (to the class name). Norn records an error's
 
 ```ts
 // src/activities/payment.activities.ts
-import { Activities, Activity, NonRetryable } from '@norn/activity';
+import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
 import { CardDeclinedError, PaymentGateway } from '../services/payment-gateway.js';
 
 @Activities({ prefix: 'payments.' })
@@ -162,7 +162,7 @@ There is no `inject: [...]` here: `norn gen` reads the constructor's parameter t
 ```ts
 // src/workflows/order.workflow.ts
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Workflow, useActivities } from '@norn/workflow';
+import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
 import { PaymentActivities } from '../../.norn/activities.js';
 
 export interface OrderInput {
@@ -235,7 +235,7 @@ Commit `.norn/` and `norn.lock.json`; CI runs `norn gen --check` to make sure th
 
 ```ts
 // src/worker.ts
-import { createWorker } from '@norn/worker';
+import { createWorker } from '@norn-ts/worker';
 import { registry } from '../.norn/registry.js';
 
 const worker = await createWorker({ registry });
@@ -258,7 +258,7 @@ With Hono:
 // src/api.ts
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
-import { nornErrorHandler, temporal, type NornEnv } from '@norn/hono';
+import { nornErrorHandler, temporal, type NornEnv } from '@norn-ts/hono';
 import { OrderWorkflow } from '../.norn/contracts.js';
 
 const app = new Hono<NornEnv>();
@@ -291,7 +291,7 @@ Starting the same order twice returns **409** (`WORKFLOW_ALREADY_STARTED`), aski
 Without Hono, use the client directly in any framework:
 
 ```ts
-import { createClient } from '@norn/client';
+import { createClient } from '@norn-ts/client';
 import { OrderWorkflow } from '../.norn/contracts.js';
 
 // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
@@ -303,12 +303,12 @@ console.log(await order.result());
 
 ## 10. Test it
 
-Vite (and so Vitest) compiles TypeScript with Oxc, which leaves standard decorators in place, and Node cannot run them. `@norn/testing/vite` provides a plugin that lowers them first:
+Vite (and so Vitest) compiles TypeScript with Oxc, which leaves standard decorators in place, and Node cannot run them. `@norn-ts/testing/vite` provides a plugin that lowers them first:
 
 ```ts
 // vitest.config.ts
 import { defineConfig } from 'vitest/config';
-import { standardDecorators } from '@norn/testing/vite';
+import { standardDecorators } from '@norn-ts/testing/vite';
 
 export default defineConfig({
   plugins: [standardDecorators()],
@@ -319,7 +319,7 @@ export default defineConfig({
 ```ts
 // test/order.workflow.test.ts
 import { expect, it } from 'vitest';
-import { mockActivities, useTestEnv } from '@norn/testing/vitest';
+import { mockActivities, useTestEnv } from '@norn-ts/testing/vitest';
 import { PaymentActivities } from '../.norn/activities.js';
 import { OrderWorkflow } from '../.norn/contracts.js';
 import { registry } from '../.norn/registry.js';

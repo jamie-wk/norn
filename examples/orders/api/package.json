@@ -12,16 +12,16 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",
-    "@norn/client": "workspace:^",
-    "@norn/codec": "workspace:^",
-    "@norn/core": "workspace:^",
+    "@norn-ts/client": "workspace:^",
+    "@norn-ts/codec": "workspace:^",
+    "@norn-ts/core": "workspace:^",
     "@norn/example-orders-contracts": "workspace:^",
-    "@norn/hono": "workspace:^",
+    "@norn-ts/hono": "workspace:^",
     "@temporalio/client": "1.24.0",
     "@temporalio/common": "1.24.0",
     "hono": "4.13.13"
   },
   "devDependencies": {
-    "@norn/testing": "workspace:^"
+    "@norn-ts/testing": "workspace:^"
   }
 }

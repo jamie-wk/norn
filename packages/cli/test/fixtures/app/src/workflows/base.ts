@@ -1,4 +1,4 @@
-import { Query, Signal } from '@norn/workflow';
+import { Query, Signal } from '@norn-ts/workflow';
 
 /** Pause/resume handlers shared by several workflows. */
 export class Pausable {

@@ -1,4 +1,4 @@
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 import { type PaymentActivities } from '../activities/payment.js';
 import { type Info } from '@temporalio/activity';
 import type { PaymentActivities as Pay } from '../activities/payment.js';

@@ -7,10 +7,10 @@ import type { TestWorkflowEnvironment } from '@temporalio/testing';
 import { Worker } from '@temporalio/worker';
 import { WorkflowFailedError } from '@temporalio/client';
 import { historyFromJSON } from '@temporalio/common/lib/proto-utils.js';
-import { createClient, type NornClient } from '@norn/client';
-import { TEMPORAL_SEARCH_ATTRIBUTE_TYPES } from '@norn/core';
-import type { QueryRef, SignalRef, UpdateRef, WorkflowContract } from '@norn/core';
-import { bundleWorkflows, createWorker, type NornRegistry, type NornWorker } from '@norn/worker';
+import { createClient, type NornClient } from '@norn-ts/client';
+import { TEMPORAL_SEARCH_ATTRIBUTE_TYPES } from '@norn-ts/core';
+import type { QueryRef, SignalRef, UpdateRef, WorkflowContract } from '@norn-ts/core';
+import { bundleWorkflows, createWorker, type NornRegistry, type NornWorker } from '@norn-ts/worker';
 import { createLocalEnv } from '../../../tooling/test-support/temporal.ts';
 import { main } from '../src/cli.ts';
 import { copyFixture, removeDir } from './helpers.ts';
@@ -40,7 +40,7 @@ describe('generated code', () => {
     const bad = join(dir, 'src/api/bad.ts');
     writeFileSync(
       bad,
-      "import type { RefArgs } from '@norn/core';\nimport { OrderWorkflow } from '../../.norn/contracts.js';\n" +
+      "import type { RefArgs } from '@norn-ts/core';\nimport { OrderWorkflow } from '../../.norn/contracts.js';\n" +
         "export const wrong: RefArgs<typeof OrderWorkflow.signals.cancel> = [42];\nexport const missing = OrderWorkflow.signals.nope;\n",
     );
     try {

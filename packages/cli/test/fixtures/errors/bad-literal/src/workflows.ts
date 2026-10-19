@@ -1,4 +1,4 @@
-import { Workflow, Signal } from '@norn/workflow';
+import { Workflow, Signal } from '@norn-ts/workflow';
 
 const QUEUE = 'orders';
 

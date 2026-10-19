@@ -1,4 +1,4 @@
-import { Activities, Activity, NonRetryable, Service, getCorrelationId, heartbeat, token } from '@norn/activity';
+import { Activities, Activity, NonRetryable, Service, getCorrelationId, heartbeat, token } from '@norn-ts/activity';
 
 export interface Config {
   greeting: string;

@@ -1,4 +1,4 @@
-import { Activities, Activity, heartbeat } from '@norn/activity';
+import { Activities, Activity, heartbeat } from '@norn-ts/activity';
 import { ShippingService } from '../services/shipping.ts';
 
 @Activities({ prefix: 'shipping.' })

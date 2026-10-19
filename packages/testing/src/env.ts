@@ -1,10 +1,10 @@
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { DefaultLogger, Runtime, type LogLevel, type WorkerOptions } from '@temporalio/worker';
 import { defineSearchAttributeKey, type DataConverter } from '@temporalio/common';
-import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, toMs, type Duration, type SearchAttributeType } from '@norn/core';
-import { createClient, type NornClient, type WorkflowClient } from '@norn/client';
-import { bundleWorkflows, createWorker, type NornRegistry, type NornWorker, type RegistryContainerOptions } from '@norn/worker';
-import type { AnyWorkflowContract } from '@norn/core';
+import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, toMs, type Duration, type SearchAttributeType } from '@norn-ts/core';
+import { createClient, type NornClient, type WorkflowClient } from '@norn-ts/client';
+import { bundleWorkflows, createWorker, type NornRegistry, type NornWorker, type RegistryContainerOptions } from '@norn-ts/worker';
+import type { AnyWorkflowContract } from '@norn-ts/core';
 import { activityMap, type ActivitySource } from './mocks.js';
 
 export type TestEnvMode = 'local' | 'time-skipping';
@@ -23,9 +23,9 @@ export interface TestEnvOptions {
   taskQueues?: readonly string[];
   /** Set false to skip the worker, e.g. to test starts and signals only. */
   worker?: boolean;
-  /** Worker data converter, e.g. `createDataConverter()` from `@norn/codec`. */
+  /** Worker data converter, e.g. `createDataConverter()` from `@norn-ts/codec`. */
   dataConverter?: WorkerOptions['dataConverter'];
-  /** Client data converter, e.g. `clientDataConverter()` from `@norn/codec`. */
+  /** Client data converter, e.g. `clientDataConverter()` from `@norn-ts/codec`. */
   clientDataConverter?: DataConverter;
   /** Path of an existing `temporal` CLI (local mode) or test server (time-skipping). Defaults to NORN_TEMPORAL_CLI_PATH / NORN_TEMPORAL_TEST_SERVER_PATH, otherwise the SDK downloads one. */
   serverPath?: string;

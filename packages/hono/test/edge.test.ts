@@ -20,13 +20,13 @@ async function bundle(file: string) {
 }
 
 describe('runtime neutrality', () => {
-  it('bundles @norn/hono/codec-server for edge runtimes without Node built-ins or the Temporal client', async () => {
+  it('bundles @norn-ts/hono/codec-server for edge runtimes without Node built-ins or the Temporal client', async () => {
     const inputs = await bundle('codec-server.ts');
     expect(inputs.some((i) => i.includes('codec-server.ts'))).toBe(true);
     expect(inputs.filter((i) => i.includes('@temporalio') || i.includes('packages/client/'))).toEqual([]);
   });
 
-  it('keeps Node APIs out of this package itself (they only come from @norn/client)', async () => {
+  it('keeps Node APIs out of this package itself (they only come from @norn-ts/client)', async () => {
     for (const file of ['errors.ts', 'webhook.ts', 'hmac.ts', 'middleware.ts', 'internal.ts']) {
       const withComments = await import('node:fs').then((fs) => fs.readFileSync(entry(file), 'utf8'));
       const source = withComments.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');

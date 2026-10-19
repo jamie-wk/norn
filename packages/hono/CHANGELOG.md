@@ -1,4 +1,4 @@
-# @norn/hono
+# @norn-ts/hono
 
 ## 1.0.0
 

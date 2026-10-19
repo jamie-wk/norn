@@ -7,8 +7,8 @@ import {
   type,
   update,
   type AnyWorkflowContract,
-} from '@norn/core';
-import type { NornClient, WorkflowClient, WorkflowHandle } from '@norn/client';
+} from '@norn-ts/core';
+import type { NornClient, WorkflowClient, WorkflowHandle } from '@norn-ts/client';
 
 export const Payments = defineWorkflow({
   name: 'PaymentWorkflow',

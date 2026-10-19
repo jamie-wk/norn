@@ -1,4 +1,4 @@
-# @norn/eslint-plugin
+# @norn-ts/eslint-plugin
 
 ESLint rules that keep [Norn](https://jamie-wk.github.io/norn/) workflow code deterministic and free of activity imports, so you see problems in your editor instead of at bundle time or on replay.
 
@@ -7,7 +7,7 @@ Workflow code runs inside Temporal's deterministic sandbox: it is replayed from 
 ## Install
 
 ```sh
-pnpm add -D @norn/eslint-plugin eslint @typescript-eslint/parser
+pnpm add -D @norn-ts/eslint-plugin eslint @typescript-eslint/parser
 ```
 
 Requires ESLint 9 or later (flat config) and Node 22.18+.
@@ -17,7 +17,7 @@ Requires ESLint 9 or later (flat config) and Node 22.18+.
 ```js
 // eslint.config.js
 import tsParser from '@typescript-eslint/parser';
-import norn from '@norn/eslint-plugin';
+import norn from '@norn-ts/eslint-plugin';
 
 export default [
   { files: ['**/*.ts'], languageOptions: { parser: tsParser } },
@@ -34,7 +34,7 @@ export default [
 To lint other files as workflow code, or to set options, configure the rules yourself:
 
 ```js
-import norn, { workflowFiles } from '@norn/eslint-plugin';
+import norn, { workflowFiles } from '@norn-ts/eslint-plugin';
 
 export default [
   { files: ['**/*.ts'], languageOptions: { parser: tsParser } },
@@ -124,7 +124,7 @@ It checks `import` declarations (including side-effect imports like `import 'nod
 
 **Top-level type-only imports are always allowed**: `import type { X } from '...'`, `import type X = require('...')`, `export type { X } from '...'` and `export type * from '...'`.
 
-**Inline `type` specifiers are not enough.** Under `verbatimModuleSyntax`, `import { type X } from 'm'` compiles to `import {} from 'm'` (and `export { type X } from 'm'` to `export {} from 'm'`), which still loads `m`. So when `m` would otherwise be reported, a declaration whose specifiers are *all* inline `type` is reported too, with a message suggesting `import type { ... }` / `export type { ... }`. Inline `type` specifiers from modules that may be loaded (`import { type Duration, ms } from '@norn/core'`) are fine. A mix such as `import { type X, y } from 'fs'` is reported as a normal value import.
+**Inline `type` specifiers are not enough.** Under `verbatimModuleSyntax`, `import { type X } from 'm'` compiles to `import {} from 'm'` (and `export { type X } from 'm'` to `export {} from 'm'`), which still loads `m`. So when `m` would otherwise be reported, a declaration whose specifiers are *all* inline `type` is reported too, with a message suggesting `import type { ... }` / `export type { ... }`. Inline `type` specifiers from modules that may be loaded (`import { type Duration, ms } from '@norn-ts/core'`) are fine. A mix such as `import { type X, y } from 'fs'` is reported as a normal value import.
 
 **Pattern matching** is done on the import specifier string, not on the resolved file. The specifier is loosely normalized first: `.` and `..` segments are collapsed and leading ones dropped, so `./activities/payments`, `../../src/activities/index.js` and `@acme/app/services/mailer` all match `**/activities/**` or `**/services/**`. Patterns support `**` (any number of segments, including none), `*` and `?` (within one segment) and `{a,b}`. A directory import such as `../activities` matches `**/activities/**`.
 
@@ -144,9 +144,9 @@ Default `activityPatterns` (exported as `defaultActivityPatterns`):
  '**/*.service', '**/*.service.ts', '**/*.service.js']
 ```
 
-Built-in allow list (exported as `defaultAllow`): `@temporalio/workflow`, `@temporalio/common`, `@norn/workflow`, `@norn/core`.
+Built-in allow list (exported as `defaultAllow`): `@temporalio/workflow`, `@temporalio/common`, `@norn-ts/workflow`, `@norn-ts/core`.
 
-Built-in deny list (exported as `defaultDeny`): `@temporalio/activity`, `@temporalio/client`, `@temporalio/worker`, `@temporalio/testing`, `@norn/activity`, `@norn/worker`, `@norn/client`, `@norn/testing`, `@norn/hono`, `@norn/cli`. These depend on Node, the network or worker internals; use them from activities, the worker or the client. To permit one anyway, list it in `allow`.
+Built-in deny list (exported as `defaultDeny`): `@temporalio/activity`, `@temporalio/client`, `@temporalio/worker`, `@temporalio/testing`, `@norn-ts/activity`, `@norn-ts/worker`, `@norn-ts/client`, `@norn-ts/testing`, `@norn-ts/hono`, `@norn-ts/cli`. These depend on Node, the network or worker internals; use them from activities, the worker or the client. To permit one anyway, list it in `allow`.
 
 ```ts
 // Incorrect
@@ -160,7 +160,7 @@ import { type Stats } from 'node:fs';
 
 // Correct
 import type { PaymentActivities } from './activities/payments.ts';
-import { Workflow, useActivities } from '@norn/workflow';
+import { Workflow, useActivities } from '@norn-ts/workflow';
 // an activity contract, not the implementation
 import { payments } from './registry.ts';
 
@@ -178,10 +178,10 @@ With `{ onlyAllowed: true, allow: ['zod'] }`, `import _ from 'lodash'` is report
 ## Exports
 
 ```ts
-import norn, { workflowFiles, defaultActivityPatterns, defaultAllow, defaultDeny } from '@norn/eslint-plugin';
-import type { WorkflowDeterminismOptions, NoActivityImportsOptions } from '@norn/eslint-plugin';
+import norn, { workflowFiles, defaultActivityPatterns, defaultAllow, defaultDeny } from '@norn-ts/eslint-plugin';
+import type { WorkflowDeterminismOptions, NoActivityImportsOptions } from '@norn-ts/eslint-plugin';
 
-// { name: '@norn/eslint-plugin', version }
+// { name: '@norn-ts/eslint-plugin', version }
 norn.meta;
 // { 'workflow-determinism', 'no-activity-imports' }
 norn.rules;

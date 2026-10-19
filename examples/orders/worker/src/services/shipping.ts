@@ -1,4 +1,4 @@
-import { Service } from '@norn/activity';
+import { Service } from '@norn-ts/activity';
 import { HttpClient } from './http.ts';
 
 @Service()

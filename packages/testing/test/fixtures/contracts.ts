@@ -1,4 +1,4 @@
-import { contract } from '@norn/core';
+import { contract } from '@norn-ts/core';
 import type { ReminderWorkflow, WaitWorkflow } from './workflow-classes.ts';
 
 export const Reminders = contract<typeof ReminderWorkflow>()({

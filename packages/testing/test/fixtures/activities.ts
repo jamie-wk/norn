@@ -1,4 +1,4 @@
-import { Activities, Activity, Service } from '@norn/activity';
+import { Activities, Activity, Service } from '@norn-ts/activity';
 
 @Service()
 export class Mailer {

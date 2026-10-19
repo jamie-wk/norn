@@ -9,16 +9,16 @@
   "commit": false,
   "fixed": [
     [
-      "@norn/activity",
-      "@norn/cli",
-      "@norn/client",
-      "@norn/codec",
-      "@norn/core",
-      "@norn/eslint-plugin",
-      "@norn/hono",
-      "@norn/testing",
-      "@norn/worker",
-      "@norn/workflow"
+      "@norn-ts/activity",
+      "@norn-ts/cli",
+      "@norn-ts/client",
+      "@norn-ts/codec",
+      "@norn-ts/core",
+      "@norn-ts/eslint-plugin",
+      "@norn-ts/hono",
+      "@norn-ts/testing",
+      "@norn-ts/worker",
+      "@norn-ts/workflow"
     ]
   ],
   "linked": [],

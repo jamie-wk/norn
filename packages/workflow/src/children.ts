@@ -18,7 +18,7 @@ import {
   type WorkflowClass,
   type WorkflowInput,
   type WorkflowOutput,
-} from '@norn/core';
+} from '@norn-ts/core';
 import { describeWorkflow } from './definition.js';
 
 export interface ChildOptions {

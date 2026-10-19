@@ -2,7 +2,7 @@
 
 Temporal stores every workflow input, result, signal, update, query result and activity argument in its database. If those contain personal data, bank details or contract terms, encrypt them **before they leave your process**: the server, its database, backups and anyone with access to the Temporal UI then see only ciphertext.
 
-`@norn/codec` provides:
+`@norn-ts/codec` provides:
 
 - **`createEncryptionCodec()`**: a Temporal `PayloadCodec` using AES-256-GCM via WebCrypto, with the key ID stored in each payload so you can rotate keys without breaking existing history.
 - **`payloadConverter`**: Temporal's default converter plus lossless `bigint` and TC39 `Temporal.*` values (`Instant`, `PlainDate`, `ZonedDateTime`, ...). It writes the same bytes as the default converter for plain JSON, so switching is safe.
@@ -13,7 +13,7 @@ Temporal stores every workflow input, result, signal, update, query result and a
 Generate a key once and put it in your secret manager:
 
 ```sh
-node -e "import('@norn/codec').then(m => console.log(m.generateKey()))"
+node -e "import('@norn-ts/codec').then(m => console.log(m.generateKey()))"
 ```
 
 Keys are 32 random bytes, base64-encoded; anything else is rejected at startup. Load them from the environment in both the worker and every client:
@@ -28,8 +28,8 @@ export const currentKeyId = process.env.NORN_ENCRYPTION_KEY_ID ?? '2026-10';
 ### Worker
 
 ```ts
-import { createDataConverter } from '@norn/codec';
-import { createWorker } from '@norn/worker';
+import { createDataConverter } from '@norn-ts/codec';
+import { createWorker } from '@norn-ts/worker';
 import { registry } from '../.norn/registry.js';
 import { currentKeyId, keys } from './codec.js';
 
@@ -40,15 +40,15 @@ await worker.run();
 `createDataConverter()` returns `{ payloadConverterPath, payloadCodecs }`. The path makes the worker load the converter inside the workflow sandbox too, so workflows can receive and return `bigint`s. When `createWorker()` bundles at startup it passes the path to the bundler for you. If you **prebuild the bundle**, pass it yourself:
 
 ```ts
-import { resolvePayloadConverterPath } from '@norn/codec';
+import { resolvePayloadConverterPath } from '@norn-ts/codec';
 await bundleWorkflows(registry, { outFile: 'dist/workflow-bundle.js', payloadConverterPath: resolvePayloadConverterPath() });
 ```
 
 ### Client
 
 ```ts
-import { clientDataConverter } from '@norn/codec';
-import { createClient } from '@norn/client';
+import { clientDataConverter } from '@norn-ts/codec';
+import { createClient } from '@norn-ts/client';
 
 const norn = createClient({ dataConverter: clientDataConverter({ keys, currentKeyId }) });
 ```
@@ -87,12 +87,12 @@ Enabling encryption on an existing namespace is safe: decoding passes through pa
 
 With encryption on, the Temporal UI and `temporal` CLI show ciphertext. A **codec server** is an HTTP endpoint they call to decode payloads for display, using your keys, so operators can read inputs and results in the browser while the server never sees plaintext.
 
-`@norn/hono` ships one as a Hono sub-app:
+`@norn-ts/hono` ships one as a Hono sub-app:
 
 ```ts
 import { Hono } from 'hono';
-import { createEncryptionCodec } from '@norn/codec';
-import { codecServer } from '@norn/hono/codec-server';
+import { createEncryptionCodec } from '@norn-ts/codec';
+import { codecServer } from '@norn-ts/hono/codec-server';
 import { currentKeyId, keys } from './codec.js';
 
 const app = new Hono();
@@ -109,13 +109,13 @@ app.route(
 export default app;
 ```
 
-It serves `POST /encode` and `POST /decode` in the codec server protocol, with CORS preflight handling for browser origins (default `https://cloud.temporal.io` and `http://localhost:8233`), a namespace allow-list (from the `X-Namespace` header) and a required `auth` hook. Anyone who passes `auth` can decrypt your payloads, and restrict `cors.origins` to your Temporal UI. Then point the UI at it: in Temporal Cloud under the namespace's codec server settings, or for a self-hosted UI with `TEMPORAL_CODEC_ENDPOINT=https://api.example.com/codec`. The `@norn/hono/codec-server` entry point has no Temporal client dependency, so it can run on edge runtimes. Options are listed in the [Hono guide](/guide/hono#codec-server).
+It serves `POST /encode` and `POST /decode` in the codec server protocol, with CORS preflight handling for browser origins (default `https://cloud.temporal.io` and `http://localhost:8233`), a namespace allow-list (from the `X-Namespace` header) and a required `auth` hook. Anyone who passes `auth` can decrypt your payloads, and restrict `cors.origins` to your Temporal UI. Then point the UI at it: in Temporal Cloud under the namespace's codec server settings, or for a self-hosted UI with `TEMPORAL_CODEC_ENDPOINT=https://api.example.com/codec`. The `@norn-ts/hono/codec-server` entry point has no Temporal client dependency, so it can run on edge runtimes. Options are listed in the [Hono guide](/guide/hono#codec-server).
 
 If you use other codecs too (for example compression), pass them all in the order your data converter applies them: `codec: [compressionCodec, encryptionCodec]`.
 
 ## Payload format
 
-For other-language consumers: an encrypted payload has metadata `encoding: binary/encrypted` and `encryption-key-id: <id>`, and data `IV (12 bytes) || AES-256-GCM ciphertext || tag (16 bytes)`. The plaintext is the original `temporal.api.common.v1.Payload` serialised as protobuf (so the original encoding is hidden too), and the additional authenticated data is the UTF-8 key ID. Tagged JSON values look like `{"$norn":"bigint","v":"123"}`. Details are in the [`@norn/codec` README](https://github.com/jamie-wk/norn/tree/main/packages/codec#format).
+For other-language consumers: an encrypted payload has metadata `encoding: binary/encrypted` and `encryption-key-id: <id>`, and data `IV (12 bytes) || AES-256-GCM ciphertext || tag (16 bytes)`. The plaintext is the original `temporal.api.common.v1.Payload` serialised as protobuf (so the original encoding is hidden too), and the additional authenticated data is the UTF-8 key ID. Tagged JSON values look like `{"$norn":"bigint","v":"123"}`. Details are in the [`@norn-ts/codec` README](https://github.com/jamie-wk/norn/tree/main/packages/codec#format).
 
 ## Security notes
 

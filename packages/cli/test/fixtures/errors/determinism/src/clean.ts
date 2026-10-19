@@ -1,5 +1,5 @@
 import { sleep, uuid4 } from '@temporalio/workflow';
-import { Workflow } from '@norn/workflow';
+import { Workflow } from '@norn-ts/workflow';
 
 const setTimeout = (fn: () => void) => fn();
 

@@ -1,4 +1,4 @@
-import { defineActivities } from '@norn/workflow';
+import { defineActivities } from '@norn-ts/workflow';
 import type { GreetActivities as GreetActivities$ } from './activities.ts';
 
 export const GreetActivities = defineActivities<GreetActivities$>()({
