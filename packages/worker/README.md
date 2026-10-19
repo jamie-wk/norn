@@ -19,17 +19,21 @@ Requires Node 22.18+ on a glibc-based system (the Temporal SDK's core is a nativ
 ```ts
 // src/worker.ts
 import { createWorker, installRuntime } from '@norn/worker';
-import { createDataConverter } from '@norn/codec'; // optional: payload encryption
+// optional: payload encryption
+import { createDataConverter } from '@norn/codec';
 import { registry } from '../.norn/registry.js';
 
-installRuntime(); // NORN_LOG_LEVEL, NORN_METRICS_ADDRESS; before any connection or worker
+// NORN_LOG_LEVEL, NORN_METRICS_ADDRESS; before any connection or worker
+installRuntime();
 
 const worker = await createWorker({
   registry,
-  container: { errors: { http: true } }, // 4xx from providers are final, 5xx retried
+  // 4xx from providers are final, 5xx retried
+  container: { errors: { http: true } },
   dataConverter: process.env.NORN_KEY ? createDataConverter({ keys: { k1: process.env.NORN_KEY }, currentKeyId: 'k1' }) : undefined,
 });
-await worker.run(); // resolves after a graceful shutdown; rejects if a worker fails
+// resolves after a graceful shutdown; rejects if a worker fails
+await worker.run();
 ```
 
 `createWorker()` resolves once everything is ready: every singleton dependency and activity is created (so a bad provider fails here), the connection is open, the workflow bundle is built or loaded and the health server listens.
@@ -62,7 +66,8 @@ function createWorker(options: CreateWorkerOptions): Promise<NornWorker>;
 interface NornWorker extends AsyncDisposable {
   readonly taskQueues: readonly string[];
   readonly state: 'INITIALIZED' | 'RUNNING' | 'STOPPING' | 'STOPPED' | 'FAILED';
-  readonly healthPort: number | undefined; // useful with health: { port: 0 }
+  // useful with health: { port: 0 }
+  readonly healthPort: number | undefined;
   readonly config: ResolvedWorkerConfig;
   run(): Promise<void>;
   shutdown(): Promise<void>;
@@ -126,7 +131,8 @@ In development `createWorker()` bundles the registry's workflows at startup. In 
 
 ```ts
 import { bundleWorkflows } from '@norn/worker';
-import { resolvePayloadConverterPath } from '@norn/codec'; // only with @norn/codec's data converter
+// only with @norn/codec's data converter
+import { resolvePayloadConverterPath } from '@norn/codec';
 import { registry } from '../dist/.norn/registry.js';
 
 await bundleWorkflows(registry, { outFile: 'dist/workflow-bundle.js', payloadConverterPath: resolvePayloadConverterPath() });
@@ -158,9 +164,11 @@ For custom bundling setups:
 
 ```ts
 interface NornRegistry {
-  workflowsPath: string; // the generated workflows barrel (.ts in development, .js once compiled)
+  // the generated workflows barrel (.ts in development, .js once compiled)
+  workflowsPath: string;
   taskQueues: readonly string[];
-  activities: readonly string[]; // registered names, including prefixes
+  // registered names, including prefixes
+  activities: readonly string[];
   searchAttributes: Readonly<Record<string, SearchAttributeType>>;
   createContainer(options?: RegistryContainerOptions): Container;
 }

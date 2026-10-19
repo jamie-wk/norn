@@ -22,18 +22,22 @@ Requires Node 22.18+ (the Temporal client uses gRPC; Bun and Deno work with Node
 import { createClient } from '@norn/client';
 import { OrderWorkflow } from './.norn/contracts.js';
 
-await using norn = createClient(); // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
+// TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
+await using norn = createClient();
 
 const orders = norn.workflow(OrderWorkflow);
 const order = await orders.start({ orderId: 'o-42', customerId: 'c-7', email: 'a@example.com', card: 'tok', items: [] }, {
   searchAttributes: { CustomerId: 'c-7' },
-}); // workflow ID 'order-o-42', from the contract's template
+// workflow ID 'order-o-42', from the contract's template
+});
 
-await order.update('addItem', { sku: 'sku-mug', qty: 2 }); // returns addItem()'s result
+// returns addItem()'s result
+await order.update('addItem', { sku: 'sku-mug', qty: 2 });
 await order.signal('cancel', 'changed my mind');
 const view = await order.query('view');
 
-const same = orders.get({ orderId: 'o-42' }); // no call, no string building
+// no call, no string building
+const same = orders.get({ orderId: 'o-42' });
 console.log(await same.result());
 ```
 
@@ -46,7 +50,8 @@ function createClient(options?: ClientOptions): NornClient;
 
 interface NornClient extends AsyncDisposable {
   workflow<C extends AnyWorkflowContract>(contract: C): WorkflowClient<C>;
-  readonly temporal: Client; // the underlying @temporalio/client Client
+  // the underlying @temporalio/client Client
+  readonly temporal: Client;
   readonly connection: ConnectionLike;
   close(): Promise<void>;
 }

@@ -84,10 +84,14 @@ Options:
 @Workflow()
 export class Reminder {
   async run() {
-    setTimeout(() => this.remind(), 60_000);   // use sleep()
-    const key = process.env.API_KEY;           // pass it in, or use an activity
-    const at = Temporal.Now.instant();         // real wall clock
-    return crypto.randomUUID();                // use uuid4()
+    // use sleep()
+    setTimeout(() => this.remind(), 60_000);
+    // pass it in, or use an activity
+    const key = process.env.API_KEY;
+    // real wall clock
+    const at = Temporal.Now.instant();
+    // use uuid4()
+    return crypto.randomUUID();
   }
 }
 
@@ -98,7 +102,8 @@ import { sleep, uuid4 } from '@temporalio/workflow';
 export class Reminder {
   async run(input: { apiKey: string }) {
     await sleep('1 minute');
-    const at = Temporal.Instant.fromEpochMilliseconds(Date.now()); // Date is deterministic in workflows
+    // Date is deterministic in workflows
+    const at = Temporal.Instant.fromEpochMilliseconds(Date.now());
     return uuid4();
   }
 }
@@ -148,13 +153,16 @@ Built-in deny list (exported as `defaultDeny`): `@temporalio/activity`, `@tempor
 import { readFileSync } from 'node:fs';
 import { charge } from './activities/payments.ts';
 import { Mailer } from '../services/mailer.service.ts';
-import { Connection } from '@temporalio/client';         // deny list
-import { type Stats } from 'node:fs';                   // still loads node:fs; use `import type`
+// deny list
+import { Connection } from '@temporalio/client';
+// still loads node:fs; use `import type`
+import { type Stats } from 'node:fs';
 
 // Correct
 import type { PaymentActivities } from './activities/payments.ts';
 import { Workflow, useActivities } from '@norn/workflow';
-import { payments } from './registry.ts'; // an activity contract, not the implementation
+// an activity contract, not the implementation
+import { payments } from './registry.ts';
 
 @Workflow()
 export class Orders {
@@ -173,9 +181,12 @@ With `{ onlyAllowed: true, allow: ['zod'] }`, `import _ from 'lodash'` is report
 import norn, { workflowFiles, defaultActivityPatterns, defaultAllow, defaultDeny } from '@norn/eslint-plugin';
 import type { WorkflowDeterminismOptions, NoActivityImportsOptions } from '@norn/eslint-plugin';
 
-norn.meta;                // { name: '@norn/eslint-plugin', version }
-norn.rules;               // { 'workflow-determinism', 'no-activity-imports' }
-norn.configs.recommended; // flat config object
+// { name: '@norn/eslint-plugin', version }
+norn.meta;
+// { 'workflow-determinism', 'no-activity-imports' }
+norn.rules;
+// flat config object
+norn.configs.recommended;
 ```
 
 ## License

@@ -54,7 +54,8 @@ With Norn:
 // src/workflows/order.workflow.ts
 import { condition } from '@temporalio/workflow';
 import { Query, Signal, Workflow, useActivities } from '@norn/workflow';
-import { PaymentActivities } from '../../.norn/activities.js'; // generated, workflow-safe
+// generated, workflow-safe
+import { PaymentActivities } from '../../.norn/activities.js';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
 export class OrderWorkflow {
@@ -89,7 +90,8 @@ import { CardDeclinedError, PaymentGateway } from '../services/payment-gateway.j
 
 @Activities({ prefix: 'payments.' })
 export class PaymentActivities {
-  constructor(private readonly gateway: PaymentGateway) {} // injected
+  // injected
+  constructor(private readonly gateway: PaymentGateway) {}
 
   @Activity({ timeout: '30s', retries: 3 })
   @NonRetryable([CardDeclinedError])
@@ -106,9 +108,11 @@ export class PaymentActivities {
 
 ```ts
 // api.ts: no worker code imported, every name and argument type-checked
-const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-42', cents: 1999 }); // ID order-o-42
+// ID order-o-42
+const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-42', cents: 1999 });
 await order.signal('cancel', 'changed my mind');
-const status = await order.query('getStatus'); // 'pending' | 'paid' | 'refunded'
+// 'pending' | 'paid' | 'refunded'
+const status = await order.query('getStatus');
 ```
 
 ## Features
@@ -162,8 +166,10 @@ The Temporal SDK packages are peer dependencies, so your app controls the SDK ve
    import { createWorker } from '@norn/worker';
    import { registry } from '../.norn/registry.js';
 
-   const worker = await createWorker({ registry }); // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
-   await worker.run(); // until SIGTERM, then drains gracefully
+   // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
+   const worker = await createWorker({ registry });
+   // until SIGTERM, then drains gracefully
+   await worker.run();
    ```
 
 5. **Start workflows** from any API:

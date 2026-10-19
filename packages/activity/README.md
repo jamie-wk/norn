@@ -28,7 +28,8 @@ export interface PaymentGateway {
   charge(request: { orderId: string; amountCents: number; card: string; idempotencyKey: string }): Promise<Charge>;
   refund(request: { chargeId: string; idempotencyKey: string }): Promise<{ refundId: string }>;
 }
-export const PaymentGateway = token<PaymentGateway>('PaymentGateway'); // same name as the interface
+// same name as the interface
+export const PaymentGateway = token<PaymentGateway>('PaymentGateway');
 
 @Service({ provides: PaymentGateway })
 export class HttpPaymentGateway implements PaymentGateway {
@@ -45,7 +46,8 @@ import { PaymentGateway } from '../services/payment-gateway.js';
 
 @Activities({ prefix: 'payments.' })
 export class PaymentActivities {
-  constructor(private readonly gateway: PaymentGateway) {} // injected: HttpPaymentGateway
+  // injected: HttpPaymentGateway
+  constructor(private readonly gateway: PaymentGateway) {}
 
   /** The order ID is the idempotency key, so retries never double-charge. */
   @Activity({ timeout: '30s', retries: 5, retry: { initialInterval: '200ms', maximumInterval: '5s' } })
@@ -76,7 +78,8 @@ Point `norn.config.ts` at the providers module (`providers: 'src/providers.ts'`)
 
 ```ts
 // in a workflow
-private readonly payments = useActivities(PaymentActivities); // from .norn/activities.js
+// from .norn/activities.js
+private readonly payments = useActivities(PaymentActivities);
 const charge = await this.payments.charge(orderId, totalCents, card);
 ```
 
@@ -143,7 +146,8 @@ function provide<K extends InjectionKey>(
 ): Provider<Resolved<K>>;
 
 interface ProviderContext {
-  activity?: Info; // the running activity, for activity-scoped providers
+  // the running activity, for activity-scoped providers
+  activity?: Info;
   resolve<K extends InjectionKey>(key: K): Promise<Resolved<K>>;
 }
 ```
@@ -166,15 +170,18 @@ function createContainer(options?: ContainerOptions): Container;
 
 interface ContainerOptions {
   providers?: readonly Provider<any>[];
-  services?: readonly ClassEntry[]; // { cls, deps? }
+  // { cls, deps? }
+  services?: readonly ClassEntry[];
   activities?: readonly ClassEntry[];
-  overrides?: ReadonlyArray<readonly [InjectionKey, unknown]>; // replace any dependency; never disposed
+  // replace any dependency; never disposed
+  overrides?: ReadonlyArray<readonly [InjectionKey, unknown]>;
   errors?: ErrorMappingOptions;
 }
 
 interface Container extends AsyncDisposable {
   resolve<K extends InjectionKey>(key: K): Promise<Resolved<K>>;
-  activities(): Promise<Record<string, ActivityFunction>>; // the worker's activity map, by registered name
+  // the worker's activity map, by registered name
+  activities(): Promise<Record<string, ActivityFunction>>;
 }
 ```
 
@@ -190,7 +197,8 @@ await using container = createContainer({
   overrides: [[HttpClient, fakeHttp]],
   errors: { http: true },
 });
-const activities = await container.activities(); // { 'payments.charge': fn, 'payments.refund': fn }
+// { 'payments.charge': fn, 'payments.refund': fn }
+const activities = await container.activities();
 ```
 
 The container checks the graph before creating anything:

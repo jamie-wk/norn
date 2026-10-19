@@ -71,9 +71,12 @@ Both forms validate at runtime too: a missing name or task queue, a malformed ID
 ### Using a contract
 
 ```ts
-OrderWorkflow.name; // 'OrderWorkflow'
-OrderWorkflow.taskQueue; // 'orders'
-OrderWorkflow.workflowId({ orderId: 'o-42' }); // 'order-o-42'
+// 'OrderWorkflow'
+OrderWorkflow.name;
+// 'orders'
+OrderWorkflow.taskQueue;
+// 'order-o-42'
+OrderWorkflow.workflowId({ orderId: 'o-42' });
 ```
 
 `workflowId(params)` throws `NornConfigError` when the contract has no ID template or a field is empty. Type helpers read the phantom types: `ContractInput<C>`, `ContractOutput<C>`, `IdParams<C>`, `SearchAttributeValues<C>`, `RefArgs<R>` and `RefResult<R>`.
@@ -101,8 +104,10 @@ Months and years are rejected because they have no fixed length. `toMs()` return
 ```ts
 function templateKeys(template: string): string[];
 function formatWorkflowId(template: string, input: unknown): string;
-type TemplateKeys<T extends string>; // 'orderId' for 'order-{orderId}'
-type MissingTemplateKeys<T extends string, Input>; // never when every placeholder is a field of Input
+// 'orderId' for 'order-{orderId}'
+type TemplateKeys<T extends string>;
+// never when every placeholder is a field of Input
+type MissingTemplateKeys<T extends string, Input>;
 ```
 
 `'invoice-{companyId}-{invoiceNumber}'` has two placeholders. Placeholder names must be identifiers and braces must balance. When formatting, each value must be a non-empty string, a number or a bigint; anything else throws `NornConfigError` before the call reaches Temporal.
@@ -115,7 +120,8 @@ class NornError extends Error {
   readonly code: string;
   readonly status: number;
   readonly details: Record<string, unknown>;
-  toJSON(): { code: string; message: string; details: Record<string, unknown> }; // no stack, no cause
+  // no stack, no cause
+  toJSON(): { code: string; message: string; details: Record<string, unknown> };
 }
 ```
 
@@ -146,7 +152,8 @@ throw new NornError('INVITATION_EXPIRED', 410, 'This invitation has expired', { 
 A deterministic state machine for workflow status. Illegal or repeated moves are ignored instead of corrupting state, which suits out-of-order and duplicate events such as webhooks.
 
 ```ts
-import { transitions } from '@norn/core'; // also re-exported by @norn/workflow
+// also re-exported by @norn/workflow
+import { transitions } from '@norn/core';
 
 const status = transitions(
   {
@@ -159,20 +166,27 @@ const status = transitions(
   'open',
 );
 
-status.move('paid'); // false: not a legal move from 'open'
-status.move('charging'); // true
-status.is('charging', 'paid'); // true
+// false: not a legal move from 'open'
+status.move('paid');
+// true
+status.move('charging');
+// true
+status.is('charging', 'paid');
 ```
 
 ```ts
 interface Transitions<S extends string> {
   readonly current: S;
-  readonly version: number; // incremented by every applied move
-  readonly isTerminal: boolean; // no outgoing moves
+  // incremented by every applied move
+  readonly version: number;
+  // no outgoing moves
+  readonly isTerminal: boolean;
   can(next: S): boolean;
-  move(next: S): boolean; // applies a legal move, returns whether it did
+  // applies a legal move, returns whether it did
+  move(next: S): boolean;
   is(...states: S[]): boolean;
-  snapshot(): TransitionSnapshot<S>; // { current, version }, to carry across continue-as-new
+  // { current, version }, to carry across continue-as-new
+  snapshot(): TransitionSnapshot<S>;
 }
 ```
 
@@ -183,7 +197,8 @@ Every target in the table must be a state (checked at compile time and at runtim
 Banking-day arithmetic for timers such as ACH settlement windows. Pure, so it is safe in workflow code; load holidays with an activity and pass them in.
 
 ```ts
-import { businessCalendar } from '@norn/core'; // also re-exported by @norn/workflow
+// also re-exported by @norn/workflow
+import { businessCalendar } from '@norn/core';
 
 const calendar = businessCalendar({ holidays: ['2026-12-25'], utcOffsetMinutes: -300 });
 await condition(() => this.settled, calendar.msUntilBusinessDays(Date.now(), 3));

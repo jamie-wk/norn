@@ -35,12 +35,14 @@ import { condition } from '@temporalio/workflow';
 import { Query, Signal, Update, Validate, Workflow, useActivities } from '@norn/workflow';
 import { PaymentActivities } from '../../.norn/activities.js';
 
-@Workflow({ taskQueue: 'orders', id: 'order-{orderId}' }) // id fields are checked against run()'s input
+// id fields are checked against run()'s input
+@Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
 export class OrderWorkflow {
   private status: 'open' | 'paid' | 'canceled' = 'open';
   private readonly pay = useActivities(PaymentActivities);
 
-  @Signal({ dedupeBy: (e: { eventId: string }) => e.eventId }) // providers redeliver
+  // providers redeliver
+  @Signal({ dedupeBy: (e: { eventId: string }) => e.eventId })
   paymentEvent(_e: { eventId: string }) {}
 
   @Query() getStatus() { return this.status; }
@@ -65,21 +67,26 @@ Handlers are registered before `run()` starts, and signals that arrived before t
 import { Activities, Activity, NonRetryable, Service, token } from '@norn/activity';
 
 export interface PaymentGateway { charge(r: { orderId: string; cents: number; idempotencyKey: string }): Promise<{ id: string }> }
-export const PaymentGateway = token<PaymentGateway>('PaymentGateway'); // same name as the interface
+// same name as the interface
+export const PaymentGateway = token<PaymentGateway>('PaymentGateway');
 
 @Service({ provides: PaymentGateway })
 export class StripeGateway implements PaymentGateway { /* ... */ }
 
-export class CardDeclinedError extends Error { override name = 'CardDeclinedError'; } // explicit name survives minification
+// explicit name survives minification
+export class CardDeclinedError extends Error { override name = 'CardDeclinedError'; }
 
 @Activities({ prefix: 'payments.' })
 export class PaymentActivities {
-  constructor(private readonly gateway: PaymentGateway) {} // norn gen resolves the token by type name
+  // norn gen resolves the token by type name
+  constructor(private readonly gateway: PaymentGateway) {}
 
-  @Activity({ timeout: '30s', retries: 3 }) // retries AFTER the first attempt
+  // retries AFTER the first attempt
+  @Activity({ timeout: '30s', retries: 3 })
   @NonRetryable([CardDeclinedError])
   async charge(orderId: string, cents: number) {
-    return this.gateway.charge({ orderId, cents, idempotencyKey: `charge-${orderId}` }); // activities can retry: make them idempotent
+    // activities can retry: make them idempotent
+    return this.gateway.charge({ orderId, cents, idempotencyKey: `charge-${orderId}` });
   }
 }
 ```
@@ -94,9 +101,11 @@ Match a typed failure in a workflow with `asFailure(error, CardDeclinedError)`. 
 import { createClient } from '@norn/client';
 import { OrderWorkflow } from '../.norn/contracts.js';
 
-const norn = createClient(); // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
+// TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
+const norn = createClient();
 const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-1', cents: 1999 });
-await norn.workflow(OrderWorkflow).get({ orderId: 'o-1' }).update('cancel'); // get() makes no call
+// get() makes no call
+await norn.workflow(OrderWorkflow).get({ orderId: 'o-1' }).update('cancel');
 ```
 
 Errors are typed `NornError`s from `@norn/core` with HTTP statuses: `WorkflowAlreadyStartedError` 409, `WorkflowNotFoundError` 404, `WorkflowClosedError` 409, `UpdateRejectedError` 422 (a validator or the update threw), `TemporalUnavailableError` 503. With Hono, `app.use(temporal({}))` puts the client on `c.var.norn` and `app.onError(nornErrorHandler())` turns those into JSON responses. `temporalWebhook({ verify, map })` maps provider webhooks to signals (`verify` is required; use `hmacSha256Verifier`). `codecServer({ codec, auth })` requires `auth`.
@@ -115,7 +124,8 @@ import { OrderWorkflow } from '../.norn/contracts.js';
 import { registry } from '../.norn/registry.js';
 
 const pay = mockActivities(PaymentActivities, { charge: async (orderId) => ({ id: `ch_${orderId}` }) });
-const env = useTestEnv({ registry, mode: 'time-skipping', activities: pay }); // timers skip instantly
+// timers skip instantly
+const env = useTestEnv({ registry, mode: 'time-skipping', activities: pay });
 
 it('charges after the window', async () => {
   const order = await env.workflow(OrderWorkflow).start({ orderId: 'o-1', cents: 500 });

@@ -22,7 +22,8 @@ Requires Node 22.18+ and TypeScript with **TC39 standard decorators** (`target` 
 // src/workflows/order.workflow.ts
 import { condition } from '@temporalio/workflow';
 import { Query, Signal, Update, Validate, Workflow, asFailure, setSearchAttributes, transitions, useActivities, useChild } from '@norn/workflow';
-import { InventoryActivities, PaymentActivities } from '../../.norn/activities.js'; // generated, workflow-safe
+// generated, workflow-safe
+import { InventoryActivities, PaymentActivities } from '../../.norn/activities.js';
 import { InvalidItemError, PaymentDeclinedError, type LineItem, type OrderInput } from '../domain.js';
 import { ShipmentWorkflow } from './shipment.workflow.js';
 
@@ -40,7 +41,8 @@ export class OrderWorkflow {
   private cancelReason: string | undefined;
 
   constructor(input: OrderInput) {
-    this.items = [...(input.items ?? [])]; // ready before any handler runs
+    // ready before any handler runs
+    this.items = [...(input.items ?? [])];
   }
 
   @Query() view() {
@@ -136,7 +138,8 @@ function Update(options?: string | UpdateOptions): MethodDecorator;
 
 interface HandlerOptions { name?: string; description?: string }
 interface SignalOptions<A> extends HandlerOptions {
-  unfinishedPolicy?: 'abandon' | 'warn'; // default 'warn'
+  // default 'warn'
+  unfinishedPolicy?: 'abandon' | 'warn';
   dedupeBy?: (...args: A) => string | undefined;
 }
 interface UpdateOptions extends HandlerOptions { unfinishedPolicy?: 'abandon' | 'warn' }
@@ -221,8 +224,10 @@ export const PaymentActivities = defineActivities<PaymentActivities$>()({
 function useChild<T extends WorkflowClass | AnyWorkflowContract>(target: T, defaults?: ChildOptions): ChildRef<T>;
 
 interface ChildRef<T> {
-  start(input, options?: ChildOptions): Promise<ChildHandle<T>>; // resolves once the child is running
-  execute(input, options?: ChildOptions): Promise<Output>; // starts and waits for the result
+  // resolves once the child is running
+  start(input, options?: ChildOptions): Promise<ChildHandle<T>>;
+  // starts and waits for the result
+  execute(input, options?: ChildOptions): Promise<Output>;
 }
 interface ChildHandle<T> {
   readonly workflowId: string;
@@ -301,7 +306,8 @@ Walk an error's cause chain (such as `ActivityFailure` → `ApplicationFailure`)
 try {
   await this.payments.charge(orderId, total, card);
 } catch (error) {
-  const declined = asFailure(error, PaymentDeclinedError); // or asFailure(error, 'PaymentDeclinedError')
+  // or asFailure(error, 'PaymentDeclinedError')
+  const declined = asFailure(error, PaymentDeclinedError);
   if (!declined) throw error;
   this.failure = declined.message;
 }

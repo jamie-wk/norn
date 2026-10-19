@@ -30,14 +30,16 @@ app.onError(nornErrorHandler());
 
 app.post('/orders', async (c) => {
   const input = await c.req.json();
-  const handle = await c.var.norn.workflow(Orders).start(input); // 409 JSON if it is already running
+  // 409 JSON if it is already running
+  const handle = await c.var.norn.workflow(Orders).start(input);
   return c.json({ workflowId: handle.workflowId }, 201);
 });
 
 app.post('/orders/:orderId/items', async (c) => {
   const { sku } = await c.req.json();
   const count = await c.var.norn.workflow(Orders).get({ orderId: c.req.param('orderId') }).update('addItem', sku);
-  return c.json({ count }); // 404 if the order does not exist, 422 if the validator rejects the SKU
+  // 404 if the order does not exist, 422 if the validator rejects the SKU
+  return c.json({ count });
 });
 
 export default app;
@@ -52,9 +54,12 @@ process.on('SIGTERM', () => void norn.close());
 function temporal(options: TemporalOptions): TemporalMiddleware;
 
 type TemporalOptions = ({ client: NornClient } | ClientOptions) & {
-  correlationHeader?: string; // default 'x-correlation-id'
-  requestIdHeader?: string | false; // default 'x-request-id'
-  trustIncoming?: boolean; // default true
+  // default 'x-correlation-id'
+  correlationHeader?: string;
+  // default 'x-request-id'
+  requestIdHeader?: string | false;
+  // default true
+  trustIncoming?: boolean;
 };
 
 interface TemporalMiddleware extends MiddlewareHandler<NornEnv> {
@@ -170,7 +175,8 @@ app.post(
         case 'payment.failed':
           return signalAction(Orders, { orderId: event.data.orderId }, 'paymentFailed', event.data.reason);
         default:
-          return null; // not interesting: 202, nothing sent
+          // not interesting: 202, nothing sent
+          return null;
       }
     },
   }),
@@ -205,7 +211,8 @@ Why these defaults: providers retry any non-2xx response, usually for days. A la
 ```ts
 function temporalWebhook<E extends Env = any>(options: {
   verify: ((c: Context<E>, rawBody: string, rawBytes: Uint8Array) => boolean | Promise<boolean>) | false;
-  maxBodyBytes?: number; // default 1 MiB
+  // default 1 MiB
+  maxBodyBytes?: number;
   parse?: (rawBody: string, c: Context<E>) => unknown;
   map: (body: unknown, c: Context<E>) => WebhookMapResult | Promise<WebhookMapResult>;
   onClosed?: 'ignore' | 'error' | ((info: WebhookFailureInfo<WorkflowClosedError>, c: Context<E>) => Response | void | Promise<Response | void>);
@@ -226,9 +233,11 @@ interface WebhookFailureInfo<Err> { action: WebhookAction; index: number; error:
 Build actions with the typed helpers; signal and update names and argument types come from the contract:
 
 ```ts
-signalAction(Orders, { orderId }, 'paid', { amountCents: 1999 }); // WebhookSignalAction<typeof Orders>
+// WebhookSignalAction<typeof Orders>
+signalAction(Orders, { orderId }, 'paid', { amountCents: 1999 });
 signalAction(Orders, { workflowId: 'order-42' }, 'cancel', 'customer request');
-updateAction(Orders, { orderId }, 'addItem', 'sku-1'); // WebhookUpdateAction<typeof Orders>
+// WebhookUpdateAction<typeof Orders>
+updateAction(Orders, { orderId }, 'addItem', 'sku-1');
 ```
 
 or write them as objects, typed with `WebhookAction<typeof Contract>`:
@@ -334,7 +343,8 @@ function codecServer<E extends Env = any>(options: {
   codec: PayloadCodec | PayloadCodec[];
   auth: ((c: Context<E>) => boolean | Promise<boolean>) | false;
   cors?: { origins: string[] } | false;
-  maxBodyBytes?: number; // default 16 MiB
+  // default 16 MiB
+  maxBodyBytes?: number;
   namespaces?: string[];
   onError?: (err: unknown, c: Context<E>) => void;
 }): Hono<E>;

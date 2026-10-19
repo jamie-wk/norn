@@ -32,7 +32,8 @@ import { standardDecorators } from '@norn/testing/vite';
 
 export default defineConfig({
   plugins: [standardDecorators()],
-  test: { testTimeout: 60_000, hookTimeout: 120_000 }, // workflow tests talk to a real server
+  // workflow tests talk to a real server
+  test: { testTimeout: 60_000, hookTimeout: 120_000 },
 });
 ```
 
@@ -91,12 +92,15 @@ it('refunds when cancelled during the window', async () => {
 
 ```ts
 interface TestEnv extends AsyncDisposable {
-  readonly temporal: TestWorkflowEnvironment; // from @temporalio/testing
+  // from @temporalio/testing
+  readonly temporal: TestWorkflowEnvironment;
   readonly client: NornClient;
   readonly worker: NornWorker | undefined;
   readonly mode: 'local' | 'time-skipping';
-  workflow<C extends AnyWorkflowContract>(contract: C): WorkflowClient<C>; // client.workflow(contract)
-  sleep(duration: Duration): Promise<void>; // skips time, or sleeps for real in local mode
+  // client.workflow(contract)
+  workflow<C extends AnyWorkflowContract>(contract: C): WorkflowClient<C>;
+  // skips time, or sleeps for real in local mode
+  sleep(duration: Duration): Promise<void>;
   teardown(): Promise<void>;
 }
 ```
@@ -163,7 +167,8 @@ import { createFakeClient } from '@norn/testing';
 import { UpdateRejectedError } from '@norn/client';
 
 const fake = createFakeClient();
-const app = createApp({ client: fake }); // e.g. app.use(temporal({ client: fake }))
+// e.g. app.use(temporal({ client: fake }))
+const app = createApp({ client: fake });
 
 fake.stub(OrderWorkflow, {
   updates: {
