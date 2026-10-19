@@ -1,3 +1,4 @@
+import type { ScheduleOverlap } from '@norn/worker';
 import type { NornGenError, NornGenErrorCode } from './errors.js';
 import { Fn, Ref, evaluateLiteral, isObject, type Literal, type LiteralContext, type LiteralObject } from './literal.js';
 import { isRelative, type Project } from './project.js';
@@ -11,7 +12,7 @@ export interface Location {
 
 export type SearchAttributeType = 'text' | 'keyword' | 'int' | 'double' | 'bool' | 'datetime' | 'keywordList';
 export const SEARCH_ATTRIBUTE_TYPES: readonly SearchAttributeType[] = ['text', 'keyword', 'int', 'double', 'bool', 'datetime', 'keywordList'];
-export type ScheduleOverlap = 'skip' | 'buffer-one' | 'buffer-all' | 'cancel-other' | 'terminate-other' | 'allow-all';
+export type { ScheduleOverlap };
 export const OVERLAPS: readonly ScheduleOverlap[] = ['skip', 'buffer-one', 'buffer-all', 'cancel-other', 'terminate-other', 'allow-all'];
 
 export interface HandlerModel {
@@ -104,7 +105,8 @@ const PACKAGES: Record<string, ReadonlySet<string>> = {
 };
 const HANDLER_KINDS = { Signal: 'signal', Query: 'query', Update: 'update' } as const;
 type HandlerKind = (typeof HANDLER_KINDS)[keyof typeof HANDLER_KINDS];
-const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
+// A copy of @norn/core's IDENTIFIER: the CLI has no runtime dependency on core (checks.test.ts keeps them equal).
+export const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
 const WORKFLOW_KEYS = new Set(['taskQueue', 'name', 'id', 'versioning', 'searchAttributes', 'failOn', 'drainHandlers']);
 const SIGNAL_KEYS = new Set(['name', 'description', 'unfinishedPolicy', 'dedupeBy']);

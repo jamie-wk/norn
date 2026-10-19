@@ -5,6 +5,7 @@ import {
   classTag,
   tagMethod,
   type MissingTemplateKeys,
+  type ScheduleOverlap,
   type WorkflowClass,
   type WorkflowInput,
 } from '@norn/core';
@@ -125,7 +126,7 @@ export interface ScheduleOptions<Input = unknown> {
   /** Input passed to every run. Must be JSON. */
   input?: Input;
   /** What to do when a run is still going at the next fire time. Defaults to `'skip'`. */
-  overlap?: 'skip' | 'buffer-one' | 'buffer-all' | 'cancel-other' | 'terminate-other' | 'allow-all';
+  overlap?: ScheduleOverlap;
   /** Time zone for the cron expression, such as `'America/New_York'`. Defaults to UTC. */
   timeZone?: string;
   /** Pause the schedule after a failed run. */

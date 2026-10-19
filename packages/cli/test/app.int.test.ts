@@ -8,6 +8,7 @@ import { Worker } from '@temporalio/worker';
 import { WorkflowFailedError } from '@temporalio/client';
 import { historyFromJSON } from '@temporalio/common/lib/proto-utils.js';
 import { createClient, type NornClient } from '@norn/client';
+import { TEMPORAL_SEARCH_ATTRIBUTE_TYPES } from '@norn/core';
 import type { QueryRef, SignalRef, UpdateRef, WorkflowContract } from '@norn/core';
 import { bundleWorkflows, createWorker, type NornRegistry, type NornWorker } from '@norn/worker';
 import { createLocalEnv } from '../../../tooling/test-support/temporal.ts';
@@ -15,7 +16,6 @@ import { main } from '../src/cli.ts';
 import { copyFixture, removeDir } from './helpers.ts';
 
 const tsc = fileURLToPath(new URL('../../../node_modules/.bin/tsc', import.meta.url));
-const TEMPORAL_TYPES = { text: 'TEXT', keyword: 'KEYWORD', int: 'INT', double: 'DOUBLE', bool: 'BOOL', datetime: 'DATETIME', keywordList: 'KEYWORD_LIST' } as const;
 
 let dir: string;
 let output = '';
@@ -70,7 +70,7 @@ describe('end to end on a Temporal dev server', () => {
     ({ registry } = (await import(join(dir, '.norn/registry.ts'))) as { registry: NornRegistry });
     contracts = await import(join(dir, '.norn/contracts.ts'));
     env = await createLocalEnv({
-      searchAttributes: Object.fromEntries(Object.entries(registry.searchAttributes).map(([k, t]) => [k, TEMPORAL_TYPES[t]])),
+      searchAttributes: Object.fromEntries(Object.entries(registry.searchAttributes).map(([k, t]) => [k, TEMPORAL_SEARCH_ATTRIBUTE_TYPES[t]])),
     });
     bundle = await bundleWorkflows(registry);
     worker = await createWorker({ registry, connection: env.nativeConnection, namespace: namespace(), handleSignals: false, workflowBundle: bundle });

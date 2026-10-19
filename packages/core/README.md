@@ -216,9 +216,10 @@ The workflow sandbox freezes `Symbol`, so Norn cannot use `Symbol.metadata`. Dec
 | `SignalRef`, `QueryRef`, `UpdateRef`, `HandlerRef`, `RefArgs<R>`, `RefResult<R>` | Handler reference types |
 | `ManualWorkflowDef`, `ManualContract<D>`, `TypeSpec`, `SignalSpec`, `QuerySpec`, `UpdateSpec` | Manual contract types |
 | `WorkflowClass`, `WorkflowInput<C>`, `WorkflowOutput<C>`, `HandlerMethodKey<C>`, `GeneratedWorkflowDef<C>`, `GeneratedContract<C, D>` | Generated contract types |
-| `SearchAttributeType`, `SearchAttributeTypes`, `SearchAttributeValue<T>`, `SEARCH_ATTRIBUTE_TYPES` | `'text' \| 'keyword' \| 'int' \| 'double' \| 'bool' \| 'datetime' \| 'keywordList'` |
+| `SearchAttributeType`, `SearchAttributeTypes`, `SearchAttributeValue<T>`, `SEARCH_ATTRIBUTE_TYPES`, `TEMPORAL_SEARCH_ATTRIBUTE_TYPES` (Temporal's name for each) | `'text' \| 'keyword' \| 'int' \| 'double' \| 'bool' \| 'datetime' \| 'keywordList'` |
 | `Duration`, `toMs(duration)`, `formatDuration(duration)` | Durations |
-| `templateKeys(template)`, `formatWorkflowId(template, input)`, `TemplateKeys<T>`, `MissingTemplateKeys<T, Input>` | ID templates |
+| `templateKeys(template)`, `formatWorkflowId(template, input)`, `TemplateKeys<T>`, `MissingTemplateKeys<T, Input>`, `IDENTIFIER` | ID templates; `IDENTIFIER` is the name rule for template keys and workflow, handler and activity names |
+| `ScheduleOverlap` | `@Schedule`'s `overlap` values |
 | `NornError`, `NornConfigError`, `WorkflowAlreadyStartedError`, `WorkflowNotFoundError`, `WorkflowClosedError`, `UpdateRejectedError`, `QueryFailedError`, `WorkflowFailedError`, `TemporalUnavailableError`, `NornErrorOptions` | Errors |
 | `isNornError(value)`, `errorTypeOf(error)` | Error helpers |
 | `transitions(table, initial)`, `Transitions`, `TransitionTable`, `TransitionSnapshot` | State machine |

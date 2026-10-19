@@ -1,7 +1,7 @@
-import type { SearchAttributeType } from '@norn/core';
+import type { ScheduleOverlap, SearchAttributeType } from '@norn/core';
 import type { Container, ErrorMappingOptions, InjectionKey } from '@norn/activity';
 
-export type ScheduleOverlap = 'skip' | 'buffer-one' | 'buffer-all' | 'cancel-other' | 'terminate-other' | 'allow-all';
+export type { ScheduleOverlap };
 
 /** A schedule declared with `@Schedule`, as written to `.norn/schedules.json`. */
 export interface ScheduleSpec {

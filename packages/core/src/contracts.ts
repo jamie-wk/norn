@@ -20,6 +20,9 @@ export type SearchAttributeValue<T extends SearchAttributeType> = T extends 'tex
           ? string[]
           : never;
 
+/** What a schedule does when a run is still going at the next fire time. */
+export type ScheduleOverlap = 'skip' | 'buffer-one' | 'buffer-all' | 'cancel-other' | 'terminate-other' | 'allow-all';
+
 /** Temporal's name for each search attribute type, as `defineSearchAttributeKey()` takes it. */
 export const TEMPORAL_SEARCH_ATTRIBUTE_TYPES = Object.freeze({
   text: 'TEXT',

@@ -11,13 +11,14 @@ export type TemplateKeys<T extends string> = string extends T
 export type MissingTemplateKeys<T extends string, Input> = Exclude<TemplateKeys<T>, keyof NonNullable<Input>>;
 
 const PLACEHOLDER = /\{([^{}]*)\}/g;
-const KEY = /^[A-Za-z_$][\w$]*$/;
+/** A JavaScript identifier: ID template keys and workflow, handler and activity names. */
+export const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
 /** Lists the placeholder names in an ID template. Throws on malformed templates. */
 export function templateKeys(template: string): string[] {
   const keys: string[] = [];
   const stripped = template.replace(PLACEHOLDER, (_match, key: string) => {
-    if (!KEY.test(key)) {
+    if (!IDENTIFIER.test(key)) {
       throw new NornConfigError(`Invalid ID template ${JSON.stringify(template)}: "{${key}}" is not a field name`);
     }
     if (!keys.includes(key)) keys.push(key);

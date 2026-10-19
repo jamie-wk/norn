@@ -1,4 +1,5 @@
 import {
+  IDENTIFIER,
   NORN,
   NornConfigError,
   SEARCH_ATTRIBUTE_TYPES,
@@ -85,7 +86,6 @@ export interface WorkflowTag {
   options: WorkflowOptions;
 }
 
-export const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 const VERSIONING: readonly VersioningBehavior[] = ['pinned', 'auto-upgrade'];
 const POLICIES: readonly UnfinishedPolicy[] = ['abandon', 'warn'];
 
