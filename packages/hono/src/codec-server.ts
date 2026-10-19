@@ -54,10 +54,7 @@ const DEFAULT_MAX_BODY_BYTES = 16 * 1024 * 1024;
 class BadPayloadsError extends Error {}
 
 const isCodec = (value: unknown): value is PayloadCodec =>
-  isPlainObjectLike(value) && typeof (value as PayloadCodec).encode === 'function' && typeof (value as PayloadCodec).decode === 'function';
-function isPlainObjectLike(value: unknown): value is object {
-  return typeof value === 'object' && value !== null;
-}
+  typeof value === 'object' && value !== null && typeof (value as PayloadCodec).encode === 'function' && typeof (value as PayloadCodec).decode === 'function';
 
 function normalizeOrigin(origin: string): string {
   if (origin === '*') return origin;
@@ -117,7 +114,7 @@ function toJsonPayload(p: Payload): JsonPayload {
  * ```
  */
 export function codecServer<E extends Env = any>(options: CodecServerOptions<E>): Hono<E> {
-  if (!isPlainObjectLike(options)) throw new NornConfigError('codecServer: options with a `codec` are required');
+  if (typeof options !== 'object' || options === null) throw new NornConfigError('codecServer: options with a `codec` are required');
   const codecs = Array.isArray(options.codec) ? [...options.codec] : [options.codec];
   if (codecs.length === 0 || !codecs.every(isCodec)) {
     throw new NornConfigError('codecServer: `codec` must be a PayloadCodec ({ encode, decode }) or a non-empty array of them');
@@ -154,19 +151,17 @@ export function codecServer<E extends Env = any>(options: CodecServerOptions<E>)
   };
   const fail = (c: Context<E>, status: 400 | 401 | 403 | 413 | 500, code: string, message: string) => c.json({ error: { code, message, details: {} } }, status);
 
-  const allowedOrigin = (origin: string | undefined): boolean => origins !== undefined && origin !== undefined && (origins.has('*') || origins.has(origin));
-
   const app = new Hono<E>();
 
   if (origins) {
     // CORS: answered before auth, because browsers send preflights without credentials.
     app.use('*', async (c, next) => {
       const origin = c.req.header('origin');
-      if (origin !== undefined && !allowedOrigin(origin)) {
+      if (origin !== undefined && !origins.has('*') && !origins.has(origin)) {
         c.header('vary', 'Origin');
         return fail(c, 403, 'FORBIDDEN_ORIGIN', 'Origin is not allowed');
       }
-      if (origin !== undefined && origins?.has('*')) {
+      if (origin !== undefined && origins.has('*')) {
         // A wildcard never comes with credentials, or any site could read decrypted payloads with the user's cookies.
         c.header('access-control-allow-origin', '*');
       } else if (origin !== undefined) {

@@ -140,7 +140,6 @@ export function createEncryptionCodec(options: EncryptionCodecOptions): PayloadC
     }
     return key;
   };
-  const hasKey = (id: string) => imported.has(id) || raw.has(id);
   const currentKeyIdBytes = utf8.encode(currentKeyId);
 
   async function encryptOne(payload: Payload): Promise<Payload> {
@@ -172,7 +171,7 @@ export function createEncryptionCodec(options: EncryptionCodecOptions): PayloadC
       throw new NornCodecError(`Encrypted payload has no "${ENCRYPTION_KEY_ID_METADATA_KEY}" metadata, so it cannot be decrypted.`);
     }
     const keyId = utf8Decoder.decode(idBytes);
-    const key = hasKey(keyId) ? cryptoKey(keyId) : undefined;
+    const key = cryptoKey(keyId);
     if (!key) {
       throw new NornCodecError(
         `Payload was encrypted with key ${quote(keyId)}, which is not configured. ` +

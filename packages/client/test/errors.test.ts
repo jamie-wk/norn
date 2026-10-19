@@ -5,6 +5,7 @@ import {
   ServiceError,
   WorkflowFailedError as TemporalWorkflowFailedError,
   WorkflowUpdateFailedError,
+  WorkflowUpdateRPCTimeoutOrCancelledError,
 } from '@temporalio/client';
 import {
   ApplicationFailure,
@@ -70,17 +71,24 @@ describe('toNornError', () => {
     const err = toNornError(new ServiceError('call failed', { cause: grpc(code) }), ctx);
     expect(err).toBeInstanceOf(TemporalUnavailableError);
     expect(err).toMatchObject({ status: 503 });
-    expect(toNornError(grpc(code), ctx)).toBeInstanceOf(TemporalUnavailableError);
+  });
+
+  it('maps an update RPC timeout to 503 TemporalUnavailableError', () => {
+    const err = toNornError(new WorkflowUpdateRPCTimeoutOrCancelledError('timed out', { cause: grpc(status.DEADLINE_EXCEEDED) }), ctx);
+    expect(err).toBeInstanceOf(TemporalUnavailableError);
+  });
+
+  it.each([status.NOT_FOUND, status.UNAVAILABLE])('leaves gRPC code %s from other services alone', (code) => {
+    const raw = grpc(code);
+    expect(toNornError(raw, ctx)).toBe(raw);
+    const wrapped = new Error('lookup failed', { cause: raw });
+    expect(toNornError(wrapped, ctx)).toBe(wrapped);
   });
 
   it('leaves an oversized message alone: retrying it can never succeed', () => {
     const tooBig = grpc(status.RESOURCE_EXHAUSTED, 'Received message larger than max (5242880 vs. 4194304)');
     const wrapped = new ServiceError('Failed to start Workflow', { cause: tooBig });
     expect(toNornError(wrapped, ctx)).toBe(wrapped);
-  });
-
-  it('maps a gRPC NOT_FOUND to WorkflowNotFoundError', () => {
-    expect(toNornError(new ServiceError('x', { cause: grpc(status.NOT_FOUND) }), ctx)).toBeInstanceOf(WorkflowNotFoundError);
   });
 
   it('passes Norn errors and unrelated errors through unchanged', () => {

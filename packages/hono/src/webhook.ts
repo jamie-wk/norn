@@ -44,7 +44,7 @@ export interface WebhookFailureInfo<Err extends NornError> {
 
 /**
  * - `'ignore'`: skip the action; when nothing else was accepted, respond 200 `{ ignored: 'closed' | 'not_found' }`.
- * - `'error'`: stop and respond with the error (409 `WORKFLOW_CLOSED` / 404 `WORKFLOW_NOT_FOUND`).
+ * - `'error'`: stop and throw the error to `app.onError` (409 `WORKFLOW_CLOSED` / 404 `WORKFLOW_NOT_FOUND` with `nornErrorHandler()`).
  * - a function: return a `Response` to stop and send it, or nothing to ignore the action.
  */
 export type WebhookFailurePolicy<E extends Env, Err extends NornError> =
@@ -194,13 +194,13 @@ export function temporalWebhook<E extends Env = any>(options: WebhookOptions<E>)
     const mapped = await map(body, c);
     const list: readonly unknown[] = mapped === null || mapped === undefined ? [] : Array.isArray(mapped) ? mapped : [mapped];
     if (list.length === 0) return c.json({ accepted: 0, ignored: 'unmapped' }, 202);
-    // Check every action before sending any, so a bad mapping never half-applies an event.
     const actions = list.map(checkAction);
-
     const client = explicitClient ?? (c.var as { norn?: NornClient }).norn;
     if (!client) {
       throw new NornConfigError('temporalWebhook needs a client: add the temporal() middleware before it, or pass { client }');
     }
+    // Resolve every workflow ID before sending anything (get() makes no call), so a bad mapping never half-applies an event.
+    const handles = actions.map((checked) => client.workflow(checked.workflow).get(checked.target as never) as unknown as LooseHandle);
 
     let accepted = 0;
     const ignored: ('closed' | 'not_found')[] = [];
@@ -208,7 +208,7 @@ export function temporalWebhook<E extends Env = any>(options: WebhookOptions<E>)
     let hasUpdates = false;
 
     for (const [index, checked] of actions.entries()) {
-      const handle = client.workflow(checked.workflow).get(checked.target as never) as unknown as LooseHandle;
+      const handle = handles[index]!;
       try {
         if (checked.kind === 'update') {
           hasUpdates = true;
@@ -223,7 +223,7 @@ export function temporalWebhook<E extends Env = any>(options: WebhookOptions<E>)
         if (code !== 'WORKFLOW_CLOSED' && code !== 'WORKFLOW_NOT_FOUND') throw error;
         const nornError = error as NornError;
         const policy = code === 'WORKFLOW_CLOSED' ? onClosed : onNotFound;
-        if (policy === 'error') return respondWithError(c, nornError, nornError.status);
+        if (policy === 'error') throw nornError;
         if (typeof policy === 'function') {
           const info = { action: checked.action, index, error: nornError } as WebhookFailureInfo<never>;
           const res = await (policy as (info: WebhookFailureInfo<never>, c: Context<E>) => MaybePromise<Response | void | undefined>)(info, c);

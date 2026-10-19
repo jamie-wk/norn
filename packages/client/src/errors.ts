@@ -4,6 +4,7 @@ import {
   ServiceError,
   WorkflowFailedError as TemporalWorkflowFailedError,
   WorkflowUpdateFailedError,
+  WorkflowUpdateRPCTimeoutOrCancelledError,
 } from '@temporalio/client';
 import {
   ApplicationFailure,
@@ -31,10 +32,11 @@ export interface ErrorContext {
   query?: string;
 }
 
-const GRPC = { DEADLINE_EXCEEDED: 4, NOT_FOUND: 5, RESOURCE_EXHAUSTED: 8, UNAVAILABLE: 14 } as const;
+const GRPC = { DEADLINE_EXCEEDED: 4, RESOURCE_EXHAUSTED: 8, UNAVAILABLE: 14 } as const;
 
-/** The first error in the cause chain that carries a gRPC status code. */
+/** The gRPC status under a Temporal RPC error; other services' gRPC errors are not Temporal's. */
 function grpcError(error: unknown): { code: number; message?: string } | undefined {
+  if (!(error instanceof ServiceError || error instanceof WorkflowUpdateRPCTimeoutOrCancelledError)) return undefined;
   for (let e: unknown = error, depth = 0; e && depth < 5; e = (e as { cause?: unknown }).cause, depth++) {
     if (typeof (e as { code?: unknown }).code === 'number') return e as { code: number; message?: string };
   }
@@ -94,9 +96,6 @@ export function toNornError(error: unknown, ctx: ErrorContext): unknown {
   const rateLimited = code === GRPC.RESOURCE_EXHAUSTED && !/larger than max/i.test(grpc?.message ?? '');
   if (code === GRPC.UNAVAILABLE || code === GRPC.DEADLINE_EXCEEDED || rateLimited) {
     return new TemporalUnavailableError({ message: `Temporal is unavailable: ${(error as Error).message}`, cause: error });
-  }
-  if (code === GRPC.NOT_FOUND && (error instanceof ServiceError || (error as { metadata?: unknown }).metadata !== undefined)) {
-    return new WorkflowNotFoundError({ workflowId: ctx.workflowId, runId: ctx.runId, cause: error });
   }
   if (ctx.query !== undefined && error instanceof ServiceError) {
     return new QueryFailedError({ workflowId: ctx.workflowId, query: ctx.query, message: error.message, cause: error });

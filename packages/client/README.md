@@ -154,7 +154,7 @@ try {
 }
 ```
 
-`toNornError(error, ctx)` converts any Temporal client error (returning unknown errors unchanged), and `failureTypeOf(cause)` names a failure the same way `WorkflowFailedError` does. With `@norn/hono`, `nornErrorHandler()` turns all of these into JSON responses.
+`toNornError(error, ctx)` converts any Temporal client error (returning unknown errors unchanged, including gRPC errors from other services), and `failureTypeOf(cause)` names a failure the same way `WorkflowFailedError` does. With `@norn/hono`, `nornErrorHandler()` turns all of these into JSON responses.
 
 ## Correlation IDs
 

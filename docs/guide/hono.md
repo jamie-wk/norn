@@ -135,7 +135,7 @@ What happens when the workflow isn't there:
 | Option | Default | Behaviour |
 | --- | --- | --- |
 | `onClosed` | `'ignore'` | The workflow already closed: skip the action. If nothing was accepted, respond **200** `{ ignored: 'closed' }`, so the provider stops retrying a late delivery. |
-| `onNotFound` | `'error'` | No such workflow: respond **404** `WORKFLOW_NOT_FOUND`. With `'ignore'`, skip the action (**200** `{ ignored: 'not_found' }` if nothing was accepted). |
+| `onNotFound` | `'error'` | No such workflow: throw the error to `app.onError`, which `nornErrorHandler()` turns into **404** `WORKFLOW_NOT_FOUND` (or your status override). With `'ignore'`, skip the action (**200** `{ ignored: 'not_found' }` if nothing was accepted). |
 
 Each takes `'ignore'`, `'error'`, or a function `({ action, index, error }, c)` that returns a `Response` to send, or nothing to ignore the action. Any other failure, such as Temporal being unavailable, is thrown to `app.onError`, so the response is a 5xx and the provider retries.
 

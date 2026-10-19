@@ -48,6 +48,8 @@ describe('startOptions', () => {
   it('rejects unknown policies', () => {
     expect(() => startOptions(Orders, { orderId: 'o' }, { ifRunning: 'maybe' as never })).toThrow(NornConfigError);
     expect(() => startOptions(Orders, { orderId: 'o' }, { ifClosed: 'never' as never })).toThrow(NornConfigError);
+    expect(() => startOptions(Orders, { orderId: 'o' }, { ifRunning: 'toString' as never })).toThrow(NornConfigError);
+    expect(() => startOptions(Orders, { orderId: 'o' }, { ifClosed: 'toString' as never })).toThrow(NornConfigError);
   });
 
   it('converts durations and passes Temporal options through', () => {

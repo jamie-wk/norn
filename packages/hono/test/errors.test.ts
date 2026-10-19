@@ -110,6 +110,14 @@ describe('nornErrorHandler: raw Temporal errors', () => {
     expect(res.status).toBe(503);
     expect(await res.json()).toMatchObject({ error: { code: 'TEMPORAL_UNAVAILABLE' } });
   });
+
+  it.each([5, 14])('treats gRPC code %s from another service as an unexpected 500', async (code) => {
+    const other = Object.assign(new Error('from another gRPC service'), { code, metadata: {} });
+    const res = await call(appThrowing(other));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: { code: 'INTERNAL' } });
+    expect(console.error).toHaveBeenCalled();
+  });
 });
 
 describe('nornErrorHandler: other errors', () => {
