@@ -18,7 +18,6 @@ export interface PaymentEvent {
   taskQueue: 'orders',
   id: 'order-{orderId}',
   searchAttributes: { CustomerId: 'keyword', OrderStatus: 'keyword' },
-  description: 'Order lifecycle: payment, cancellation window, shipping',
 })
 export class OrderWorkflow {
   private readonly payments = useActivities(PaymentActivities);
