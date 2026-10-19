@@ -195,6 +195,10 @@ The [Getting started guide](https://jamie-wk.github.io/norn/guide/getting-starte
 | [`@norn/hono`](./packages/hono) | Hono middleware with a typed client and correlation IDs, an error handler, webhook-to-signal routing and a codec server. |
 | [`@norn/eslint-plugin`](./packages/eslint-plugin) | `norn/workflow-determinism` and `norn/no-activity-imports` for editor-time checks of workflow code. |
 
+## Using Norn with coding agents
+
+[`skills/norn/SKILL.md`](skills/norn/SKILL.md) is an [agent skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) that teaches coding agents Norn's conventions: what may run in the workflow sandbox, when to run `norn gen`, and how to write workflows, activities and tests. For Claude Code, copy the `skills/norn` folder into your project's `.claude/skills/`. The docs site also serves [`llms.txt`](https://jamie-wk.github.io/norn/llms.txt).
+
 ## Why the name Norn
 
 In Norse myth, the three Norns, **Urðr**, **Verðandi** and **Skuld**, sit at the well beneath Yggdrasil and weave the threads of fate: what has been, what is becoming, and what shall be.
