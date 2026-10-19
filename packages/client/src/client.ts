@@ -2,6 +2,7 @@ import {
   Client,
   Connection,
   WithStartWorkflowOperation,
+  type ConnectionLike,
   type ConnectionOptions,
   type DataConverter,
   type WorkflowClientInterceptor,
@@ -28,6 +29,11 @@ import { toNornError, type ErrorContext } from './errors.js';
 import { resolveWorkflowId, startOptions, type StartOptions } from './options.js';
 
 export interface ClientOptions {
+  /**
+   * Wrap an existing Temporal client instead of creating one, e.g. a test environment's
+   * time-skipping client. Its interceptors are used as-is (no correlation interceptor is added).
+   */
+  client?: Client;
   /** An existing connection. When omitted, Norn opens a lazy one and closes it on `close()`. */
   connection?: Connection;
   /** Server address. Defaults to `TEMPORAL_ADDRESS`, then `localhost:7233`. */
@@ -133,7 +139,7 @@ export interface NornClient extends AsyncDisposable {
   workflow<C extends AnyWorkflowContract>(contract: C): WorkflowClient<C>;
   /** The underlying Temporal client. */
   readonly temporal: Client;
-  readonly connection: Connection;
+  readonly connection: ConnectionLike;
   close(): Promise<void>;
 }
 
@@ -171,8 +177,9 @@ function isExplicitTarget(target: unknown): target is { workflowId: string; runI
 export function createClient(options: ClientOptions = {}): NornClient {
   const env = process.env;
   const apiKey = options.apiKey ?? env.TEMPORAL_API_KEY;
-  const ownsConnection = options.connection === undefined;
+  const ownsConnection = options.connection === undefined && options.client === undefined;
   const connection =
+    options.client?.connection ??
     options.connection ??
     Connection.lazy({
       address: options.address ?? env.TEMPORAL_ADDRESS ?? 'localhost:7233',
@@ -180,7 +187,9 @@ export function createClient(options: ClientOptions = {}): NornClient {
       ...(options.connectTimeout !== undefined ? { connectTimeout: formatDuration(options.connectTimeout) } : {}),
     });
   const interceptors = [...(options.correlation === false ? [] : [correlationInterceptor()]), ...(options.interceptors ?? [])];
-  const temporal = new Client({
+  const temporal =
+    options.client ??
+    new Client({
     connection,
     namespace: options.namespace ?? env.TEMPORAL_NAMESPACE ?? 'default',
     dataConverter: options.dataConverter,
