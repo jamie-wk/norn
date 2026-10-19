@@ -48,7 +48,6 @@ const ESCAPE_TAG = 'object';
 const temporalTagByToStringTag = new Map<string, string>(TEMPORAL_TYPES.map((t) => [`[object Temporal.${t}]`, `Temporal.${t}`]));
 const temporalTypeByTag = new Map<string, TemporalTypeName>(TEMPORAL_TYPES.map((t) => [`Temporal.${t}`, t]));
 const objectToString = Object.prototype.toString;
-const hasOwn = (o: object, k: string) => Object.prototype.hasOwnProperty.call(o, k);
 
 type Json = Record<string, unknown>;
 
@@ -56,7 +55,7 @@ const isPlainRecord = (v: unknown): v is Json => v !== null && typeof v === 'obj
 
 /** `{ "$norn": string, "v": unknown }` with exactly those two keys. */
 function readTag(obj: Json): string | undefined {
-  if (!hasOwn(obj, TAG) || !hasOwn(obj, 'v') || typeof obj[TAG] !== 'string') return undefined;
+  if (!Object.hasOwn(obj, TAG) || !Object.hasOwn(obj, 'v') || typeof obj[TAG] !== 'string') return undefined;
   let count = 0;
   for (const _ in obj) if (++count > 2) return undefined;
   return obj[TAG];
@@ -97,7 +96,7 @@ export class NornJsonPayloadConverter implements PayloadConverterWithEncoding {
         const tag = temporalTagByToStringTag.get(objectToString.call(raw));
         if (tag) return { [TAG]: tag, v: String(raw) };
       }
-      if (isPlainRecord(current) && hasOwn(current, TAG) && !(key === 'v' && escapes.has(this as object))) {
+      if (isPlainRecord(current) && Object.hasOwn(current, TAG) && !(key === 'v' && escapes.has(this as object))) {
         const wrapper = { [TAG]: ESCAPE_TAG, v: current };
         escapes.add(wrapper);
         return wrapper;

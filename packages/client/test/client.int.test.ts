@@ -114,6 +114,7 @@ describe('with-start operations', () => {
     expect(one.result).toEqual(['x']);
     const two = await norn.workflow(Carts).updateWithStart({ cartId }, { update: 'add', args: ['y'] });
     expect(two.result).toEqual(['x', 'y']);
+    expect(one.handle.runId).toBeTypeOf('string');
     expect(two.handle.runId).toBe(one.handle.runId);
     await two.handle.signal('checkout');
   });

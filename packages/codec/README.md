@@ -80,40 +80,13 @@ Use `createEncryptionCodec` directly if you only want encryption (with Temporal'
 
 ### Codec server (Temporal UI / CLI)
 
-The Temporal UI and `temporal` CLI can decode payloads through a [codec server](https://docs.temporal.io/production-deployment/data-encryption). A sketch with Hono:
+The Temporal UI and `temporal` CLI can decode payloads through a [codec server](https://docs.temporal.io/production-deployment/data-encryption). Use `codecServer()` from `@norn/hono`, which adds authentication, CORS, namespace checks and body limits:
 
 ```ts
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import type { Payload } from '@temporalio/common';
-import { createEncryptionCodec } from '@norn/codec';
-
-const codec = createEncryptionCodec({ keys, currentKeyId: '2026-10' });
-
-type JsonPayload = { metadata?: Record<string, string>; data?: string };
-const b64 = {
-  from: (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0)),
-  to: (b: Uint8Array) => btoa(Array.from(b, (x) => String.fromCharCode(x)).join('')),
-};
-const fromJson = (p: JsonPayload): Payload => ({
-  metadata: Object.fromEntries(Object.entries(p.metadata ?? {}).map(([k, v]) => [k, b64.from(v)])),
-  data: b64.from(p.data ?? ''),
-});
-const toJson = (p: Payload): JsonPayload => ({
-  metadata: Object.fromEntries(Object.entries(p.metadata ?? {}).map(([k, v]) => [k, b64.to(v)])),
-  data: b64.to(p.data ?? new Uint8Array()),
-});
-
-const app = new Hono();
-app.use('*', cors({ origin: 'https://cloud.temporal.io', allowHeaders: ['Content-Type', 'X-Namespace', 'Authorization'], credentials: true }));
-for (const op of ['encode', 'decode'] as const) {
-  app.post(`/${op}`, async (c) => {
-    // Authenticate the caller here: anyone who can call /decode can read your payloads.
-    const { payloads } = await c.req.json<{ payloads: JsonPayload[] }>();
-    return c.json({ payloads: (await codec[op](payloads.map(fromJson))).map(toJson) });
-  });
-}
-export default app;
+app.route('/codec', codecServer({
+  codec: createEncryptionCodec({ keys, currentKeyId: '2026-10' }),
+  auth: (c) => c.req.header('authorization') === `Bearer ${env.CODEC_TOKEN}`,
+}));
 ```
 
 ## Key rotation

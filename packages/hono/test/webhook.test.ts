@@ -284,6 +284,31 @@ describe('temporalWebhook: sad paths', () => {
     }
   });
 
+  it('sends nothing when a later action has a target its ID template cannot use', async () => {
+    const errors: unknown[] = [];
+    const client = fakeClient();
+    const a = new Hono<NornEnv>();
+    a.use(temporal({ client }));
+    a.onError((err, c) => {
+      errors.push(err);
+      return c.text('err', 500);
+    });
+    a.post('/hook', temporalWebhook({ verify: false, map: () => [signalAction(Payments, { paymentId: 'p1' }, 'ping'), { workflow: Payments, target: {}, signal: 'ping' } as never] }));
+    expect((await post(a, {})).status).toBe(500);
+    expect(errors[0]).toBeInstanceOf(NornConfigError);
+    expect(client.calls).toEqual([]);
+  });
+
+  it("lets nornErrorHandler options apply to the 'error' policy", async () => {
+    const a = new Hono<NornEnv>();
+    a.use(temporal({ client: fakeClient() }));
+    a.onError(nornErrorHandler({ status: { WORKFLOW_NOT_FOUND: 410 } }));
+    a.post('/hook', temporalWebhook({ verify: false, map: () => signalAction(Payments, { paymentId: 'missing-5' }, 'ping') }));
+    const res = await post(a, {});
+    expect(res.status).toBe(410);
+    expect(await res.json()).toMatchObject({ error: { code: 'WORKFLOW_NOT_FOUND', correlationId: 'hook-1' } });
+  });
+
   it('fails clearly without a client', async () => {
     const errors: unknown[] = [];
     const a = new Hono();

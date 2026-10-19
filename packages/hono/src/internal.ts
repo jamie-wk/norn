@@ -25,13 +25,8 @@ export function isHeaderName(value: unknown): value is string {
 export function decodeBase64(value: string): Uint8Array | undefined {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   if (!/^[A-Za-z0-9+/]*={0,2}$/.test(normalized)) return undefined;
-  const unpadded = normalized.replace(/=+$/, '');
-  if (unpadded.length % 4 === 1) return undefined;
   try {
-    const binary = atob(unpadded + '='.repeat((4 - (unpadded.length % 4)) % 4));
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes;
+    return Uint8Array.from(atob(normalized), (c) => c.charCodeAt(0));
   } catch {
     return undefined;
   }

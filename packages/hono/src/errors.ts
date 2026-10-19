@@ -16,6 +16,7 @@ export type NornErrorCode =
   | 'INTERNAL'
   | 'WEBHOOK_UNVERIFIED'
   | 'WEBHOOK_INVALID_BODY'
+  | 'WEBHOOK_TOO_LARGE'
   | (string & {});
 
 /** The JSON error body: `{ error: { code, message, details, correlationId } }`. */

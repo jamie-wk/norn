@@ -2,6 +2,7 @@ import {
   Client,
   Connection,
   WithStartWorkflowOperation,
+  WorkflowUpdateStage,
   type ConnectionLike,
   type ConnectionOptions,
   type DataConverter,
@@ -289,14 +290,19 @@ export function createClient(options: ClientOptions = {}): NornClient {
         const update = nameOf(contract.updates, operation.update);
         const ctx = { workflowId: startOpts.workflowId, workflowType: contract.name, update };
         const startWorkflowOperation = new WithStartWorkflowOperation(contract.name, startOpts as never);
-        const result = await call(
+        const { runId, result } = await call(
           ctx,
-          () => temporal.workflow.executeUpdateWithStart(update, { args: operation.args as unknown[], startWorkflowOperation }),
+          async () => {
+            const upd = await temporal.workflow.startUpdateWithStart(update, {
+              args: operation.args as unknown[],
+              startWorkflowOperation,
+              waitForStage: WorkflowUpdateStage.ACCEPTED,
+            });
+            return { runId: upd.workflowRunId, result: await upd.result() };
+          },
           opts.correlationId,
         );
-        const handle = await startWorkflowOperation.workflowHandle();
-        const runId = (handle as { firstExecutionRunId?: string }).firstExecutionRunId;
-        return { handle: wrap(contract, handle, runId), result: result as never };
+        return { handle: wrap(contract, await startWorkflowOperation.workflowHandle(), runId), result: result as never };
       },
       list(query) {
         const iterable = temporal.workflow.list({ query: visibility(query) });

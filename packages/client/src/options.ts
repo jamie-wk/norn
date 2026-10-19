@@ -109,10 +109,10 @@ export function resolveWorkflowId(contract: AnyWorkflowContract, input: unknown,
 
 /** Builds Temporal start options from a contract, its input and Norn start options. */
 export function startOptions<C extends AnyWorkflowContract>(contract: C, input: unknown, options: StartOptions<C> = {}) {
-  if (options.ifRunning !== undefined && !(options.ifRunning in CONFLICT)) {
+  if (options.ifRunning !== undefined && !Object.hasOwn(CONFLICT, options.ifRunning)) {
     throw new NornConfigError(`ifRunning must be one of ${Object.keys(CONFLICT).join(', ')}`);
   }
-  if (options.ifClosed !== undefined && !(options.ifClosed in REUSE)) {
+  if (options.ifClosed !== undefined && !Object.hasOwn(REUSE, options.ifClosed)) {
     throw new NornConfigError(`ifClosed must be one of ${Object.keys(REUSE).join(', ')}`);
   }
   const typed = options.searchAttributes ? toTypedSearchAttributes(contract, options.searchAttributes) : undefined;

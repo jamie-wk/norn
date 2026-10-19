@@ -191,8 +191,8 @@ For each request it:
 | `map` returned `null`, `undefined` or `[]` | 202 | `{ accepted: 0, ignored: 'unmapped' }` |
 | Workflow already closed (default `onClosed: 'ignore'`) | 200 | `{ ignored: 'closed' }` |
 | Workflow not found with `onNotFound: 'ignore'` | 200 | `{ ignored: 'not_found' }` |
-| Workflow not found (default `onNotFound: 'error'`) | 404 | `WORKFLOW_NOT_FOUND` error body |
-| Workflow closed with `onClosed: 'error'` | 409 | `WORKFLOW_CLOSED` error body |
+| Workflow not found (default `onNotFound: 'error'`) | via `app.onError` | 404 `WORKFLOW_NOT_FOUND` with `nornErrorHandler()` (status overrides apply) |
+| Workflow closed with `onClosed: 'error'` | via `app.onError` | 409 `WORKFLOW_CLOSED` with `nornErrorHandler()` (status overrides apply) |
 | Verification failed | 401 | `WEBHOOK_UNVERIFIED` error body |
 | Unparseable body | 400 | `WEBHOOK_INVALID_BODY` error body |
 | Body over `maxBodyBytes` | 413 | `WEBHOOK_TOO_LARGE` error body |
