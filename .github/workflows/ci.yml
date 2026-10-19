@@ -44,6 +44,8 @@ jobs:
         with: { node-version: '${{ matrix.node }}', cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+      # The CLI integration tests compile and run the built packages.
+      - run: pnpm build
       # Downloads the Temporal dev server and time-skipping test server on first use.
       - run: pnpm test:integration
 
@@ -72,6 +74,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      # E18 runs the host's built `norn` CLI against the stack.
+      - run: pnpm build
       - run: docker compose -f e2e/docker-compose.yml up -d --build --wait
       - run: pnpm test:e2e
         env:
