@@ -20,7 +20,9 @@ describe('happy paths', () => {
     expect(created.body).toMatchObject({ orderId: order.orderId, workflowId: `order-${order.orderId}` });
 
     const done = await waitForStatus(stack, order.orderId, 'completed');
-    expect(done).toMatchObject({ totalCents: 3_900, items: order.items, workflowStatus: 'COMPLETED' });
+    expect(done).toMatchObject({ totalCents: 3_900, items: order.items });
+    // The order reads 'completed' before the workflow sends the last email and credits loyalty, so wait for the run to end.
+    await expect.poll(async () => (await stack.api(`/orders/${order.orderId}`)).body.workflowStatus, { timeout: 20_000 }).toBe('COMPLETED');
     expect(done.chargeId).toMatch(/^ch_/);
     expect(done.trackingNumber).toMatch(/^TRK/);
 
