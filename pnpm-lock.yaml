@@ -14,6 +14,24 @@ importers:
       '@changesets/cli':
         specifier: 3.0.3
         version: 3.0.3
+      '@temporalio/activity':
+        specifier: 1.24.0
+        version: 1.24.0
+      '@temporalio/client':
+        specifier: 1.24.0
+        version: 1.24.0
+      '@temporalio/common':
+        specifier: 1.24.0
+        version: 1.24.0
+      '@temporalio/testing':
+        specifier: 1.24.0
+        version: 1.24.0(esbuild@0.28.2)
+      '@temporalio/worker':
+        specifier: 1.24.0
+        version: 1.24.0(esbuild@0.28.2)
+      '@temporalio/workflow':
+        specifier: 1.24.0
+        version: 1.24.0
       '@types/node':
         specifier: ^22.18.0
         version: 22.20.5
