@@ -74,6 +74,13 @@ describe('createWorker', () => {
     expect(result).toMatchObject({ greeting: `Hi, ${name}` });
   });
 
+  it('replaces activities by name with activityOverrides', async () => {
+    const worker = await createWorker({ registry, ...base(), activityOverrides: { 'greet.hello': async (name: string) => `mocked ${name}` } });
+    const name = uid('mock');
+    expect(await withRunning(worker, () => norn.workflow(Greet).execute({ name }))).toMatchObject({ greeting: `mocked ${name}` });
+    expect(calls).toEqual([]);
+  });
+
   it('bundles the registry itself when no bundle is given', async () => {
     const worker = await createWorker({ registry, connection: env.nativeConnection, handleSignals: false });
     const name = uid('self');
@@ -144,6 +151,12 @@ describe('startup failures', () => {
     const error = await createWorker({ registry, address: '127.0.0.1:1', handleSignals: false, workflowBundle: bundle }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(TemporalUnavailableError);
   }, 60_000);
+
+  it('rejects overrides for activities that do not exist', async () => {
+    await expect(createWorker({ registry, ...base(), activityOverrides: { 'greet.nope': async () => 1 } })).rejects.toThrow(/unknown activity greet\.nope/);
+    // Validation runs before anything is created.
+    expect(disposed).toEqual([]);
+  });
 
   it('rejects task queues the registry does not use', async () => {
     await expect(createWorker({ registry, ...base(), taskQueues: ['typo'] })).rejects.toThrow(/typo/);

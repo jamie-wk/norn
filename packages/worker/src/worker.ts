@@ -29,6 +29,13 @@ export interface CreateWorkerOptions extends WorkerConfigOptions {
   /** E.g. `createDataConverter()` from `@norn/codec`. */
   dataConverter?: WorkerOptions['dataConverter'];
   plugins?: WorkerPlugin[];
+  /**
+   * Replace registered activities by name, typically with mocks in tests. Names must exist in the
+   * registry; use `extraActivities` for new ones.
+   */
+  activityOverrides?: Record<string, (...args: any[]) => unknown>;
+  /** Additional activities not declared with `@Activities`. */
+  extraActivities?: Record<string, (...args: any[]) => unknown>;
   /** Extra activity interceptors, after Norn's correlation interceptor. */
   activityInterceptors?: ActivityInterceptorsFactory[];
   /** Passed through to every Temporal `Worker.create()` call. */
@@ -81,7 +88,12 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
 
   let workers: Worker[];
   try {
-    const activities = await container.activities();
+    for (const name of Object.keys(options.activityOverrides ?? {})) {
+      if (!registry.activities.includes(name)) {
+        throw new NornConfigError(`Cannot override unknown activity ${name} (registered: ${registry.activities.join(', ') || 'none'})`);
+      }
+    }
+    const activities = { ...(await container.activities()), ...options.extraActivities, ...options.activityOverrides };
     if (options.connection) {
       connection = options.connection;
     } else {
