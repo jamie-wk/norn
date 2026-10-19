@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "workflows": {
+    "OrderWorkflow": {
+      "taskQueue": "orders",
+      "signals": [
+        "cancel",
+        "complete",
+        "transfer-event"
+      ],
+      "queries": [
+        "status"
+      ],
+      "updates": [
+        "add-item"
+      ]
+    },
+    "ReportWorkflow": {
+      "taskQueue": "reports",
+      "signals": [],
+      "queries": [],
+      "updates": []
+    },
+    "ShoppingCart": {
+      "taskQueue": "carts",
+      "signals": [
+        "checkout",
+        "pause",
+        "resume"
+      ],
+      "queries": [
+        "contents",
+        "isPaused"
+      ],
+      "updates": [
+        "add"
+      ]
+    }
+  },
+  "activities": [
+    "buildReport",
+    "inventory.release",
+    "inventory.reserve",
+    "payments.charge",
+    "payments.refund-charge"
+  ]
+}

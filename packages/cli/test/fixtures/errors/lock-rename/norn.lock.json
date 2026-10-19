@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "workflows": {
+    "LegacyWorkflow": {
+      "taskQueue": "legacy",
+      "signals": [],
+      "queries": [],
+      "updates": []
+    },
+    "OrderWorkflow": {
+      "taskQueue": "orders",
+      "signals": ["cancel", "pause"],
+      "queries": ["status"],
+      "updates": ["add-item"]
+    }
+  },
+  "activities": ["pay.charge", "pay.refund"]
+}

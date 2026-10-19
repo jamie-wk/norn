@@ -58,24 +58,39 @@
   },
   "peerDependencies": {
     "@temporalio/client": "^1.24.0",
-    "@temporalio/worker": "^1.24.0"
+    "@temporalio/common": "^1.24.0",
+    "@temporalio/worker": "^1.24.0",
+    "@norn/worker": "^1.0.0",
+    "@norn/codec": "^1.0.0"
   },
   "peerDependenciesMeta": {
     "@temporalio/client": {
       "optional": true
     },
+    "@temporalio/common": {
+      "optional": true
+    },
     "@temporalio/worker": {
+      "optional": true
+    },
+    "@norn/worker": {
+      "optional": true
+    },
+    "@norn/codec": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@temporalio/client": "1.24.0",
-    "@temporalio/worker": "1.24.0",
-    "@temporalio/workflow": "1.24.0",
-    "@temporalio/common": "1.24.0",
-    "@norn/workflow": "workspace:^",
     "@norn/activity": "workspace:^",
+    "@norn/client": "workspace:^",
+    "@norn/codec": "workspace:^",
     "@norn/core": "workspace:^",
-    "@norn/client": "workspace:^"
+    "@norn/worker": "workspace:^",
+    "@norn/workflow": "workspace:^",
+    "@temporalio/client": "1.24.0",
+    "@temporalio/common": "1.24.0",
+    "@temporalio/testing": "1.24.0",
+    "@temporalio/worker": "1.24.0",
+    "@temporalio/workflow": "1.24.0"
   }
 }

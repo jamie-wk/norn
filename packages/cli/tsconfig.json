@@ -9,5 +9,9 @@
     "src",
     "test",
     "test-d"
+  ],
+  "exclude": [
+    "test/fixtures",
+    "test/.tmp"
   ]
 }
