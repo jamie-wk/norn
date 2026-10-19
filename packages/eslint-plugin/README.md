@@ -108,7 +108,7 @@ export class Reminder {
 
 Reports imports that load, in workflow code:
 
-1. **Node built-ins**: anything in `module.builtinModules` (`fs`, `fs/promises`, `path`, `crypto`, `http`, `child_process`, ...) and anything with the `node:` prefix.
+1. **Node built-ins**: anything `module.isBuiltin()` accepts (`fs`, `fs/promises`, `node:path`, `crypto`, `node:test`, ...). npm packages that merely start with a built-in's name, such as `buffer/`, are not built-ins.
 2. **Packages that cannot run in the workflow sandbox**: the deny list (below, plus `deny`), including subpaths.
 3. **Activity and service modules**: specifiers matching `activityPatterns`.
 4. **Any other bare package not in the allow list**, but only when `onlyAllowed: true`.

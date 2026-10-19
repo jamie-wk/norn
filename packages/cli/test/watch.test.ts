@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { watch, type GenerateResult } from '../src/index.ts';
@@ -44,6 +44,35 @@ describe('watch', () => {
     writeFileSync(cart, readFileSync(cart, 'utf8').replace('abandon()', 'leave()'));
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(results).toHaveLength(2);
+  });
+
+  it('reports unexpected failures as errors and keeps watching', async () => {
+    const project = copyFixture('app');
+    // A file where the output directory should be makes writing fail with a plain Error.
+    writeFileSync(join(project, '.norn'), '');
+    const results: GenerateResult[] = [];
+    const controller = new AbortController();
+    let notify: () => void = () => {};
+    const done = watch({ cwd: project, signal: controller.signal, debounceMs: 50, onResult: (r) => (results.push(r), notify()) });
+    const next = (count: number) =>
+      new Promise<void>((resolve) => {
+        notify = () => results.length >= count && resolve();
+        notify();
+      });
+    try {
+      await next(1);
+      expect(results[0]!.errors).toEqual([expect.objectContaining({ message: expect.stringContaining('.norn') })]);
+
+      rmSync(join(project, '.norn'));
+      const cart = join(project, 'src/workflows/cart.ts');
+      writeFileSync(cart, `${readFileSync(cart, 'utf8')}\n`);
+      await next(2);
+      expect(results[1]!.errors).toEqual([]);
+    } finally {
+      controller.abort();
+      await done;
+      removeDir(project);
+    }
   });
 
   it('resolves immediately for an already-aborted signal', async () => {

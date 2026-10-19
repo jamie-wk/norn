@@ -8,6 +8,7 @@ import { project, removeDir, writeFiles } from './helpers.ts';
 
 let env: TestWorkflowEnvironment;
 let dir: string;
+let other: string;
 let output = '';
 
 const nightly: ScheduleSpec = {
@@ -22,14 +23,18 @@ const nightly: ScheduleSpec = {
 };
 const weekly: ScheduleSpec = { id: 'weekly-report', workflowType: 'ReportWorkflow', taskQueue: 'reports', cron: ['0 9 * * 1'], paused: true, pauseOnFailure: true };
 
-function declare(schedules: ScheduleSpec[]) {
-  writeFiles(dir, { '.norn/schedules.json': JSON.stringify(schedules) });
+function declare(schedules: ScheduleSpec[], cwd = dir) {
+  writeFiles(cwd, { '.norn/schedules.json': JSON.stringify(schedules) });
 }
 
 async function sync(...args: string[]) {
+  return syncIn(dir, ...args);
+}
+
+async function syncIn(cwd: string, ...args: string[]) {
   output = '';
   const code = await main(['schedules', 'sync', ...args], {
-    cwd: dir,
+    cwd,
     env: { TEMPORAL_ADDRESS: env.address, TEMPORAL_NAMESPACE: env.namespace ?? 'default' },
     stdout: (s) => (output += s),
     stderr: (s) => (output += s),
@@ -44,11 +49,13 @@ async function listed(id: string) {
 
 beforeAll(async () => {
   env = await createLocalEnv();
-  dir = project({ 'src/x.ts': 'export const x = 1;\n' });
+  dir = project({ 'package.json': '{ "name": "project-a" }', 'src/x.ts': 'export const x = 1;\n' });
+  other = project({ 'package.json': '{ "name": "project-b" }', 'src/x.ts': 'export const x = 1;\n' });
 });
 
 afterAll(async () => {
   removeDir(dir);
+  removeDir(other);
   await env?.teardown();
 });
 
@@ -64,7 +71,7 @@ describe('norn schedules sync', () => {
     expect(output).toContain('2 created, 0 updated, 0 unchanged, 0 deleted');
 
     const d = await env.client.schedule.getHandle('nightly-report').describe();
-    expect(d.memo).toEqual({ nornManaged: true });
+    expect(d.memo).toEqual({ nornManaged: 'project-a' });
     expect(d.action).toMatchObject({ type: 'startWorkflow', workflowType: 'ReportWorkflow', taskQueue: 'reports', args: [{ kind: 'daily' }] });
     expect(d.policies).toMatchObject({ overlap: 'BUFFER_ONE', pauseOnFailure: false });
     expect(d.spec.timezone).toBe('America/New_York');
@@ -86,7 +93,7 @@ describe('norn schedules sync', () => {
     expect(d.policies.overlap).toBe('ALLOW_ALL');
     expect(d.state.note).toBe('Moved to 3am');
     expect(d.spec.calendars?.[0]).toMatchObject({ hour: [{ start: 3, end: 3, step: 1 }] });
-    expect(d.memo).toEqual({ nornManaged: true });
+    expect(d.memo).toEqual({ nornManaged: 'project-a' });
     expect(d.action.memo?.[HASH_MEMO]).toEqual(expect.any(String));
   });
 
@@ -104,7 +111,7 @@ describe('norn schedules sync', () => {
   });
 
   it('prunes managed schedules that are no longer declared, only with --prune', async () => {
-    await expect.poll(async () => (await listed('weekly-report'))?.memo, { timeout: 15_000 }).toEqual({ nornManaged: true });
+    await expect.poll(async () => (await listed('weekly-report'))?.memo, { timeout: 15_000 }).toEqual({ nornManaged: 'project-a' });
     await expect.poll(async () => listed('hand-made'), { timeout: 15_000 }).toBeDefined();
     declare([nightly]);
     expect(await sync()).toBe(0);
@@ -119,10 +126,35 @@ describe('norn schedules sync', () => {
     expect((await env.client.schedule.getHandle('hand-made').describe()).action.workflowType).toBe('Other');
   });
 
+  it("never updates or prunes another project's schedules in the same namespace", async () => {
+    const theirs: ScheduleSpec = { id: 'b-report', workflowType: 'ReportWorkflow', taskQueue: 'b', cron: ['0 4 * * *'] };
+    declare([theirs, { ...nightly, cron: ['0 5 * * *'] }], other);
+    expect(await syncIn(other)).toBe(1);
+    expect(output).toContain('created    b-report');
+    expect(output).toContain('conflict   nightly-report');
+    expect((await env.client.schedule.getHandle('b-report').describe()).memo).toEqual({ nornManaged: 'project-b' });
+    expect((await env.client.schedule.getHandle('nightly-report').describe()).spec.calendars?.[0]).toMatchObject({ hour: [{ start: 2, end: 2, step: 1 }] });
+
+    await expect.poll(async () => (await listed('b-report'))?.memo, { timeout: 15_000 }).toEqual({ nornManaged: 'project-b' });
+    expect(await sync('--prune')).toBe(0);
+    expect(output).toContain('0 deleted');
+    await env.client.schedule.getHandle('b-report').describe();
+  });
+
+  it('needs a package name to tell projects apart', async () => {
+    const nameless = project({ 'package.json': '{}', '.norn/schedules.json': '[]' });
+    try {
+      expect(await syncIn(nameless)).toBe(1);
+      expect(output).toContain('needs a "name"');
+    } finally {
+      removeDir(nameless);
+    }
+  });
+
   it('is available programmatically', async () => {
-    const result = await syncSchedules({ client: env.client, schedules: [nightly], dryRun: true });
+    const result = await syncSchedules({ client: env.client, project: 'project-a', schedules: [nightly], dryRun: true });
     expect(result).toEqual({ created: [], updated: [], unchanged: ['nightly-report'], deleted: [], conflicts: [] });
-    await expect(syncSchedules({ client: env.client, schedules: [nightly, nightly] })).rejects.toThrow(/more than once/);
+    await expect(syncSchedules({ client: env.client, project: 'project-a', schedules: [nightly, nightly] })).rejects.toThrow(/more than once/);
   });
 
   it('reports connection failures', async () => {

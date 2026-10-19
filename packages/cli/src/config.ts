@@ -88,8 +88,8 @@ export async function loadConfig(options: LoadConfigOptions = {}): Promise<Resol
   let raw: unknown = {};
   if (configFile) {
     try {
-      // The query defeats the module cache so watch mode and repeated runs see edits.
-      const mod = (await import(`${pathToFileURL(configFile).href}?t=${Date.now()}`)) as { default?: unknown };
+      // The query defeats the module cache so watch mode sees edits; keyed by mtime so unchanged configs are not re-imported.
+      const mod = (await import(`${pathToFileURL(configFile).href}?t=${statSync(configFile).mtimeMs}`)) as { default?: unknown };
       if (mod.default === undefined) {
         throw new NornGenFailure([fail('The config file needs a default export', 'export default defineConfig({ ... })')]);
       }

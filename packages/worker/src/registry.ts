@@ -17,13 +17,6 @@ export interface ScheduleSpec {
   note?: string;
 }
 
-export interface RegistryWorkflow {
-  /** Temporal workflow type name. */
-  name: string;
-  className: string;
-  taskQueue: string;
-}
-
 export interface RegistryContainerOptions {
   overrides?: ReadonlyArray<readonly [InjectionKey, unknown]>;
   errors?: ErrorMappingOptions;
@@ -38,11 +31,9 @@ export interface NornRegistry {
   workflowsPath: string;
   /** Every task queue a workflow in this project is declared on. */
   taskQueues: readonly string[];
-  workflows: readonly RegistryWorkflow[];
   /** Registered activity names, including prefixes. */
   activities: readonly string[];
   searchAttributes: Readonly<Record<string, SearchAttributeType>>;
-  schedules: readonly ScheduleSpec[];
   createContainer(options?: RegistryContainerOptions): Container;
 }
 

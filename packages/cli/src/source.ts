@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { parseSync } from 'oxc-parser';
 
 /** A loosely typed ESTree/TS-ESTree node from oxc-parser. */
@@ -81,6 +80,21 @@ function nameOf(node: AstNode): string {
   return node.type === 'Identifier' ? node.name : String(node.value);
 }
 
+/** The expression inside type assertions, `!` and parentheses. */
+export const unwrap = (node: AstNode): AstNode =>
+  node.type === 'TSAsExpression' || node.type === 'TSSatisfiesExpression' || node.type === 'ParenthesizedExpression' || node.type === 'TSNonNullExpression'
+    ? unwrap(node.expression)
+    : node;
+
+/** The static key of an object property (`a`, `'a'`, `1`, `` [`a`] ``), if it has one. */
+export function staticKey(prop: AstNode): string | undefined {
+  const key = prop.key as AstNode;
+  if (!prop.computed && key.type === 'Identifier') return key.name;
+  if (key.type === 'Literal' && (typeof key.value === 'string' || typeof key.value === 'number')) return String(key.value);
+  if (key.type === 'TemplateLiteral' && key.expressions.length === 0) return key.quasis[0].value.cooked;
+  return undefined;
+}
+
 /** Names bound by a destructuring pattern. */
 export function patternNames(node: AstNode | null | undefined, out: AstNode[] = []): AstNode[] {
   if (!node) return out;
@@ -151,27 +165,6 @@ function collectDeclaration(node: AstNode, map: Map<string, LocalDeclaration[]>,
     default:
       return [];
   }
-}
-
-/** Finds dynamic `import('literal')` calls anywhere in the program. */
-function dynamicImports(program: AstNode): AstNode[] {
-  const found: AstNode[] = [];
-  const visit = (node: unknown): void => {
-    if (!node || typeof node !== 'object') return;
-    if (Array.isArray(node)) {
-      for (const n of node) visit(n);
-      return;
-    }
-    const n = node as AstNode;
-    if (n.type === 'ImportExpression') found.push(n);
-    for (const key in n) {
-      if (key === 'start' || key === 'end' || key === 'type') continue;
-      const value = n[key];
-      if (value && typeof value === 'object') visit(value);
-    }
-  };
-  visit(program.body);
-  return found;
 }
 
 export function parseModule(file: string, code: string): ParsedModule {
@@ -276,8 +269,10 @@ export function parseModule(file: string, code: string): ParsedModule {
     }
   }
 
-  for (const node of dynamicImports(program)) {
-    const src = node.source;
+  // Only the specifier is re-parsed: the module record has spans, not values.
+  for (const { start, end, moduleRequest } of result.module.dynamicImports) {
+    const node: AstNode = { type: 'ImportExpression', start, end };
+    const src = (parseSync('specifier.js', code.slice(moduleRequest.start, moduleRequest.end)).program.body[0] as AstNode | undefined)?.expression;
     const value = src?.type === 'Literal' && typeof src.value === 'string' ? src.value : src?.type === 'TemplateLiteral' && src.expressions.length === 0 ? src.quasis[0].value.cooked : undefined;
     if (value !== undefined) imports.push({ source: value, node, form: 'dynamic', typeOnly: false, inlineTypeOnly: false, specifiers: [] });
   }
@@ -310,13 +305,9 @@ export function parseModule(file: string, code: string): ParsedModule {
   };
 }
 
-export function readModule(file: string): ParsedModule {
-  return parseModule(file, readFileSync(file, 'utf8'));
-}
-
-/** The export names under which a local binding is exported. */
-export function exportNamesOf(mod: ParsedModule, local: string): string[] {
+/** The name a local value is exported under: its own name when it can, else the first alphabetically. `default` does not count. */
+export function exportNameOf(mod: ParsedModule, local: string): string | undefined {
   const names: string[] = [];
-  for (const [name, entry] of mod.exports) if (entry.kind === 'local' && entry.local === local && !entry.typeOnly) names.push(name);
-  return names;
+  for (const [name, entry] of mod.exports) if (entry.kind === 'local' && entry.local === local && !entry.typeOnly && name !== 'default') names.push(name);
+  return names.includes(local) ? local : names.sort()[0];
 }

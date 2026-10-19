@@ -1,7 +1,7 @@
 import type { NornGenError, NornGenErrorCode } from './errors.js';
-import { Fn, LiteralErrors, Ref, evaluateLiteral, isObject, type Literal, type LiteralContext, type LiteralObject } from './literal.js';
+import { Fn, Ref, evaluateLiteral, isObject, type Literal, type LiteralContext, type LiteralObject } from './literal.js';
 import { isRelative, type Project } from './project.js';
-import { exportNamesOf, type AstNode, type ParsedModule } from './source.js';
+import { exportNameOf, staticKey, unwrap, type AstNode, type ParsedModule } from './source.js';
 
 export interface Location {
   file: string;
@@ -106,7 +106,7 @@ const HANDLER_KINDS = { Signal: 'signal', Query: 'query', Update: 'update' } as 
 type HandlerKind = (typeof HANDLER_KINDS)[keyof typeof HANDLER_KINDS];
 const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
-const WORKFLOW_KEYS = new Set(['taskQueue', 'name', 'id', 'versioning', 'searchAttributes', 'failOn', 'drainHandlers', 'description']);
+const WORKFLOW_KEYS = new Set(['taskQueue', 'name', 'id', 'versioning', 'searchAttributes', 'failOn', 'drainHandlers']);
 const SIGNAL_KEYS = new Set(['name', 'description', 'unfinishedPolicy', 'dedupeBy']);
 const QUERY_KEYS = new Set(['name', 'description']);
 const UPDATE_KEYS = new Set(['name', 'description', 'unfinishedPolicy']);
@@ -214,10 +214,6 @@ export function declaresActivityCode(mod: ParsedModule): boolean {
   );
 }
 
-export function declaresWorkflow(mod: ParsedModule): boolean {
-  return mod.classes.some((c) => (c.decorators as AstNode[]).some((d) => decoratorOf(mod, d)?.name === 'Workflow'));
-}
-
 function jsDoc(mod: ParsedModule, node: AstNode): string | undefined {
   let best: { value: string; end: number } | undefined;
   for (const c of mod.comments) {
@@ -259,15 +255,11 @@ export class Analyzer {
     return `${loc.file}:${loc.line}`;
   }
 
-  /** Evaluates a literal, reporting a `non-literal` error and returning `null` (not `undefined`) on failure. */
+  /** Evaluates a literal, reporting `non-literal` errors and returning `FAILED` on failure. */
   private literal(mod: ParsedModule, node: AstNode, ctx: LiteralContext): Literal | undefined | typeof FAILED {
-    try {
-      return evaluateLiteral(node, ctx);
-    } catch (error) {
-      if (!(error instanceof LiteralErrors)) throw error;
-      for (const e of error.errors) this.error('non-literal', mod, e.node, e.message, e.hint);
-      return FAILED;
-    }
+    const { value, errors } = evaluateLiteral(node, ctx);
+    for (const e of errors) this.error('non-literal', mod, e.node, e.message, e.hint);
+    return errors.length > 0 ? FAILED : value;
   }
 
   /** Evaluates an optional options-object argument. */
@@ -344,8 +336,8 @@ export class Analyzer {
   }
 
   private exportName(info: ClassInfo, kind: string): string | undefined {
-    const names = exportNamesOf(info.mod, info.name).filter((n) => n !== 'default');
-    if (names.length > 0) return names.includes(info.name) ? info.name : names.toSorted()[0];
+    const name = exportNameOf(info.mod, info.name);
+    if (name) return name;
     this.error(
       'not-exported',
       info.mod,
@@ -418,15 +410,12 @@ export class Analyzer {
 
   private workflow(info: ClassInfo, dec: Decorator, scheduleDecs: Decorator[]): WorkflowModel | undefined {
     const { mod } = info;
-    let ok = true;
     const optionsNode = dec.args[0];
     const options = this.options(mod, dec, 0, { refKeys: new Set(['failOn']) }, WORKFLOW_KEYS);
-    if (options === FAILED) ok = false;
     const o = options === FAILED ? {} : options;
     const prop = (key: string) => (optionsNode && propertyNode(optionsNode, key)) ?? optionsNode ?? dec.node;
     const invalid = (key: string, message: string, hint?: string) => {
       this.error('invalid-option', mod, prop(key), `@Workflow on ${info.name}: ${message}`, hint);
-      ok = false;
     };
 
     if (options !== FAILED) {
@@ -440,7 +429,6 @@ export class Analyzer {
         invalid('versioning', "versioning must be 'pinned' or 'auto-upgrade'");
       }
       if (o.drainHandlers !== undefined && typeof o.drainHandlers !== 'boolean') invalid('drainHandlers', 'drainHandlers must be a boolean');
-      if (o.description !== undefined && typeof o.description !== 'string') invalid('description', 'description must be a string');
       if (o.failOn !== undefined && (!Array.isArray(o.failOn) || o.failOn.some((e) => !(e instanceof Ref)))) {
         invalid('failOn', 'failOn must list error classes, such as [InvalidOrderError]');
       }
@@ -456,7 +444,6 @@ export class Analyzer {
                 (saNode && propertyNode(saNode, key)) ?? prop('searchAttributes'),
                 `@Workflow on ${info.name}: search attribute ${key} has unknown type ${JSON.stringify(type)}; use one of ${SEARCH_ATTRIBUTE_TYPES.join(', ')}`,
               );
-              ok = false;
             }
           }
         }
@@ -464,7 +451,6 @@ export class Analyzer {
     }
 
     const exportName = this.exportName(info, 'Workflow');
-    if (!exportName) ok = false;
     const name = typeof o.name === 'string' ? o.name : info.name;
     const taskQueue = typeof o.taskQueue === 'string' ? o.taskQueue : '';
 
@@ -478,29 +464,20 @@ export class Analyzer {
         for (const d of member.decorators) {
           if (d.name === 'Activity' || d.name === 'NonRetryable') {
             this.error('invalid-decorator', member.mod, d.node, `@${d.name} can only be used in an @Activities class`);
-            ok = false;
             continue;
           }
           if (d.name === 'Workflow' || d.name === 'Schedule' || d.name === 'Activities' || d.name === 'Service') {
             this.error('invalid-decorator', member.mod, d.node, `@${d.name} decorates classes, not members`);
-            ok = false;
             continue;
           }
-          if (!this.checkMember(member, d)) {
-            ok = false;
-            continue;
-          }
+          if (!this.checkMember(member, d)) continue;
           const method = member.key!;
           if (d.name === 'Validate') {
             const arg = d.args[0];
             const update = arg ? this.literal(member.mod, arg, { label: '@Validate', whole: '@Validate update name' }) : undefined;
-            if (update === FAILED) {
-              ok = false;
-              continue;
-            }
+            if (update === FAILED) continue;
             if (typeof update !== 'string' || update === '') {
               this.error('invalid-decorator', member.mod, d.node, "@Validate needs the update method's name, such as @Validate('addItem')");
-              ok = false;
               continue;
             }
             validators.push({ update, dec: d, member });
@@ -512,39 +489,31 @@ export class Analyzer {
           const arg = d.args[0];
           if (arg) {
             const value = this.literal(member.mod, arg, { label: `@${d.name}`, fnKeys: new Set(['dedupeBy']) });
-            if (value === FAILED) {
-              ok = false;
-              continue;
-            }
+            if (value === FAILED) continue;
             if (typeof value === 'string') handlerOptions = { name: value };
             else if (isObject(value)) {
               handlerOptions = value;
               for (const key of Object.keys(value)) {
                 if (!keys.has(key)) {
                   this.error('invalid-option', member.mod, propertyNode(arg, key) ?? arg, `@${d.name} has no option "${key}"`, `Known options: ${[...keys].join(', ')}`);
-                  ok = false;
                 }
               }
             } else if (value !== undefined) {
               this.error('invalid-option', member.mod, arg, `@${d.name} takes a name or an options object`);
-              ok = false;
               continue;
             }
           }
           const hName = handlerOptions.name ?? method;
           if (typeof hName !== 'string' || hName === '') {
             this.error('invalid-option', member.mod, propertyNode(arg!, 'name') ?? arg!, `@${d.name} name must be a non-empty string`);
-            ok = false;
             continue;
           }
           const policy = handlerOptions.unfinishedPolicy;
           if (policy !== undefined && policy !== 'abandon' && policy !== 'warn') {
             this.error('invalid-option', member.mod, propertyNode(arg!, 'unfinishedPolicy') ?? arg!, "unfinishedPolicy must be 'abandon' or 'warn'");
-            ok = false;
           }
           if (handlerOptions.dedupeBy !== undefined && !(handlerOptions.dedupeBy instanceof Fn)) {
             this.error('invalid-option', member.mod, propertyNode(arg!, 'dedupeBy') ?? arg!, 'dedupeBy must be a function');
-            ok = false;
           }
           // Explicit descriptions travel with the decorator at runtime; JSDoc ones go into implement().
           const doc = handlerOptions.description === undefined ? jsDoc(member.mod, member.node) : undefined;
@@ -565,7 +534,6 @@ export class Analyzer {
           `Workflow ${name}: ${h.kind} "${h.name}" is registered by both ${first}() and ${method}()`,
           `Give one of them a different name with @${h.dec.name}({ name: '...' })`,
         );
-        ok = false;
       } else seen[h.kind].set(h.name, method);
     }
 
@@ -577,27 +545,21 @@ export class Analyzer {
           ? `@Validate('${v.update}') on ${v.member.key}(): ${v.update}() is a @${target.dec.name}, not an @Update`
           : `@Validate('${v.update}') on ${v.member.key}(): there is no @Update method ${v.update}() in ${info.name}`;
         this.error('invalid-validate', v.member.mod, v.dec.node, message, '@Validate takes the method name of an @Update handler.');
-        ok = false;
       } else if (validated.has(v.update)) {
         this.error('invalid-validate', v.member.mod, v.dec.node, `Update ${v.update}() of ${info.name} has more than one validator`);
-        ok = false;
       } else validated.add(v.update);
     }
 
     if (!hasRun) {
       this.error('missing-run', mod, info.node.id ?? info.node, `Workflow class ${info.name} needs an async run() method`, 'Add async run(input) { ... }');
-      ok = false;
     }
 
     const schedules: ScheduleModel[] = [];
     for (const s of scheduleDecs.toSorted((a, b) => a.node.start - b.node.start)) {
       const sched = this.schedule(mod, s, name, taskQueue, info.name);
       if (sched) schedules.push(sched);
-      else ok = false;
     }
 
-    // Models with errors still take part in the cross-class checks; nothing is emitted while errors exist.
-    void ok;
     if (!exportName) return undefined;
     const pick = (kind: HandlerKind) =>
       [...handlers]
@@ -702,22 +664,18 @@ export class Analyzer {
 
   private activitiesClass(info: ClassInfo, dec: Decorator): ActivitiesModel | undefined {
     const { mod } = info;
-    let ok = true;
     const optionsNode = dec.args[0];
     const options = this.options(mod, dec, 0, { refKeys: new Set(['inject']) }, ACTIVITIES_KEYS);
-    if (options === FAILED) ok = false;
     const o = options === FAILED ? {} : options;
     if (o.prefix !== undefined && typeof o.prefix !== 'string') {
       this.error('invalid-option', mod, (optionsNode && propertyNode(optionsNode, 'prefix')) ?? dec.node, `@Activities on ${info.name}: prefix must be a string`);
-      ok = false;
     }
     const prefix = typeof o.prefix === 'string' ? o.prefix : '';
 
     let classNonRetryable: string[] | true | undefined;
     for (const d of info.decorators.filter((x) => x.name === 'NonRetryable')) {
       const value = this.nonRetryable(mod, d);
-      if (value === FAILED) ok = false;
-      else classNonRetryable = value;
+      if (value !== FAILED) classNonRetryable = value;
     }
 
     const methods = new Map<string, ActivityMethodModel>();
@@ -729,26 +687,18 @@ export class Analyzer {
           if (d.name !== 'Activity' && d.name !== 'NonRetryable') {
             const where = d.name === 'Activities' || d.name === 'Service' || d.name === 'Workflow' || d.name === 'Schedule' ? 'decorates classes, not members' : 'can only be used in a @Workflow class';
             this.error('invalid-decorator', member.mod, d.node, `@${d.name} ${where}`);
-            ok = false;
             continue;
           }
-          if (!this.checkMember(member, d)) {
-            ok = false;
-            continue;
-          }
+          if (!this.checkMember(member, d)) continue;
           if (d.name === 'NonRetryable') {
             const value = this.nonRetryable(member.mod, d);
-            if (value === FAILED) ok = false;
-            else methodNonRetryable = value;
+            if (value !== FAILED) methodNonRetryable = value;
           }
         }
         if (!activityDec || member.key === undefined || member.key.startsWith('#') || member.node.static || member.node.type !== 'MethodDefinition') continue;
         const actOptions = this.options(member.mod, activityDec, 0, {}, ACTIVITY_KEYS);
-        if (actOptions === FAILED) {
-          ok = false;
-          continue;
-        }
-        if (!this.validateActivityOptions(member.mod, activityDec, actOptions)) ok = false;
+        if (actOptions === FAILED) continue;
+        this.validateActivityOptions(member.mod, activityDec, actOptions);
         const tag = methodNonRetryable ?? classNonRetryable;
         const recorded: LiteralObject = { ...actOptions };
         if (Array.isArray(tag)) recorded.nonRetryable = tag;
@@ -767,17 +717,14 @@ export class Analyzer {
           ...m.loc,
           hint: "Give one of them a different name with @Activity({ name: '...' })",
         });
-        ok = false;
       } else names.set(m.name, m.method);
     }
     if (methods.size === 0 && !this.chain(info).some((c) => c.members.some((m) => m.decorators.some((d) => d.name === 'Activity')))) {
       this.error('invalid-decorator', mod, info.node.id ?? info.node, `@Activities class ${info.name} has no @Activity methods`, 'Decorate the methods to register with @Activity().');
-      ok = false;
     }
 
     const deps = this.dependencies(info, o.inject, optionsNode, 'Activities');
     const exportName = this.exportName(info, '@Activities');
-    void ok;
     if (!exportName) return undefined;
     return {
       className: info.name,
@@ -790,12 +737,10 @@ export class Analyzer {
     };
   }
 
-  private validateActivityOptions(mod: ParsedModule, dec: Decorator, o: LiteralObject): boolean {
-    let ok = true;
+  private validateActivityOptions(mod: ParsedModule, dec: Decorator, o: LiteralObject): void {
     const node = dec.args[0];
     const fail = (key: string, message: string) => {
       this.error('invalid-option', mod, (node && propertyNode(node, key)) ?? dec.node, `@Activity option "${key}" ${message}`);
-      ok = false;
     };
     const duration = (v: Literal) => (typeof v === 'string' && v.trim() !== '') || (typeof v === 'number' && v >= 0);
     if (o.name !== undefined && (typeof o.name !== 'string' || o.name === '')) fail('name', 'must be a non-empty string');
@@ -816,33 +761,26 @@ export class Analyzer {
         if (o.retries !== undefined && o.retry.maximumAttempts !== undefined) fail('retries', 'cannot be combined with retry.maximumAttempts');
       }
     }
-    return ok;
   }
 
   private service(info: ClassInfo, dec: Decorator): ServiceModel | undefined {
     const { mod } = info;
-    let ok = true;
     const optionsNode = dec.args[0];
     const options = this.options(mod, dec, 0, { refKeys: new Set(['inject', 'provides']) }, SERVICE_KEYS);
-    if (options === FAILED) ok = false;
     const o = options === FAILED ? {} : options;
     if (o.scope !== undefined && o.scope !== 'singleton' && o.scope !== 'activity') {
       this.error('invalid-option', mod, (optionsNode && propertyNode(optionsNode, 'scope')) ?? dec.node, `@Service on ${info.name}: scope must be 'singleton' or 'activity'`);
-      ok = false;
     }
     if (o.provides !== undefined && !(o.provides instanceof Ref)) {
       this.error('invalid-option', mod, (optionsNode && propertyNode(optionsNode, 'provides')) ?? dec.node, `@Service on ${info.name}: provides must be a class or token`);
-      ok = false;
     }
     for (const member of info.members) {
       for (const d of member.decorators) {
         this.error('invalid-decorator', mod, d.node, `@${d.name} cannot be used in a @Service class`);
-        ok = false;
       }
     }
     const deps = this.dependencies(info, o.inject, optionsNode, 'Service');
     const exportName = this.exportName(info, '@Service');
-    void ok;
     if (!exportName) return undefined;
     return { className: info.name, exportName, file: mod.file, deps: deps ?? [], loc: this.loc(mod, info.node.id ?? info.node) };
   }
@@ -945,8 +883,8 @@ export class Analyzer {
     const decls = mod.declarations.get(name);
     if (decls) {
       if (decls.some((d) => d.hasValue)) {
-        const exported = exportNamesOf(mod, name).filter((n) => n !== 'default');
-        if (exported.length > 0) return { module: { kind: 'file', path: mod.file }, name: exported.includes(name) ? name : exported[0]! };
+        const exported = exportNameOf(mod, name);
+        if (exported) return { module: { kind: 'file', path: mod.file }, name: exported };
         this.error('not-exported', mod, node, `${name} (used by ${className}) must be exported from ${rel} so the container can import it`, `Write export before its declaration.`);
         return undefined;
       }
@@ -962,10 +900,8 @@ export class Analyzer {
     const found = this.project.findExport(file, name);
     if (found) {
       const mod = this.project.module(found.file);
-      const names = exportNamesOf(mod, found.local).filter((n) => n !== 'default');
-      if (names.length > 0 && mod.declarations.get(found.local)?.some((d) => d.hasValue)) {
-        return { module: { kind: 'file', path: found.file }, name: names.includes(found.local) ? found.local : names.toSorted()[0]! };
-      }
+      const exported = exportNameOf(mod, found.local);
+      if (exported && mod.declarations.get(found.local)?.some((d) => d.hasValue)) return { module: { kind: 'file', path: found.file }, name: exported };
     }
     return { module: { kind: 'file', path: file }, name };
   }
@@ -1041,15 +977,9 @@ export class Analyzer {
 const FAILED = Symbol('failed');
 
 export function propertyNode(objectNode: AstNode, key: string): AstNode | undefined {
-  let node = objectNode;
-  while (node.type === 'TSAsExpression' || node.type === 'TSSatisfiesExpression' || node.type === 'ParenthesizedExpression') node = node.expression;
+  const node = unwrap(objectNode);
   if (node.type !== 'ObjectExpression') return undefined;
-  for (const p of node.properties as AstNode[]) {
-    if (p.type !== 'Property') continue;
-    const k = !p.computed && p.key.type === 'Identifier' ? p.key.name : p.key.type === 'Literal' ? String(p.key.value) : undefined;
-    if (k === key) return p;
-  }
-  return undefined;
+  return (node.properties as AstNode[]).find((p) => p.type === 'Property' && staticKey(p) === key);
 }
 
 export function compare(a: string, b: string): number {

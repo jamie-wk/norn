@@ -10,9 +10,9 @@ export interface WorkflowDeterminismOptions {
 }
 
 /** Modules whose `Temporal` export has a `Temporal.Now` that reads the real clock, like the built-in. */
-const temporalPolyfill = /^(?:@js-temporal\/polyfill|temporal-polyfill)(?:\/.*)?$/;
+export const temporalPolyfill = /^(?:@js-temporal\/polyfill|temporal-polyfill)(?:\/.*)?$/;
 
-const defaultGlobals = [
+export const defaultGlobals: readonly string[] = [
   'setTimeout',
   'setInterval',
   'setImmediate',

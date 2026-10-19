@@ -11,12 +11,6 @@ const ext = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
 export const registry = {
   workflowsPath: fileURLToPath(new URL(`./workflows${ext}`, import.meta.url)),
   taskQueues: ['orders', 'shipping'],
-  workflows: [
-    { name: 'DailyReportWorkflow', className: 'DailyReportWorkflow', taskQueue: 'orders' },
-    { name: 'LoyaltyWorkflow', className: 'LoyaltyWorkflow', taskQueue: 'orders' },
-    { name: 'OrderWorkflow', className: 'OrderWorkflow', taskQueue: 'orders' },
-    { name: 'ShipmentWorkflow', className: 'ShipmentWorkflow', taskQueue: 'shipping' },
-  ],
   activities: [
     'inventory.release',
     'inventory.reserve',
@@ -27,16 +21,5 @@ export const registry = {
     'shipping.createLabel',
   ],
   searchAttributes: { CustomerId: 'keyword', OrderStatus: 'keyword' },
-  schedules: [
-    {
-      id: 'daily-sales-report',
-      workflowType: 'DailyReportWorkflow',
-      taskQueue: 'orders',
-      cron: ['0 9 * * *'],
-      overlap: 'skip',
-      timeZone: 'America/Chicago',
-      note: 'Morning sales summary',
-    },
-  ],
   createContainer: createNornContainer,
 } satisfies NornRegistry;

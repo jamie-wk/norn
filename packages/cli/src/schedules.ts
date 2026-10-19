@@ -5,7 +5,7 @@ import type { ScheduleSpec } from '@norn/worker';
 
 export type { ScheduleSpec };
 
-/** Memo key that marks a schedule as created by `norn schedules sync`. */
+/** Memo key that marks a schedule as created by `norn schedules sync`; its value names the project. */
 export const MANAGED_MEMO = 'nornManaged';
 /** Workflow-action memo key holding a hash of the declared spec, used to detect changes. */
 export const HASH_MEMO = 'nornScheduleHash';
@@ -54,6 +54,8 @@ export function readSchedules(file: string): ScheduleSpec[] {
 
 export interface SyncOptions {
   client: Client;
+  /** Marks the schedules this project manages, so projects sharing a namespace leave each other's alone. The CLI uses the package.json name. */
+  project: string;
   schedules: readonly ScheduleSpec[];
   /** Report what would change without changing anything. */
   dryRun?: boolean;
@@ -66,7 +68,7 @@ export interface SyncResult {
   updated: string[];
   unchanged: string[];
   deleted: string[];
-  /** Declared IDs that exist but were not created by Norn; they are left alone. */
+  /** Declared IDs that exist but were not created by Norn for this project; they are left alone. */
   conflicts: string[];
 }
 
@@ -88,10 +90,10 @@ function scheduleParts(spec: ScheduleSpec) {
 /**
  * Makes the namespace's schedules match the declared ones: creates missing schedules, updates
  * changed ones, and with `prune` deletes managed schedules that are no longer declared.
- * Schedules Norn did not create are never modified or deleted.
+ * Schedules Norn did not create for this project are never modified or deleted.
  */
 export async function syncSchedules(options: SyncOptions): Promise<SyncResult> {
-  const { client, schedules, dryRun = false, prune = false } = options;
+  const { client, project, schedules, dryRun = false, prune = false } = options;
   const { ScheduleNotFoundError } = await import('@temporalio/client');
   const result: SyncResult = { created: [], updated: [], unchanged: [], deleted: [], conflicts: [] };
   const ids = new Set<string>();
@@ -108,11 +110,11 @@ export async function syncSchedules(options: SyncOptions): Promise<SyncResult> {
     }
     const parts = scheduleParts(spec);
     if (!description) {
-      if (!dryRun) await client.schedule.create({ scheduleId: spec.id, ...parts, memo: { [MANAGED_MEMO]: true } });
+      if (!dryRun) await client.schedule.create({ scheduleId: spec.id, ...parts, memo: { [MANAGED_MEMO]: project } });
       result.created.push(spec.id);
       continue;
     }
-    if (description.memo?.[MANAGED_MEMO] !== true) {
+    if (description.memo?.[MANAGED_MEMO] !== project) {
       result.conflicts.push(spec.id);
       continue;
     }
@@ -132,7 +134,7 @@ export async function syncSchedules(options: SyncOptions): Promise<SyncResult> {
   if (prune) {
     // Listing is eventually consistent; schedules created moments ago may not show up yet.
     for await (const summary of client.schedule.list()) {
-      if (ids.has(summary.scheduleId) || summary.memo?.[MANAGED_MEMO] !== true) continue;
+      if (ids.has(summary.scheduleId) || summary.memo?.[MANAGED_MEMO] !== project) continue;
       if (!dryRun) await client.schedule.getHandle(summary.scheduleId).delete();
       result.deleted.push(summary.scheduleId);
     }
