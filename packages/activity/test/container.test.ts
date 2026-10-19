@@ -97,9 +97,24 @@ describe('createContainer', () => {
     expect((await container.resolve(Plain)).db).toBeInstanceOf(Db);
   });
 
-  it('reports a missing provider with the dependency path', async () => {
-    await using container = createContainer({ providers: [], services: [{ cls: BankingService }] });
-    await expect(container.resolve(BankingService)).rejects.toThrow(/No provider for Db.*BankingService/);
+  it('reports a missing provider and who needs it at creation', () => {
+    expect(() => createContainer({ providers: [], services: [{ cls: BankingService }] })).toThrow(
+      /No provider for Db, required by BankingService/,
+    );
+  });
+
+  it('reports a missing dependency of an activity-scoped value at creation', () => {
+    expect(() =>
+      createContainer({
+        providers: [provide(RequestLog, () => ({ id: 'x', lines: [] }), { scope: 'activity', deps: [Db] })],
+        activities: [{ cls: AuditActivities }],
+      }),
+    ).toThrow(/No provider for Db, required by RequestLog/);
+  });
+
+  it('reports a missing provider resolved by key', async () => {
+    await using container = createContainer();
+    await expect(container.resolve(Db)).rejects.toThrow(/No provider for Db/);
   });
 
   it('rejects dependency cycles at creation', () => {

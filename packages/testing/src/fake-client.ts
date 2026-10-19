@@ -50,7 +50,7 @@ interface Execution {
 export interface FakeNornClient extends NornClient {
   /** Every call made through the fake, in order. */
   readonly calls: FakeCall[];
-  /** Inputs of every start (including with-start) of a contract. */
+  /** Inputs of every new execution of a contract (including with-start), not reused or rejected starts. */
   started<C extends AnyWorkflowContract>(contract: C): ContractInput<C>[];
   stub<C extends AnyWorkflowContract>(contract: C, stub: FakeStub<C>): void;
   /** Completes the latest run of a workflow ID with a result. */
@@ -72,6 +72,8 @@ let runCounter = 0;
 export function createFakeClient(): FakeNornClient {
   const calls: FakeCall[] = [];
   const executions = new Map<string, Execution>();
+  // Every run, including replaced ones: `executions` keeps only the latest per ID.
+  const runs: Execution[] = [];
   const stubs = new Map<string, FakeStub<any>>();
   const pendingFailures: unknown[] = [];
 
@@ -131,6 +133,7 @@ export function createFakeClient(): FakeNornClient {
       waiters: [],
     };
     executions.set(workflowId, exec);
+    runs.push(exec);
     stubs.get(contract.name)?.onStart?.(input as never, workflowId);
     return exec;
   };
@@ -227,7 +230,7 @@ export function createFakeClient(): FakeNornClient {
         return handleFor(contract, exec.workflowId, exec.runId);
       },
       async updateWithStart(input, operation, opts) {
-        const exec = startWith('updateWithStart', input, { ifRunning: 'useExisting', ...opts }, true);
+        const exec = startWith('updateWithStart', input, { ifRunning: 'useExisting', ...opts }, false);
         calls.at(-1)!.name = operation.update;
         calls.at(-1)!.args = operation.args as unknown[];
         const fn = stubs.get(contract.name)?.updates?.[operation.update] as ((...a: unknown[]) => unknown) | undefined;
@@ -265,8 +268,7 @@ export function createFakeClient(): FakeNornClient {
     get connection(): never {
       throw new NornConfigError('This is a fake client; there is no connection behind it');
     },
-    started: (contract) =>
-      calls.filter((c) => c.workflow === contract.name && (c.op === 'start' || c.op === 'signalWithStart' || c.op === 'updateWithStart')).map((c) => c.input as never),
+    started: (contract) => runs.filter((r) => r.workflow === contract.name).map((r) => r.input as never),
     stub: (contract, stub) => void stubs.set(contract.name, stub),
     complete(workflowId, result) {
       close(latest(workflowId), 'COMPLETED', { ok: true, value: result });
@@ -279,6 +281,7 @@ export function createFakeClient(): FakeNornClient {
     reset() {
       calls.length = 0;
       executions.clear();
+      runs.length = 0;
       stubs.clear();
       pendingFailures.length = 0;
     },

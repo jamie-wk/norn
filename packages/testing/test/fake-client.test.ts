@@ -43,6 +43,8 @@ describe('createFakeClient', () => {
     expect(same.runId).toBe(first.runId);
     const replaced = await fake.workflow(Orders).start({ orderId: 'o1', cents: 5 }, { ifRunning: 'terminateExisting' });
     expect(replaced.runId).not.toBe(first.runId);
+    // Only new executions count: not the rejected duplicate or the reused run.
+    expect(fake.started(Orders)).toHaveLength(2);
   });
 
   it('answers handlers from stubs and records every call', async () => {
@@ -111,12 +113,23 @@ describe('createFakeClient', () => {
     expect(result).toBe(7);
     expect(handle.workflowId).toBe('order-u');
     expect(fake.calls.map((c) => c.op)).toEqual(['signalWithStart', 'signalWithStart', 'updateWithStart']);
+    expect(fake.started(Orders).map((i) => i.orderId)).toEqual(['s', 'u']);
+  });
+
+  it('honours ifRunning: fail on update-with-start', async () => {
+    const fake = createFakeClient();
+    fake.stub(Orders, { updates: { addItem: () => 7 } });
+    await fake.workflow(Orders).start({ orderId: 'u', cents: 1 });
+    await expect(
+      fake.workflow(Orders).updateWithStart({ orderId: 'u', cents: 1 }, { update: 'addItem', args: ['a'] }, { ifRunning: 'fail' }),
+    ).rejects.toBeInstanceOf(WorkflowAlreadyStartedError);
   });
 
   it('lets tests make Temporal unavailable', async () => {
     const fake = createFakeClient();
     fake.failNext(new Error('boom'));
     await expect(fake.workflow(Orders).start({ orderId: 'x', cents: 1 })).rejects.toThrow('boom');
+    expect(fake.started(Orders)).toEqual([]);
     expect(await fake.workflow(Orders).start({ orderId: 'x', cents: 1 })).toBeDefined();
   });
 
@@ -133,6 +146,7 @@ describe('createFakeClient', () => {
     expect(await fake.workflow(Orders).count()).toBe(2);
     fake.reset();
     expect(fake.calls).toEqual([]);
+    expect(fake.started(Orders)).toEqual([]);
     expect(await fake.workflow(Orders).count()).toBe(0);
   });
 

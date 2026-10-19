@@ -2,7 +2,7 @@ import { DefaultLogger, Runtime, makeTelemetryFilterString, type LogLevel } from
 import { NornConfigError } from '@norn/core';
 
 export interface InstallRuntimeOptions {
-  /** Serve Prometheus metrics for the SDK and Temporal core on this address, e.g. `'0.0.0.0:9464'`. Defaults to `NORN_METRICS_ADDRESS`. */
+  /** Serve Prometheus metrics for the SDK and Temporal core on this address, e.g. `'0.0.0.0:9464'` or `'[::]:9464'`. Defaults to `NORN_METRICS_ADDRESS`. */
   metricsAddress?: string;
   /** Defaults to `NORN_LOG_LEVEL`, then `INFO`. */
   logLevel?: LogLevel;
@@ -18,8 +18,8 @@ export function installRuntime(options: InstallRuntimeOptions = {}, env: Record<
   const level = (options.logLevel ?? env.NORN_LOG_LEVEL ?? 'INFO').toUpperCase() as LogLevel;
   if (!LEVELS.includes(level)) throw new NornConfigError(`Log level must be one of ${LEVELS.join(', ')}, got ${level}`);
   const metricsAddress = options.metricsAddress ?? env.NORN_METRICS_ADDRESS;
-  if (metricsAddress !== undefined && !/^[^:]+:\d+$/.test(metricsAddress)) {
-    throw new NornConfigError(`Metrics address must look like host:port, got ${metricsAddress}`);
+  if (metricsAddress !== undefined && !/^(\[[^\]]+\]|[^:]+):\d+$/.test(metricsAddress)) {
+    throw new NornConfigError(`Metrics address must look like host:port or [ipv6]:port, got ${metricsAddress}`);
   }
   try {
     return Runtime.install({
@@ -30,6 +30,9 @@ export function installRuntime(options: InstallRuntimeOptions = {}, env: Record<
       },
     });
   } catch (error) {
-    throw new NornConfigError('installRuntime() must run once, before any Temporal connection or worker is created', { cause: error });
+    throw new NornConfigError(
+      `installRuntime() failed: ${(error as Error).message} (it must run once, before any Temporal connection or worker is created)`,
+      { cause: error },
+    );
   }
 }

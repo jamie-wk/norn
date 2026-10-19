@@ -144,14 +144,6 @@ function nonRetryableNames(tag: NonRetryableTag | undefined): string[] | undefin
   return tag.map((cls) => cls.name || errorTypeOf(Object.create(cls.prototype)));
 }
 
-export function isActivitiesClass(value: unknown): value is abstract new (...args: any[]) => unknown {
-  return typeof value === 'function' && classTag(value, NORN.activities) !== undefined;
-}
-
-export function isServiceClass(value: unknown): value is abstract new (...args: any[]) => unknown {
-  return typeof value === 'function' && classTag(value, NORN.service) !== undefined;
-}
-
 /** Reads and validates an `@Activities` class. */
 export function describeActivities(cls: Function): ActivitiesDefinition {
   const tag = classTag<ActivitiesTag>(cls, NORN.activities);

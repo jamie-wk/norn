@@ -5,8 +5,6 @@ export {
   Service,
   describeActivities,
   describeService,
-  isActivitiesClass,
-  isServiceClass,
   type ActivitiesDefinition,
   type ActivitiesOptions,
   type ActivityMethodDefinition,
@@ -15,7 +13,7 @@ export {
   type ServiceDefinition,
   type ServiceOptions,
 } from './decorators.js';
-export { token, isToken, keyName, type InjectionKey, type Resolved, type Token } from './tokens.js';
+export { token, type InjectionKey, type Resolved, type Token } from './tokens.js';
 export {
   createContainer,
   provide,

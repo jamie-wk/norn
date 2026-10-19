@@ -83,11 +83,9 @@ interface NornWorker extends AsyncDisposable {
 | `container` | `{ overrides?, errors? }` for the dependency container: replace dependencies, and map activity errors (`errors: { http, map }`, see `@norn/activity`). |
 | `workflowBundle` | `{ code }` or `{ codePath }` of a prebuilt bundle. |
 | `dataConverter` | Such as `createDataConverter()` from `@norn/codec`. Its `payloadConverterPath` is used when bundling at startup. |
-| `plugins` | Temporal worker plugins. |
-| `activityInterceptors` | Extra activity interceptor factories, after Norn's correlation interceptor. |
+| `plugins` | Temporal worker plugins. Also applied when bundling at startup. |
 | `activityOverrides` | Replace registered activities by name (tests). Unknown names are rejected. |
-| `extraActivities` | Activities that are not `@Activities` classes. |
-| `workerOptions` | Passed to every `Worker.create()`: concurrency, sticky cache, pollers, interceptors. Norn sets the connection, namespace, task queue, activities, bundle, data converter, plugins, shutdown grace time and deployment options itself. |
+| `workerOptions` | Passed to every `Worker.create()`: concurrency, sticky cache, pollers, interceptors. Norn sets the connection, namespace, task queue, activities, bundle, data converter, plugins, bundler options, shutdown grace time and deployment options itself. Activity interceptors in `workerOptions.interceptors.activity` run after Norn's correlation interceptor. |
 
 ### Lifecycle
 
@@ -143,7 +141,7 @@ function bundleWorkflows(registry: Pick<NornRegistry, 'workflowsPath'>, options?
 | `outFile` | Also write the bundle to this file. |
 | `payloadConverterPath` | Required when workers use a custom payload converter. |
 | `workflowInterceptorModules` | Extra workflow interceptor modules, after Norn's. |
-| `plugins` | Temporal bundler plugins, such as the OpenTelemetry plugin (`createWorker()`'s own bundling does not pass `plugins`, so prebuild when you use them). |
+| `plugins` | Temporal bundler plugins, such as the OpenTelemetry plugin. |
 | `webpackConfigHook` | Your hook, run after Norn's. |
 | `ignoreModules` | Modules the bundler should ignore. |
 

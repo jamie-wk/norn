@@ -99,7 +99,7 @@ import { OpenTelemetryPlugin } from '@temporalio/interceptors-opentelemetry';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { bundleWorkflows, createWorker } from '@norn/worker';
+import { createWorker } from '@norn/worker';
 import { registry } from '../.norn/registry.js';
 
 const otel = new OpenTelemetryPlugin({
@@ -110,8 +110,6 @@ const otel = new OpenTelemetryPlugin({
 const worker = await createWorker({
   registry,
   plugins: [otel],
-  // The plugin's workflow interceptors must be in the bundle, so bundle with the plugin too.
-  workflowBundle: await bundleWorkflows(registry, { plugins: [otel] }),
 });
 ```
 
@@ -123,10 +121,8 @@ const norn = createClient({ interceptors: [new OpenTelemetryWorkflowClientInterc
 ```
 
 ::: warning Prebuilt bundles and plugins
-Temporal plugins that add workflow interceptors can only add them when the bundle is built. `createWorker()`'s automatic bundling doesn't pass `plugins` to the bundler, so build the bundle yourself with `bundleWorkflows(registry, { plugins })` as above, or include the plugin when you prebuild for production.
+Temporal plugins that add workflow interceptors can only add them when the bundle is built. `createWorker()` passes `plugins` to its own bundling at startup; when you prebuild for production, use `bundleWorkflows(registry, { plugins: [otel] })`. `norn bundle` has no option for plugins.
 :::
-
-`norn bundle` has no option for plugins or extra interceptor modules, so with OpenTelemetry prebuild the bundle with `bundleWorkflows()` instead.
 
 Correlation IDs and trace IDs complement each other: traces show timing within one request, and the correlation ID survives places traces often don't, like an activity that runs three days later after a timer.
 

@@ -131,7 +131,7 @@ function token<T>(name: string): Token<T>;
 - A token is the runtime key for an interface. Give it the interface's name; constructor parameters typed with the interface then resolve to it, and `norn gen` writes the wiring. A parameter typed with an interface that has no same-named token is reported by `norn gen`.
 - Primitive constructor parameters cannot be injected by type; group them in a configuration token.
 
-`InjectionKey<T>` is a class or a `Token<T>`; `Resolved<K>` is the type it resolves to. `isToken(value)` and `keyName(key)` are small helpers for tooling and error messages.
+`InjectionKey<T>` is a class or a `Token<T>`; `Resolved<K>` is the type it resolves to.
 
 ### Providers
 
@@ -175,7 +175,6 @@ interface ContainerOptions {
 interface Container extends AsyncDisposable {
   resolve<K extends InjectionKey>(key: K): Promise<Resolved<K>>;
   activities(): Promise<Record<string, ActivityFunction>>; // the worker's activity map, by registered name
-  readonly definitions: readonly ActivitiesDefinition[];
 }
 ```
 
@@ -197,7 +196,7 @@ const activities = await container.activities(); // { 'payments.charge': fn, 'pa
 The container checks the graph before creating anything:
 
 - **Cycles**: `Dependency cycle: OrderService -> PricingService -> OrderService`.
-- **Missing providers**: `No provider for Db, required by BankingService (path: TransferService -> BankingService -> Db). Register it with provide() or @Service`.
+- **Missing providers**: `No provider for Db, required by BankingService. Register it with provide() or @Service`.
 - **Captive dependencies**: a singleton that depends on an activity-scoped value is refused. An activity class that depends on one becomes activity-scoped itself, automatically.
 - **Constructor arity**: a class taking more constructor arguments than it has known dependencies fails with a hint to run `norn gen` or add `inject`.
 
@@ -265,13 +264,13 @@ The correlation ID is stored in one process-wide `AsyncLocalStorage` shared with
 | `Activity(options?)`, `ActivityOptions`, `Duration` | Method decorator (option types re-exported from `@norn/core`) |
 | `NonRetryable(errors?)`, `ErrorClass` | Method or class decorator |
 | `Service(options?)`, `ServiceOptions`, `Scope` | Class decorator |
-| `token<T>(name)`, `isToken(value)`, `keyName(key)`, `Token<T>`, `InjectionKey<T>`, `Resolved<K>` | Injection keys |
+| `token<T>(name)`, `Token<T>`, `InjectionKey<T>`, `Resolved<K>` | Injection keys |
 | `provide(key, factory, options?)`, `Provider`, `ProviderContext`, `ProviderOptions` | Providers |
 | `createContainer(options?)`, `Container`, `ContainerOptions`, `ClassEntry`, `ActivityFunction` | Container |
 | `mapActivityError(error, activityType, nonRetryable, options?)`, `ErrorMappingOptions`, `ErrorDecision` | Error mapping |
 | `activityInfo()`, `idempotencyKey(suffix?)`, `heartbeat(details?)`, `lastHeartbeat()`, `cancellationSignal()` | Activity context |
 | `getCorrelationId()`, `runWithCorrelationId(id, fn)` | Correlation IDs |
-| `describeActivities(cls)`, `describeService(cls)`, `isActivitiesClass(value)`, `isServiceClass(value)`, `ActivitiesDefinition`, `ActivityMethodDefinition`, `ServiceDefinition` | Introspection (used by the container and tooling) |
+| `describeActivities(cls)`, `describeService(cls)`, `ActivitiesDefinition`, `ActivityMethodDefinition`, `ServiceDefinition` | Introspection (used by the container and tooling) |
 
 ## License
 

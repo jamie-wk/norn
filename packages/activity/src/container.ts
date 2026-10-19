@@ -80,8 +80,6 @@ export interface Container extends AsyncDisposable {
   resolve<K extends InjectionKey>(key: K): Promise<Resolved<K>>;
   /** Creates every singleton activity class and returns the worker's activity map, keyed by name. */
   activities(): Promise<Record<string, ActivityFunction>>;
-  /** The activity classes registered with this container. */
-  readonly definitions: readonly ActivitiesDefinition[];
 }
 
 interface Node {
@@ -181,7 +179,6 @@ export function createContainer(options: ContainerOptions = {}): Container {
     add(classNode(entry, def.scope, def.provides, def.className, def.inject));
   }
 
-  const definitions: ActivitiesDefinition[] = [];
   const activityClassList: Array<{ cls: AnyClass; def: ActivitiesDefinition }> = [];
   const activityOwners = new Map<string, string>();
   for (const entry of options.activities ?? []) {
@@ -191,7 +188,6 @@ export function createContainer(options: ContainerOptions = {}): Container {
       if (owner) throw new NornConfigError(`Activity "${method.name}" is registered by both ${owner} and ${def.className}`);
       activityOwners.set(method.name, def.className);
     }
-    definitions.push(def);
     activityClassList.push({ cls: entry.cls, def });
     add(classNode(entry, 'singleton', entry.cls, def.className, def.inject));
   }
@@ -209,11 +205,14 @@ export function createContainer(options: ContainerOptions = {}): Container {
     });
   }
 
-  // Cycles are reported before anything is created.
+  // Missing providers and cycles are reported before anything is created.
   const state = new Map<InjectionKey, 'visiting' | 'done'>();
   const visit = (key: InjectionKey, path: InjectionKey[]): void => {
     const node = nodes.get(key);
-    if (!node || state.get(key) === 'done') return;
+    if (!node) {
+      throw new NornConfigError(`No provider for ${keyName(key)}, required by ${keyName(path.at(-1))}. Register it with provide() or @Service`);
+    }
+    if (state.get(key) === 'done') return;
     if (state.get(key) === 'visiting') {
       const cycle = [...path.slice(path.indexOf(key)), key].map(keyName).join(' -> ');
       throw new NornConfigError(`Dependency cycle: ${cycle}`);
@@ -339,7 +338,6 @@ export function createContainer(options: ContainerOptions = {}): Container {
   };
 
   return {
-    definitions,
     resolve: <K extends InjectionKey>(key: K) => resolveActivityKey(key) as Promise<Resolved<K>>,
     activities: () => {
       if (disposed) return Promise.reject(new NornConfigError('The container has been disposed'));
