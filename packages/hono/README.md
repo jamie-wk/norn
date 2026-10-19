@@ -108,7 +108,7 @@ with the correlation ID also in the `x-correlation-id` header. Stacks and causes
 | `UPDATE_REJECTED` | 422 | An update validator rejected the input, or the handler threw. `details`: `workflowId`, `update`, `failureType` |
 | `QUERY_FAILED` | 500 | Unknown or failing query. `details`: `workflowId`, `query` |
 | `WORKFLOW_FAILED` | 500 | `result()` / `execute()` of a workflow that failed, was cancelled, terminated or timed out. `details`: `workflowId`, `failureType` |
-| `TEMPORAL_UNAVAILABLE` | 503 | Temporal could not be reached (gRPC `UNAVAILABLE` / `DEADLINE_EXCEEDED`) |
+| `TEMPORAL_UNAVAILABLE` | 503 | Temporal could not be reached or is rate limiting (gRPC `UNAVAILABLE` / `DEADLINE_EXCEEDED` / `RESOURCE_EXHAUSTED`) |
 | `CONFIG` | 500 | `NornConfigError`: invalid options or contract use (for example a missing ID template field) |
 | `INTERNAL` | 500 | Any other error. Message is `Internal Server Error` unless `expose` |
 | `WEBHOOK_UNVERIFIED` | 401 | `temporalWebhook()`: signature verification failed |

@@ -138,7 +138,7 @@ Every call converts Temporal errors with `toNornError()`. The classes come from 
 | `UpdateRejectedError` | `UPDATE_REJECTED` | 422 | A validator rejected the update, or its handler failed. Has `update` and `failureType`. |
 | `QueryFailedError` | `QUERY_FAILED` | 500 | The query is not registered, was rejected or threw. |
 | `WorkflowFailedError` | `WORKFLOW_FAILED` | 500 | `result()` / `execute()` of a failed workflow. `failureType` is the failure's type, or `'Cancelled'`, `'Terminated'`, `'TimedOut'`. |
-| `TemporalUnavailableError` | `TEMPORAL_UNAVAILABLE` | 503 | gRPC `UNAVAILABLE` or `DEADLINE_EXCEEDED`. |
+| `TemporalUnavailableError` | `TEMPORAL_UNAVAILABLE` | 503 | gRPC `UNAVAILABLE`, `DEADLINE_EXCEEDED` or `RESOURCE_EXHAUSTED` (rate limited). |
 
 Temporal reports signals, updates and cancels to a finished workflow as "not found"; Norn describes the workflow to tell a closed one (409) from one that never existed (404).
 

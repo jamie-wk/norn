@@ -15,7 +15,7 @@ Every client-facing error extends `NornError` from `@norn/core` (re-exported by 
 | `UpdateRejectedError` | `UPDATE_REJECTED` | 422 | An update's validator threw, or its handler threw an `ApplicationFailure` (or a `failOn` error). Has `workflowId`, `update` and `failureType`. |
 | `QueryFailedError` | `QUERY_FAILED` | 500 | A query is not registered, was rejected, or threw. |
 | `WorkflowFailedError` | `WORKFLOW_FAILED` | 500 | `result()` or `execute()` on a workflow that failed, was cancelled, terminated or timed out. Has `workflowId` and `failureType`. |
-| `TemporalUnavailableError` | `TEMPORAL_UNAVAILABLE` | 503 | The server could not be reached (gRPC `UNAVAILABLE` or `DEADLINE_EXCEEDED`), or a worker could not connect at startup. |
+| `TemporalUnavailableError` | `TEMPORAL_UNAVAILABLE` | 503 | The server could not be reached or is rate limiting (gRPC `UNAVAILABLE`, `DEADLINE_EXCEEDED` or `RESOURCE_EXHAUSTED`), or a worker could not connect at startup. |
 
 `@norn/hono`'s error handler adds `INTERNAL` (500) for unexpected errors and `WEBHOOK_UNVERIFIED` (401) / `WEBHOOK_INVALID_BODY` (400) for webhooks. `@norn/codec` throws `NornCodecError`, a plain `Error` subclass, for key and payload problems.
 

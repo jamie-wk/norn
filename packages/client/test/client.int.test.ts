@@ -118,6 +118,14 @@ describe('with-start operations', () => {
     await two.handle.signal('checkout');
   });
 
+  it('update-with-start with ifRunning: fail is a 409 for a running workflow', async () => {
+    const cartId = uid('cart');
+    const first = await norn.workflow(Carts).updateWithStart({ cartId }, { update: 'add', args: ['x'] });
+    const again = norn.workflow(Carts).updateWithStart({ cartId }, { update: 'add', args: ['y'] }, { ifRunning: 'fail' });
+    await expect(again).rejects.toBeInstanceOf(WorkflowAlreadyStartedError);
+    await first.handle.signal('checkout');
+  });
+
   it('update-with-start surfaces validator rejections', async () => {
     const orderId = uid('o');
     const attempt = norn.workflow(Orders).updateWithStart({ orderId }, { update: 'addItem', args: [''] });

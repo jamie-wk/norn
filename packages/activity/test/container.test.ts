@@ -162,6 +162,37 @@ describe('createContainer', () => {
     expect(disposed).toEqual(['a1-1', 'a1-2']);
   });
 
+  it("keeps the activity's result when disposing a scoped value fails", async () => {
+    await using container = createContainer({
+      providers: [
+        provide(RequestLog, () => ({ id: 'r', lines: [] }), {
+          scope: 'activity',
+          dispose: () => {
+            throw new Error('pool release failed');
+          },
+        }),
+      ],
+      activities: [{ cls: AuditActivities }],
+    });
+    const acts = await container.activities();
+    expect(await new MockActivityEnvironment().run(acts['audit.record']!, 'one')).toEqual({ id: 'r', lines: ['one'] });
+  });
+
+  it('rejects cycles through ctx.resolve instead of hanging', async () => {
+    const A = token<string>('A');
+    const B = token<string>('B');
+    await using container = createContainer({
+      providers: [
+        provide(A, async (ctx) => {
+          await Promise.resolve();
+          return `a${await ctx.resolve(B)}`;
+        }),
+        provide(B, async (ctx) => `b${await ctx.resolve(A)}`),
+      ],
+    });
+    await expect(container.resolve(A)).rejects.toThrow(/cycle: A -> B -> A/);
+  });
+
   it('disposes singletons in reverse creation order', async () => {
     const order: string[] = [];
     const First = token<string>('First');

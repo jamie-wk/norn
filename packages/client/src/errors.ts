@@ -31,7 +31,7 @@ export interface ErrorContext {
   query?: string;
 }
 
-const GRPC = { DEADLINE_EXCEEDED: 4, NOT_FOUND: 5, UNAVAILABLE: 14 } as const;
+const GRPC = { DEADLINE_EXCEEDED: 4, NOT_FOUND: 5, RESOURCE_EXHAUSTED: 8, UNAVAILABLE: 14 } as const;
 
 function grpcCode(error: unknown): number | undefined {
   for (let e: unknown = error, depth = 0; e && depth < 5; e = (e as { cause?: unknown }).cause, depth++) {
@@ -89,7 +89,8 @@ export function toNornError(error: unknown, ctx: ErrorContext): unknown {
     return new QueryFailedError({ workflowId: ctx.workflowId, query: ctx.query ?? 'unknown', message: error.message, cause: error });
   }
   const code = grpcCode(error);
-  if (code === GRPC.UNAVAILABLE || code === GRPC.DEADLINE_EXCEEDED) {
+  // RESOURCE_EXHAUSTED is rate limiting (e.g. Temporal Cloud namespace limits): retryable, like unavailability.
+  if (code === GRPC.UNAVAILABLE || code === GRPC.DEADLINE_EXCEEDED || code === GRPC.RESOURCE_EXHAUSTED) {
     return new TemporalUnavailableError({ message: `Temporal is unavailable: ${(error as Error).message}`, cause: error });
   }
   if (code === GRPC.NOT_FOUND && (error instanceof ServiceError || (error as { metadata?: unknown }).metadata !== undefined)) {

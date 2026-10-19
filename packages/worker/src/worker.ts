@@ -62,6 +62,19 @@ function unavailable(address: string, error: unknown): TemporalUnavailableError 
 }
 
 /**
+ * A Temporal worker that was created but never run keeps its connection reference and worker
+ * threads until its run() ends, so run it and stop it straight away.
+ */
+async function releaseUnrun(workers: readonly Worker[]): Promise<void> {
+  for (const w of workers) {
+    if (w.getState() !== 'INITIALIZED') continue;
+    const running = w.run();
+    w.shutdown();
+    await running.catch(() => undefined);
+  }
+}
+
+/**
  * Creates a production worker from the generated registry: one Temporal worker per task queue,
  * activities built by the dependency container, health checks, graceful shutdown on SIGTERM,
  * correlation IDs and optional worker versioning.
@@ -133,7 +146,12 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
         },
       });
     try {
-      workers = await Promise.all(config.taskQueues.map(create));
+      const created = await Promise.allSettled(config.taskQueues.map(create));
+      workers = created.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
+      // Registered after the connection, so it runs before the connection closes.
+      cleanups.push(() => releaseUnrun(workers));
+      const failed = created.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+      if (failed) throw failed.reason;
     } catch (error) {
       const code = (error as { code?: unknown }).code;
       if (code === 14 || /unavailable|connect/i.test(String((error as Error).message))) throw unavailable(config.address, error);

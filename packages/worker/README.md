@@ -100,6 +100,8 @@ interface NornWorker extends AsyncDisposable {
 
 If one task queue's worker fails, the others are shut down and `run()` rejects (`FAILED`), so the process exits and your orchestrator restarts it. `shutdown()` before `run()` just releases resources. `await using worker = await createWorker(...)` shuts down at the end of the scope. Give your platform at least the grace time plus a margin to stop the process (`stopTimeout` on ECS, `terminationGracePeriodSeconds` on Kubernetes).
 
+Signal caveats: `handleSignals: false` only removes Norn's own listener; the Temporal SDK runtime still stops running workers on SIGINT, SIGTERM, SIGQUIT and SIGUSR2. A second identical signal (two Ctrl-Cs, or a wrapper such as `pnpm run` forwarding one) gets Node's default action and exits at once, without draining. If you set `workerOptions.shutdownForceTime`, `run()` can end while activities that ignore cancellation are still running, and the container then disposes singletons underneath them.
+
 ## Health checks
 
 With `NORN_HEALTH_PORT` or `health: { port }`:

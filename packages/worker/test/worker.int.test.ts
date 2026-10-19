@@ -3,6 +3,8 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { TestWorkflowEnvironment } from '@temporalio/testing';
+import { NativeConnection } from '@temporalio/worker';
+import { createServer } from 'node:net';
 import { createContainer } from '@norn/activity';
 import { createClient, runWithCorrelationId, type NornClient } from '@norn/client';
 import { clientDataConverter, createDataConverter, generateKey } from '@norn/codec';
@@ -156,6 +158,30 @@ describe('startup failures', () => {
     await expect(createWorker({ registry, ...base(), activityOverrides: { 'greet.nope': async () => 1 } })).rejects.toThrow(/unknown activity greet\.nope/);
     // Validation runs before anything is created.
     expect(disposed).toEqual([]);
+  });
+
+  // Temporal workers that were created but never run hold the connection (and worker threads) open.
+  const ownConnection = () => NativeConnection.connect({ address: env.address });
+
+  it('releases its Temporal workers when shut down before running', async () => {
+    const connection = await ownConnection();
+    const worker = await createWorker({ registry, ...base(), connection });
+    await worker.shutdown();
+    expect(worker.state).toBe('STOPPED');
+    await expect(connection.close()).resolves.toBeUndefined();
+  });
+
+  it('releases its Temporal workers when the health server cannot start', async () => {
+    const taken = createServer().listen(0, '127.0.0.1');
+    await new Promise((resolve) => taken.once('listening', resolve));
+    const connection = await ownConnection();
+    try {
+      const port = (taken.address() as { port: number }).port;
+      await expect(createWorker({ registry, ...base(), connection, health: { port, host: '127.0.0.1' } })).rejects.toThrow(/EADDRINUSE/);
+      await expect(connection.close()).resolves.toBeUndefined();
+    } finally {
+      taken.close();
+    }
   });
 
   it('rejects task queues the registry does not use', async () => {

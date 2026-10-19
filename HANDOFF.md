@@ -15,7 +15,8 @@ docs published, and the repo ready for the maintainer to run the release. Keep t
 | Docker Compose e2e | Builds and passes (16 + 3 skipped by design). Image pinned to `temporalio/temporal:1.9.1`. |
 | Docs | `pnpm docs:build` passes, no dead links, no `VERIFY` markers. `docs.yml` deploys to Pages. |
 | READMEs | Root and every package. `check:pack` passes. |
-| Review | Narrow review done (determinism, continue-as-new, codec crypto, hono security); blockers fixed. |
+| Review | Done for determinism, continue-as-new, codec crypto, hono security, DI container, worker shutdown, client error mapping and packaging; confirmed findings fixed with tests. |
+| Agent skill | `skills/norn/SKILL.md`, trialled by an agent building a new workflow in the example (gen, typecheck and tests green). |
 
 Fixed in this pass: deterministic `pnpm build` order (`tooling/build.mjs`; the `@norn/testing` devDependency cycle
 made `pnpm -r` order arbitrary), CLI bin stub (`packages/cli/bin/norn.js`) so the bin links before `dist/` exists,

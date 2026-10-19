@@ -257,6 +257,8 @@ export function createContainer(options: ContainerOptions = {}): Container {
 
   const resolveKey = (key: InjectionKey, path: readonly InjectionKey[], scope: ScopeState | undefined): Promise<unknown> => {
     if (disposed) return Promise.reject(new NornConfigError('The container has been disposed'));
+    // Factories can resolve through ctx.resolve, which the startup cycle check can't see.
+    if (path.includes(key)) return Promise.reject(new NornConfigError(`Dependency cycle: ${[...path, key].map(keyName).join(' -> ')}`));
     const node = nodes.get(key);
     if (!node) {
       const chain = [...path, key].map(keyName).join(' -> ');
@@ -319,7 +321,12 @@ export function createContainer(options: ContainerOptions = {}): Container {
                 throw mapActivityError(error, info.activityType, method.nonRetryable, errorOptions);
               }
             } finally {
-              await disposeAll(scope.created);
+              try {
+                await disposeAll(scope.created);
+              } catch (error) {
+                // The activity already ran: a failed cleanup must not turn its outcome into a retry.
+                Context.current().log.warn('Disposing activity-scoped values failed', { activityType: info.activityType, error: String(error) });
+              }
             }
           });
         };

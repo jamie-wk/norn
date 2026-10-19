@@ -24,7 +24,7 @@ import {
 } from '@norn/core';
 import { toNornError } from '../src/index.ts';
 
-const status = { UNAVAILABLE: 14, DEADLINE_EXCEEDED: 4, NOT_FOUND: 5 } as const;
+const status = { UNAVAILABLE: 14, DEADLINE_EXCEEDED: 4, NOT_FOUND: 5, RESOURCE_EXHAUSTED: 8 } as const;
 const ctx = { workflowId: 'order-1', workflowType: 'OrderWorkflow' };
 const grpc = (code: number, message = 'grpc') => Object.assign(new Error(message), { code, details: message, metadata: {} });
 
@@ -66,7 +66,7 @@ describe('toNornError', () => {
     expect(toNornError(new QueryRejectedError(2 as never), { ...ctx, query: 'x' })).toBeInstanceOf(QueryFailedError);
   });
 
-  it.each([status.UNAVAILABLE, status.DEADLINE_EXCEEDED])('maps gRPC %s to 503 TemporalUnavailableError', (code) => {
+  it.each([status.UNAVAILABLE, status.DEADLINE_EXCEEDED, status.RESOURCE_EXHAUSTED])('maps gRPC %s to 503 TemporalUnavailableError', (code) => {
     const err = toNornError(new ServiceError('call failed', { cause: grpc(code) }), ctx);
     expect(err).toBeInstanceOf(TemporalUnavailableError);
     expect(err).toMatchObject({ status: 503 });
