@@ -1,0 +1,81 @@
+{
+  "name": "@norn/cli",
+  "version": "1.0.0",
+  "description": "The norn CLI: generates contracts, registries and DI wiring from decorated classes, and lints workflow code.",
+  "license": "MIT",
+  "type": "module",
+  "author": "Jamie King",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamie-wk/norn.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://jamie-wk.github.io/norn/",
+  "bugs": "https://github.com/jamie-wk/norn/issues",
+  "keywords": [
+    "temporal",
+    "workflow",
+    "durable-execution",
+    "typescript",
+    "decorators",
+    "norn"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@norn/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "bin": {
+    "norn": "./dist/bin.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "oxc-parser": "^0.154.0",
+    "tinyglobby": "^0.2.17"
+  },
+  "peerDependencies": {
+    "@temporalio/client": "^1.24.0",
+    "@temporalio/worker": "^1.24.0"
+  },
+  "peerDependenciesMeta": {
+    "@temporalio/client": {
+      "optional": true
+    },
+    "@temporalio/worker": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@temporalio/client": "1.24.0",
+    "@temporalio/worker": "1.24.0",
+    "@temporalio/workflow": "1.24.0",
+    "@temporalio/common": "1.24.0",
+    "@norn/workflow": "workspace:^",
+    "@norn/activity": "workspace:^",
+    "@norn/core": "workspace:^",
+    "@norn/client": "workspace:^"
+  }
+}

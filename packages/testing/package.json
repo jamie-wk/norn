@@ -1,0 +1,95 @@
+{
+  "name": "@norn/testing",
+  "version": "1.0.0",
+  "description": "Test helpers for Norn: time-skipping test environments, typed activity mocks, a fake client and replay checks.",
+  "license": "MIT",
+  "type": "module",
+  "author": "Jamie King",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamie-wk/norn.git",
+    "directory": "packages/testing"
+  },
+  "homepage": "https://jamie-wk.github.io/norn/",
+  "bugs": "https://github.com/jamie-wk/norn/issues",
+  "keywords": [
+    "temporal",
+    "workflow",
+    "durable-execution",
+    "typescript",
+    "decorators",
+    "norn"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@norn/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./vitest": {
+      "@norn/source": "./src/vitest.ts",
+      "types": "./dist/vitest.d.ts",
+      "default": "./dist/vitest.js"
+    },
+    "./vite": {
+      "@norn/source": "./src/vite.ts",
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@norn/core": "workspace:^",
+    "@norn/client": "workspace:^",
+    "@norn/worker": "workspace:^",
+    "@norn/activity": "workspace:^"
+  },
+  "peerDependencies": {
+    "@temporalio/testing": "^1.24.0",
+    "@temporalio/worker": "^1.24.0",
+    "@temporalio/client": "^1.24.0",
+    "@temporalio/common": "^1.24.0",
+    "vitest": ">=3",
+    "esbuild": ">=0.21"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    },
+    "esbuild": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@temporalio/testing": "1.24.0",
+    "@temporalio/worker": "1.24.0",
+    "@temporalio/client": "1.24.0",
+    "@temporalio/common": "1.24.0",
+    "@temporalio/workflow": "1.24.0",
+    "@temporalio/activity": "1.24.0",
+    "@norn/workflow": "workspace:^",
+    "vitest": "5.0.5",
+    "esbuild": "0.28.2"
+  }
+}

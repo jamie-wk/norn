@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+.tools/
+.env*.local
+.DS_Store
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+workflow-bundle-*.js
+e2e/.artifacts/
+*.log

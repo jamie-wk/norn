@@ -1,0 +1,11 @@
+packages:
+  - packages/*
+  - examples/*/*
+  - e2e
+  - docs
+
+onlyBuiltDependencies:
+  - "@swc/core"
+  - "@temporalio/core-bridge"
+  - esbuild
+  - protobufjs

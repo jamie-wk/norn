@@ -1,0 +1,11 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "jamie-wk/norn" }],
+  "commit": false,
+  "fixed": [["@norn/*"]],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@norn/example-*", "@norn/e2e", "@norn/docs"]
+}
