@@ -10,9 +10,9 @@ export interface ActivitiesRefLike<T = unknown, M extends string = string> {
   readonly __type?: T;
 }
 
-type RefInstance<R> = R extends ActivitiesRefLike<infer T, any> ? T : never;
+export type RefInstance<R> = R extends ActivitiesRefLike<infer T, any> ? T : never;
 type RefMethods<R> = R extends ActivitiesRefLike<any, infer M> ? M : never;
-type MethodFn<T, K> = K extends keyof T ? (T[K] extends AnyFn ? T[K] : never) : never;
+export type MethodFn<T, K> = K extends keyof T ? (T[K] extends AnyFn ? T[K] : never) : never;
 
 export type ActivityImpls<R> = { [K in RefMethods<R>]?: MethodFn<RefInstance<R>, K> };
 
@@ -68,7 +68,7 @@ function record(impl: AnyFn): AnyFn {
 export function mockActivities<R extends ActivitiesRefLike<any, any>, const I extends ActivityImpls<R>>(
   ref: R,
   impls: I,
-): MockedActivities<R, { [K in keyof I]: I[K] extends AnyFn ? RecordedFn<I[K]> : never }> {
+): MockedActivities<R, { [K in keyof I]: RecordedFn<MethodFn<RefInstance<R>, K>> }> {
   return buildMocks(ref, impls, record);
 }
 

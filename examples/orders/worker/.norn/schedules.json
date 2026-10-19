@@ -1,0 +1,13 @@
+[
+  {
+    "id": "daily-sales-report",
+    "workflowType": "DailyReportWorkflow",
+    "taskQueue": "orders",
+    "cron": [
+      "0 9 * * *"
+    ],
+    "overlap": "skip",
+    "timeZone": "America/Chicago",
+    "note": "Morning sales summary"
+  }
+]

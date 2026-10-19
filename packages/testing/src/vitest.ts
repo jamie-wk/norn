@@ -2,7 +2,7 @@ import { afterAll, beforeAll, vi, type Mock } from 'vitest';
 import type { AnyWorkflowContract, Duration } from '@norn/core';
 import type { WorkflowClient } from '@norn/client';
 import { createTestEnv, type TestEnv, type TestEnvOptions } from './env.js';
-import { buildMocks, type ActivitiesRefLike, type ActivityImpls, type MockedActivities } from './mocks.js';
+import { buildMocks, type ActivitiesRefLike, type ActivityImpls, type MethodFn, type MockedActivities, type RefInstance } from './mocks.js';
 
 type AnyFn = (...args: any[]) => any;
 
@@ -13,7 +13,7 @@ type AnyFn = (...args: any[]) => any;
 export function mockActivities<R extends ActivitiesRefLike<any, any>, const I extends ActivityImpls<R>>(
   ref: R,
   impls: I,
-): MockedActivities<R, { [K in keyof I]: I[K] extends AnyFn ? Mock<I[K]> : never }> {
+): MockedActivities<R, { [K in keyof I]: Mock<MethodFn<RefInstance<R>, K>> }> {
   return buildMocks(ref, impls, (impl) => vi.fn<AnyFn>(impl));
 }
 
