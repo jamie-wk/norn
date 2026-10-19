@@ -88,17 +88,10 @@ async function waitForSearchAttributes(temporal: TestWorkflowEnvironment, names:
 /** Registers search attributes through the operator service, for servers that take no CLI flags. */
 async function addSearchAttributes(temporal: TestWorkflowEnvironment, searchAttributes: Record<string, SearchAttributeType>): Promise<void> {
   if (Object.keys(searchAttributes).length === 0) return;
-  try {
-    await temporal.connection.operatorService.addSearchAttributes({
-      namespace: temporal.namespace ?? 'default',
-      searchAttributes: Object.fromEntries(Object.entries(searchAttributes).map(([name, type]) => [name, INDEXED_VALUE_TYPES[type]])),
-    });
-  } catch (error) {
-    throw new NornConfigError(
-      `The time-skipping test server could not register search attributes (${Object.keys(searchAttributes).join(', ')}); use mode: 'local'`,
-      { cause: error },
-    );
-  }
+  await temporal.connection.operatorService.addSearchAttributes({
+    namespace: temporal.namespace ?? 'default',
+    searchAttributes: Object.fromEntries(Object.entries(searchAttributes).map(([name, type]) => [name, INDEXED_VALUE_TYPES[type]])),
+  });
 }
 
 let runtimeChecked = false;

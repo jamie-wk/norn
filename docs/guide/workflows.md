@@ -134,7 +134,7 @@ Throwing an `ApplicationFailure` from `@temporalio/common` always fails the work
 
 ### `drainHandlers`
 
-By default the workflow does not complete while a signal or update handler is still running; it waits for `allHandlersFinished()` after `run()` returns. This prevents a classic bug where an async handler is awaiting an activity, `run()` returns, and the handler's work is silently abandoned. Set `drainHandlers: false` only if you deliberately want to complete immediately; pair it with `unfinishedPolicy` on the handlers (see [Messages](/guide/messages#unfinished-handlers)).
+By default the workflow does not complete while a signal or update handler is still running; it waits for `allHandlersFinished()` after `run()` returns. This prevents a classic bug where an async handler is awaiting an activity, `run()` returns, and the handler's work is silently abandoned. The workflow's result is still the value `run()` returned, captured before the wait, so handlers that finish during it don't change it. If the result should include their effects, `await condition(allHandlersFinished)` yourself before building it. Set `drainHandlers: false` only if you deliberately want to complete immediately; pair it with `unfinishedPolicy` on the handlers (see [Messages](/guide/messages#unfinished-handlers)).
 
 ## Writing deterministic code
 

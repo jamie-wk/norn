@@ -25,7 +25,7 @@ beforeAll(() => {
   dir = copyFixture('app');
   rmSync(join(dir, 'expected'), { recursive: true, force: true });
 });
-afterAll(() => removeDir(dir));
+afterAll(() => dir && removeDir(dir));
 
 describe('the built norn binary', () => {
   it('is the package bin and starts with a shebang', () => {
