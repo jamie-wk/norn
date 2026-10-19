@@ -1,6 +1,7 @@
 import { defineSearchAttributeKey, type SearchAttributePair, type Priority, type RetryPolicy } from '@temporalio/common';
 import {
   NornConfigError,
+  TEMPORAL_SEARCH_ATTRIBUTE_TYPES,
   formatDuration,
   type AnyWorkflowContract,
   type Duration,
@@ -47,16 +48,6 @@ const REUSE: Record<IfClosed, 'ALLOW_DUPLICATE' | 'ALLOW_DUPLICATE_FAILED_ONLY' 
   allowIfFailed: 'ALLOW_DUPLICATE_FAILED_ONLY',
   reject: 'REJECT_DUPLICATE',
 };
-
-export const TEMPORAL_SEARCH_ATTRIBUTE_TYPES = {
-  text: 'TEXT',
-  keyword: 'KEYWORD',
-  int: 'INT',
-  double: 'DOUBLE',
-  bool: 'BOOL',
-  datetime: 'DATETIME',
-  keywordList: 'KEYWORD_LIST',
-} as const satisfies Record<SearchAttributeType, string>;
 
 function checkValue(name: string, type: SearchAttributeType, value: unknown): void {
   const ok =

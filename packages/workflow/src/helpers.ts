@@ -5,8 +5,8 @@ import {
   upsertSearchAttributes,
   workflowInfo,
 } from '@temporalio/workflow';
-import { ApplicationFailure, defineSearchAttributeKey, type SearchAttributeType as TemporalSAType } from '@temporalio/common';
-import { NornConfigError, type SearchAttributeType } from '@norn/core';
+import { ApplicationFailure, defineSearchAttributeKey } from '@temporalio/common';
+import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, type SearchAttributeType } from '@norn/core';
 import { definitionFor } from './implement.js';
 
 export interface ContinueAsNewOptions {
@@ -52,16 +52,6 @@ export function isFailure(error: unknown, type: ErrorType): boolean {
   return asFailure(error, type) !== undefined;
 }
 
-const TEMPORAL_SA: Record<SearchAttributeType, TemporalSAType> = {
-  text: 'TEXT',
-  keyword: 'KEYWORD',
-  int: 'INT',
-  double: 'DOUBLE',
-  bool: 'BOOL',
-  datetime: 'DATETIME',
-  keywordList: 'KEYWORD_LIST',
-};
-
 const VALID: Record<SearchAttributeType, (value: unknown) => boolean> = {
   text: (v) => typeof v === 'string',
   keyword: (v) => typeof v === 'string',
@@ -90,7 +80,7 @@ export function setSearchAttributes(values: Record<string, SearchAttributeInput>
     if (value !== null && !VALID[saType](value)) {
       throw new NornConfigError(`Workflow ${type}: search attribute ${name} is ${saType}, got ${JSON.stringify(value)}`);
     }
-    return { key: defineSearchAttributeKey(name, TEMPORAL_SA[saType]), value };
+    return { key: defineSearchAttributeKey(name, TEMPORAL_SEARCH_ATTRIBUTE_TYPES[saType]), value };
   });
   upsertSearchAttributes(pairs as Parameters<typeof upsertSearchAttributes>[0]);
 }

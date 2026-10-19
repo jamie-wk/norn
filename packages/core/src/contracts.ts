@@ -20,6 +20,17 @@ export type SearchAttributeValue<T extends SearchAttributeType> = T extends 'tex
           ? string[]
           : never;
 
+/** Temporal's name for each search attribute type, as `defineSearchAttributeKey()` takes it. */
+export const TEMPORAL_SEARCH_ATTRIBUTE_TYPES = Object.freeze({
+  text: 'TEXT',
+  keyword: 'KEYWORD',
+  int: 'INT',
+  double: 'DOUBLE',
+  bool: 'BOOL',
+  datetime: 'DATETIME',
+  keywordList: 'KEYWORD_LIST',
+} as const satisfies Record<SearchAttributeType, string>);
+
 export const SEARCH_ATTRIBUTE_TYPES: readonly SearchAttributeType[] = Object.freeze([
   'text',
   'keyword',

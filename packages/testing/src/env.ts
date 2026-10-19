@@ -1,7 +1,7 @@
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { DefaultLogger, Runtime, type LogLevel, type WorkerOptions } from '@temporalio/worker';
 import { defineSearchAttributeKey, type DataConverter } from '@temporalio/common';
-import { NornConfigError, toMs, type Duration, type SearchAttributeType } from '@norn/core';
+import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, toMs, type Duration, type SearchAttributeType } from '@norn/core';
 import { createClient, type NornClient, type WorkflowClient } from '@norn/client';
 import { bundleWorkflows, createWorker, type NornRegistry, type NornWorker, type RegistryContainerOptions } from '@norn/worker';
 import type { AnyWorkflowContract } from '@norn/core';
@@ -43,16 +43,6 @@ export interface TestEnv extends AsyncDisposable {
   sleep(duration: Duration): Promise<void>;
   teardown(): Promise<void>;
 }
-
-const TEMPORAL_TYPES = {
-  text: 'TEXT',
-  keyword: 'KEYWORD',
-  int: 'INT',
-  double: 'DOUBLE',
-  bool: 'BOOL',
-  datetime: 'DATETIME',
-  keywordList: 'KEYWORD_LIST',
-} as const;
 
 /** `temporal.api.enums.v1.IndexedValueType`, for the operator service. */
 const INDEXED_VALUE_TYPES = {
@@ -141,7 +131,7 @@ export async function createTestEnv(options: TestEnvOptions = {}): Promise<TestE
     temporal = await TestWorkflowEnvironment.createLocal({
       server: {
         ...(path ? { executable: { type: 'existing-path' as const, path } } : {}),
-        searchAttributes: Object.entries(searchAttributes).map(([name, type]) => defineSearchAttributeKey(name, TEMPORAL_TYPES[type])),
+        searchAttributes: Object.entries(searchAttributes).map(([name, type]) => defineSearchAttributeKey(name, TEMPORAL_SEARCH_ATTRIBUTE_TYPES[type])),
       },
     });
   }
