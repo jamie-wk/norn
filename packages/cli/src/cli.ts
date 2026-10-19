@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseArgs, type ParseArgsConfig } from 'node:util';
 import { bundle } from './bundle.js';
@@ -48,11 +48,12 @@ Options:
   'schedules sync': `Usage: norn schedules sync [--dry-run] [--prune] [--config <path>]
 
 Makes the namespace's schedules match <outDir>/schedules.json. Schedules created by norn are
-marked with the memo { nornManaged: true }; others are never touched.
+marked with the memo { nornManaged: '<package.json name>' }; others, including other projects',
+are never touched.
 
 Options:
   --dry-run         Print the plan without changing anything.
-  --prune           Delete norn-managed schedules that are no longer declared.
+  --prune           Delete this project's norn-managed schedules that are no longer declared.
   --config <path>   Use this config file.
 
 Environment: TEMPORAL_ADDRESS (localhost:7233), TEMPORAL_NAMESPACE (default),
@@ -177,16 +178,19 @@ export async function main(argv: readonly string[], io: CliIo = {}): Promise<num
         if (positionals.length > 0) throw new UsageError(`Unexpected argument "${positionals[0]}"`);
         const config = await loadConfig({ cwd, configPath: values.config });
         const schedules = readSchedules(join(config.outDir, 'schedules.json'));
+        const pkg = join(config.root, 'package.json');
+        const project = existsSync(pkg) ? (JSON.parse(readFileSync(pkg, 'utf8')) as { name?: unknown }).name : undefined;
+        if (typeof project !== 'string' || project === '') throw new Error(`${pkg} needs a "name": schedules sync marks the schedules it manages with it`);
         const temporal = await connect(env);
         try {
           const dryRun = values['dry-run'] ?? false;
-          const result = await syncSchedules({ client: temporal.client, schedules, dryRun, prune: values.prune ?? false });
+          const result = await syncSchedules({ client: temporal.client, project, schedules, dryRun, prune: values.prune ?? false });
           const verb = (past: string) => (dryRun ? `would be ${past}` : past);
           for (const id of result.created) print(`created    ${id}`);
           for (const id of result.updated) print(`updated    ${id}`);
           for (const id of result.unchanged) print(`unchanged  ${id}`);
           for (const id of result.deleted) print(`deleted    ${id}`);
-          for (const id of result.conflicts) fail(`conflict   ${id}: a schedule with this id exists but was not created by norn; delete it or change the id`);
+          for (const id of result.conflicts) fail(`conflict   ${id}: a schedule with this id exists but was not created by norn for ${project}; delete it or change the id`);
           print(
             `${dryRun ? 'Dry run: ' : ''}${result.created.length} ${verb('created')}, ${result.updated.length} ${verb('updated')}, ` +
               `${result.unchanged.length} unchanged, ${result.deleted.length} ${verb('deleted')} in namespace ${temporal.namespace}.`,

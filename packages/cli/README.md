@@ -197,13 +197,8 @@ const ext = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
 export const registry = {
   workflowsPath: fileURLToPath(new URL(`./workflows${ext}`, import.meta.url)),
   taskQueues: ['carts', 'orders', 'reports'],
-  workflows: [
-    { name: 'OrderWorkflow', className: 'OrderWorkflow', taskQueue: 'orders' },
-    { name: 'ShoppingCart', className: 'CartWorkflow', taskQueue: 'carts' },
-  ],
   activities: ['payments.charge', 'payments.refund-charge'],
   searchAttributes: { CartSize: 'int', CustomerId: 'keyword', OrderStatus: 'keyword' },
-  schedules: [/* as in schedules.json */],
   createContainer: createNornContainer,
 } satisfies NornRegistry;
 ```
@@ -340,7 +335,7 @@ src/workflows/order.ts:2:1 - error norn(import-boundary): Workflow code must not
   hint: Use import type for types; workflows call activities through the generated activities file with useActivities().
 ```
 
-**Determinism.** In workflow code, references to the globals `setTimeout` (use `sleep()`), `setInterval`, `setImmediate`, `process`, `Temporal.Now`, `crypto`, `performance`, `WeakRef` and `FinalizationRegistry` are errors. Local variables, parameters and imports with those names are respected, and `Temporal` imported from `@js-temporal/polyfill` or `temporal-polyfill` is still checked. `Date.now()` and `Math.random()` are fine: the sandbox makes them deterministic. For editor feedback, use the rules in `@norn/eslint-plugin`.
+**Determinism.** In workflow code, references to the globals `setTimeout` (use `sleep()`), `setInterval`, `setImmediate`, `process`, `Temporal.Now`, `crypto`, `performance`, `WeakRef` and `FinalizationRegistry` are errors, including through `globalThis.` / `window.` / `self.` / `global.` and `const { Now } = Temporal`. Local variables (including hoisted `var`s), parameters and imports with those names are respected, and `Temporal` imported from `@js-temporal/polyfill` or `temporal-polyfill`, under any name, is still checked. `Date.now()` and `Math.random()` are fine: the sandbox makes them deterministic. For editor feedback, use the rules in `@norn/eslint-plugin`.
 
 ### Limits of syntax-only analysis
 
@@ -353,7 +348,7 @@ src/workflows/order.ts:2:1 - error norn(import-boundary): Workflow code must not
 ```sh
 norn schedules sync              # create missing, update changed, leave unchanged schedules
 norn schedules sync --dry-run    # print the plan only
-norn schedules sync --prune      # also delete norn-managed schedules that are no longer declared
+norn schedules sync --prune      # also delete this project's norn-managed schedules that are no longer declared
 ```
 
 Reads `<outDir>/schedules.json` (run `norn gen` first) and connects using:
@@ -366,7 +361,7 @@ Reads `<outDir>/schedules.json` (run `norn gen` first) and connects using:
 | `TEMPORAL_TLS_CERT`, `TEMPORAL_TLS_KEY` | none | Client certificate and key file paths for mTLS (set both) |
 | `TEMPORAL_TLS` | none | `true` to use TLS without either of the above |
 
-Schedules created by `norn` carry the memo `{ nornManaged: true }`. A declared id that already exists **without** that memo is reported as a conflict (exit 1) and left alone, and `--prune` only ever deletes managed schedules. To detect changes, the workflow action carries a hash of the declared spec in its memo (`nornScheduleHash`); a schedule is updated when the hash differs, so manual edits in the Temporal UI are kept until the declaration changes. `overlap` maps to Temporal's `ScheduleOverlapPolicy` (`'buffer-one'` → `BUFFER_ONE`, default `SKIP`); the schedule's input becomes the workflow's single argument.
+Schedules created by `norn` carry the memo `{ nornManaged: '<name>' }`, where `<name>` is the `name` in the `package.json` next to `norn.config.ts`, so projects can share a namespace. A declared id that already exists **without** this project's memo is reported as a conflict (exit 1) and left alone, and `--prune` only ever deletes this project's managed schedules. To detect changes, the workflow action carries a hash of the declared spec in its memo (`nornScheduleHash`); a schedule is updated when the hash differs, so manual edits in the Temporal UI are kept until the declaration changes. `overlap` maps to Temporal's `ScheduleOverlapPolicy` (`'buffer-one'` → `BUFFER_ONE`, default `SKIP`); the schedule's input becomes the workflow's single argument.
 
 ```
 created    nightly-report
@@ -409,7 +404,7 @@ Bundles `<outDir>/workflows.ts` (or `workflows.js` if you compiled `.norn/`) wit
 ## Programmatic API
 
 ```ts
-import { generate, watch, analyze, defineConfig, formatError } from '@norn/cli';
+import { generate, watch, defineConfig, formatError } from '@norn/cli';
 
 const result = await generate({ cwd, configPath, check, acceptRename, write });
 // { files: Record<path, content>, written: string[], stale: string[], errors: NornGenError[], root }
@@ -421,9 +416,8 @@ await watch({ cwd, signal: controller.signal, debounceMs: 100, onResult: (r) => 
 
 - `generate(options)`: paths in the result are relative to the project root. `check: true` compares with disk and writes nothing; `write: false` renders without writing.
 - `watch(options)`: generates, then regenerates on changes until `signal` aborts; resolves when stopped.
-- `analyze(options)`: the parsed model (`workflows`, `activities`, `services`, `errors`) without rendering.
 - `loadConfig(options)`, `defineConfig(config)`.
-- `syncSchedules({ client, schedules, dryRun, prune })`, `pullHistories({ client, workflowIds, outDir })`, `bundle({ outDir, outFile, codec })`, `connect(env)`.
+- `syncSchedules({ client, project, schedules, dryRun, prune })`, `pullHistories({ client, workflowIds, outDir })`, `bundle({ outDir, outFile, codec })`, `connect(env)`.
 - `main(argv, { cwd, env, stdout, stderr, signal })`: the CLI itself, resolving with the exit code.
 
 `schedules sync` and `histories pull` need `@temporalio/client` (and `@temporalio/common`); `bundle` needs `@norn/worker` and `@temporalio/worker` (plus `@norn/codec` for `--codec`). They are optional peer dependencies, loaded only by the commands that use them.

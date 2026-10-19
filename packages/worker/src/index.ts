@@ -15,7 +15,6 @@ export {
   defineRegistry,
   type NornRegistry,
   type RegistryContainerOptions,
-  type RegistryWorkflow,
   type ScheduleOverlap,
   type ScheduleSpec,
 } from './registry.js';

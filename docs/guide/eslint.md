@@ -67,7 +67,7 @@ Uses through `globalThis.`, `window.`, `self.` and `global.` are caught, as is `
 
 Reports imports that would load, in workflow code:
 
-1. **Node built-ins**: anything in `module.builtinModules` and anything with the `node:` prefix.
+1. **Node built-ins**: anything `module.isBuiltin()` accepts (`fs`, `fs/promises`, `node:test`, ...).
 2. **Packages that can't run in the sandbox**: `@temporalio/activity`, `@temporalio/client`, `@temporalio/worker`, `@temporalio/testing`, `@norn/activity`, `@norn/worker`, `@norn/client`, `@norn/testing`, `@norn/hono`, `@norn/cli` (and their subpaths), plus your `deny` list.
 3. **Activity and service modules**: specifiers matching `activityPatterns`.
 4. **Any other bare package not allowed**, only with `onlyAllowed: true`.

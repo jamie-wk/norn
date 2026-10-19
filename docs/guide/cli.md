@@ -108,7 +108,7 @@ norn schedules sync
 norn schedules sync --prune
 ```
 
-Reads `<outDir>/schedules.json` and makes the namespace's schedules match it. `--dry-run` prints the plan without changing anything, `--prune` deletes norn-managed schedules that are no longer declared, and `--config <path>` picks the config file. See [Schedules](/guide/schedules).
+Reads `<outDir>/schedules.json` and makes the namespace's schedules match it. `--dry-run` prints the plan without changing anything, `--prune` deletes this project's norn-managed schedules (memo `nornManaged` set to the `package.json` name) that are no longer declared, and `--config <path>` picks the config file. See [Schedules](/guide/schedules).
 
 It connects with `TEMPORAL_ADDRESS` (default `localhost:7233`), `TEMPORAL_NAMESPACE` (default `default`), `TEMPORAL_API_KEY` (enables TLS), `TEMPORAL_TLS=true`, and `TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY` (mTLS file paths, both or neither; only the CLI reads these two). Empty variables count as unset, the same as in `createClient()` and `createWorker()`.
 

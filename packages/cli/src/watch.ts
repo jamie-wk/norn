@@ -34,14 +34,18 @@ export async function watch(options: WatchOptions): Promise<void> {
 
   let running: Promise<void> = Promise.resolve();
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let pending = false;
   const run = () => {
     running = running.then(async () => {
       if (signal.aborted) return;
-      const result = await generate(genOptions);
+      let result: GenerateResult;
+      try {
+        result = await generate(genOptions);
+      } catch (error) {
+        // Unexpected failures (such as a failed write) must not end watch mode.
+        result = { files: {}, written: [], stale: [], errors: [{ code: 'config', message: (error as Error)?.message ?? String(error) }] };
+      }
       if (!signal.aborted) onResult?.(result);
     });
-    return running;
   };
 
   const isIgnored = (file: string) =>
@@ -57,17 +61,12 @@ export async function watch(options: WatchOptions): Promise<void> {
     watcher = fsWatch(root, { recursive: true }, (_event, filename) => {
       if (!filename || signal.aborted) return;
       if (isIgnored(join(root, filename.toString()))) return;
-      pending = true;
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        if (!pending) return;
-        pending = false;
-        void run();
-      }, debounceMs);
+      timer = setTimeout(run, debounceMs);
     });
     watcher.on('error', stop);
     signal.addEventListener('abort', stop, { once: true });
     // Watch first, so edits made while the first generation runs are not missed.
-    void run();
+    run();
   });
 }

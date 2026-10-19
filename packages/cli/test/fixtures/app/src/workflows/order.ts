@@ -18,7 +18,6 @@ export type OrderStatus = 'pending' | 'paid' | 'canceled' | 'refunded' | 'comple
   id: 'order-{orderId}',
   searchAttributes: { CustomerId: 'keyword', OrderStatus: 'keyword' },
   failOn: [InvalidOrderError],
-  description: 'Charges, reserves stock and waits for fulfilment.',
 })
 export class OrderWorkflow {
   private status: OrderStatus = 'pending';

@@ -18,6 +18,9 @@ ruleTester.run('no-activity-imports', rule, {
     // Other bare packages are allowed unless `onlyAllowed` is on.
     `import { z } from 'zod';`,
     `import ms from 'ms';`,
+    // npm packages named like built-ins are not built-ins.
+    `import { Buffer } from 'buffer/';`,
+    `import punycode from 'punycode/punycode.js';`,
     // Top-level `import type` / `export type` are erased at compile time, whatever the module.
     `import type { Stats } from 'node:fs';`,
     `import type * as fs from 'fs';`,

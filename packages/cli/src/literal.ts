@@ -1,4 +1,4 @@
-import type { AstNode } from './source.js';
+import { staticKey, unwrap, type AstNode } from './source.js';
 
 /** A reference to a class or token by name, such as an entry of `inject: [...]`. */
 export class Ref {
@@ -63,15 +63,6 @@ function describe(node: AstNode): string {
   }
 }
 
-/** Every problem found in one value. */
-export class LiteralErrors extends Error {
-  readonly errors: LiteralError[];
-  constructor(errors: LiteralError[]) {
-    super(errors.map((e) => e.message).join('\n'));
-    this.errors = errors;
-  }
-}
-
 const INVALID = Symbol('invalid');
 let collected: LiteralError[] = [];
 
@@ -83,19 +74,6 @@ function fail(what: string, node: AstNode, extra?: string): typeof INVALID {
     node.type === 'Identifier' ? `${HINT}: replace ${node.name} with its value.` : `${HINT}: replace this with a literal value.`;
   collected.push(new LiteralError(message, node, hint));
   return INVALID;
-}
-
-const unwrap = (node: AstNode): AstNode =>
-  node.type === 'TSAsExpression' || node.type === 'TSSatisfiesExpression' || node.type === 'ParenthesizedExpression' || node.type === 'TSNonNullExpression'
-    ? unwrap(node.expression)
-    : node;
-
-function propertyKey(prop: AstNode, what: string): string | typeof INVALID {
-  const key = prop.key as AstNode;
-  if (!prop.computed && key.type === 'Identifier') return key.name;
-  if (key.type === 'Literal' && (typeof key.value === 'string' || typeof key.value === 'number')) return String(key.value);
-  if (key.type === 'TemplateLiteral' && key.expressions.length === 0) return key.quasis[0].value.cooked;
-  return fail(`${what} key`, key);
 }
 
 interface State {
@@ -147,8 +125,11 @@ function evaluateNode(input: AstNode, ctx: LiteralContext, state: State, path: s
           fail(here, prop, 'Methods and accessors are not allowed');
           continue;
         }
-        const key = propertyKey(prop, here);
-        if (key === INVALID) continue;
+        const key = staticKey(prop);
+        if (key === undefined) {
+          fail(`${here} key`, prop.key);
+          continue;
+        }
         const nextState =
           depth === 0 ? { refs: state.refs || !!ctx.refKeys?.has(key), fns: state.fns || !!ctx.fnKeys?.has(key) } : state;
         const value = evaluateNode(prop.value, ctx, nextState, path ? `${path}.${key}` : key, depth + 1);
@@ -161,16 +142,13 @@ function evaluateNode(input: AstNode, ctx: LiteralContext, state: State, path: s
   }
 }
 
-/** Evaluates a decorator argument that must be a literal. Throws {@link LiteralErrors} listing every problem. */
-export function evaluateLiteral(node: AstNode, ctx: LiteralContext): Literal | undefined {
+/** Evaluates a decorator argument that must be a literal, listing every problem in `errors`. */
+export function evaluateLiteral(node: AstNode, ctx: LiteralContext): { value: Literal | undefined; errors: LiteralError[] } {
   collected = [];
-  try {
-    const value = evaluateNode(node, ctx, { refs: !!ctx.allowRefs, fns: false }, '', 0);
-    if (collected.length > 0) throw new LiteralErrors(collected);
-    return value === INVALID ? undefined : value;
-  } finally {
-    collected = [];
-  }
+  const value = evaluateNode(node, ctx, { refs: !!ctx.allowRefs, fns: false }, '', 0);
+  const errors = collected;
+  collected = [];
+  return { value: value === INVALID ? undefined : value, errors };
 }
 
 export function isObject(value: Literal | undefined): value is LiteralObject {

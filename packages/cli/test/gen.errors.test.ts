@@ -107,7 +107,7 @@ describe('import boundaries', () => {
     expectError(errors, { code: 'import-boundary', file, line: 4, message: '"@norn/activity"' });
     expectError(errors, { code: 'import-boundary', file, line: 5, message: '"@norn/worker/sub/path"' });
     expectError(errors, { code: 'import-boundary', file, line: 8, message: '"@temporalio/activity"' });
-    expectError(errors, { code: 'import-boundary', file, line: 14, message: 'Node built-in "node:crypto"' });
+    expectError(errors, { code: 'import-boundary', file, line: 16, message: 'Node built-in "node:crypto"' });
     expect(errors).toHaveLength(7);
   });
 
@@ -147,7 +147,18 @@ describe('determinism', () => {
     expectError(errors, { code: 'determinism', ...at(f, file, 'performance.now'), message: 'performance' });
     expectError(errors, { code: 'determinism', ...at(f, file, 'WeakRef('), message: 'WeakRef' });
     expectError(errors, { code: 'determinism', ...at(f, file, 'FinalizationRegistry('), message: 'FinalizationRegistry' });
-    expect(errors).toHaveLength(9);
+
+    // Through global objects, destructured, and through aliased polyfill imports; hoisted `var`s shadow.
+    const g = 'src/globals.ts';
+    expectError(errors, { code: 'determinism', ...at(f, g, 'globalThis.setTimeout'), message: 'setTimeout' });
+    expectError(errors, { code: 'determinism', ...at(f, g, 'globalThis.process'), message: 'process' });
+    expectError(errors, { code: 'determinism', ...at(f, g, 'window.crypto'), message: 'crypto' });
+    expectError(errors, { code: 'determinism', ...at(f, g, 'self.performance'), message: 'performance' });
+    expectError(errors, { code: 'determinism', ...at(f, g, "global['setInterval']"), message: 'setInterval' });
+    expectError(errors, { code: 'determinism', ...at(f, g, 'Temporal;'), message: 'Temporal.Now' });
+    expectError(errors, { code: 'determinism', ...at(f, g, 'globalThis.Temporal.Now'), message: 'Temporal.Now' });
+    expectError(errors, { code: 'determinism', ...at(f, g, 'T.Now.instant'), message: 'Temporal.Now' });
+    expect(errors).toHaveLength(17);
   });
 });
 

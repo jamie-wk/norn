@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { connectionSettings, historyFileName, overlapPolicy, readSchedules, specHash } from '../src/index.ts';
+import type { Client } from '@temporalio/client';
+import { importPath } from '../src/emit.ts';
+import { historyFileName, pullHistories } from '../src/histories.ts';
+import { overlapPolicy, readSchedules, specHash } from '../src/schedules.ts';
+import { connectionSettings } from '../src/temporal.ts';
 import { project, removeDir } from './helpers.ts';
 
 describe('connection settings', () => {
@@ -58,5 +62,18 @@ describe('schedule helpers', () => {
   it('makes workflow IDs safe file names', () => {
     expect(historyFileName('order-123')).toBe('order-123.json');
     expect(historyFileName('tenant/a b:c')).toBe('tenant_a_b_c.json');
+  });
+
+  it('refuses workflow IDs that map to the same file name', async () => {
+    const client = { workflow: { getHandle: () => ({ fetchHistory: async () => ({ events: [] }) }) } } as unknown as Client;
+    await expect(pullHistories({ client, workflowIds: ['a/b', 'a:b'], outDir: '/nonexistent/histories' })).rejects.toThrow(/"a\/b" and "a:b" both map to a_b\.json/);
+  });
+});
+
+describe('generated import paths', () => {
+  it('always start with ./ or ../', () => {
+    expect(importPath('/p/.norn', '/p/src/a.ts', '.js')).toBe('../src/a.js');
+    expect(importPath('/p/.norn', '/p/.norn/.hidden/a.ts', '.js')).toBe('./.hidden/a.js');
+    expect(importPath('/p', '/p/..x/a.mts', '.ts')).toBe('./..x/a.mts');
   });
 });

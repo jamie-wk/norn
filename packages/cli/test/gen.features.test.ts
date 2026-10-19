@@ -157,7 +157,7 @@ export class Acts {
 export class Svc {}
 `,
       'src/w.ts': `import { Workflow, Signal, Update } from '@norn/workflow';
-@Workflow({ taskQueue: 'q', retries: 3 })
+@Workflow({ taskQueue: 'q', retries: 3, description: 'W' })
 export class W {
   @Signal({ unfinishedPolicy: 'explode', dedupeBy: 'id' }) s() {}
   @Update({ name: '' }) u() {}
@@ -174,11 +174,12 @@ export class W {
     expectError(errors, { code: 'invalid-option', line: 6, message: '"timeout" must be a duration' });
     expectError(errors, { code: 'invalid-option', line: 8, message: 'provides must be a class or token' });
     expectError(errors, { code: 'invalid-option', file: 'src/w.ts', line: 2, message: '@Workflow has no option "retries"' });
+    expectError(errors, { code: 'invalid-option', file: 'src/w.ts', line: 2, message: '@Workflow has no option "description"' });
     expectError(errors, { code: 'invalid-option', file: 'src/w.ts', line: 4, message: 'unfinishedPolicy' });
     expectError(errors, { code: 'invalid-option', file: 'src/w.ts', line: 4, message: 'dedupeBy must be a function' });
     expectError(errors, { code: 'invalid-option', file: 'src/w.ts', line: 5, message: 'name must be a non-empty string' });
     expectError(errors, { code: 'invalid-option', file: 'src/w.ts', line: 6, message: 'takes a name or an options object' });
-    expect(errors).toHaveLength(12);
+    expect(errors).toHaveLength(13);
   });
 
   it('allows functions only for dedupeBy', async () => {

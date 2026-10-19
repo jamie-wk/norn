@@ -107,10 +107,8 @@ const ext = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
 export const registry = {
   workflowsPath: fileURLToPath(new URL(`./workflows${ext}`, import.meta.url)),
   taskQueues: ['orders'],
-  workflows: [{ name: 'OrderWorkflow', className: 'OrderWorkflow', taskQueue: 'orders' }],
   activities: ['payments.charge', 'payments.refund'],
   searchAttributes: {},
-  schedules: [],
   createContainer: createNornContainer,
 } satisfies NornRegistry;
 ```

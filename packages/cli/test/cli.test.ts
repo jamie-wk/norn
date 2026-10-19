@@ -50,7 +50,7 @@ describe('norn CLI', () => {
     const result = await run(['gen'], fixture('errors/determinism'));
     expect(result.code).toBe(1);
     expect(result.stderr).toContain('src/order.ts:10:5 - error norn(determinism)');
-    expect(result.stderr).toContain('9 errors');
+    expect(result.stderr).toContain('17 errors');
   });
 
   it('gen: writes, then reports up to date, then --check finds stale files', async () => {
@@ -66,7 +66,6 @@ describe('norn CLI', () => {
     expect((await run(['gen', '--check'], dir)).code).toBe(0);
 
     const cart = join(dir, 'src/workflows/cart.ts');
-    writeFileSync(cart, readFileSync(cart, 'utf8').replace("taskQueue: 'carts'", "taskQueue: 'carts', description: 'Carts'"));
     writeFileSync(cart, readFileSync(cart, 'utf8').replace('@Signal() checkout()', '@Signal() abandon() {}\n\n  @Signal() checkout()'));
     const stale = await run(['gen', '--check'], dir);
     expect(stale.code).toBe(1);

@@ -1,4 +1,4 @@
-import { builtinModules } from 'node:module';
+import { isBuiltin } from 'node:module';
 import type { Rule } from 'eslint';
 import { globToRegExp, normalizeSpecifier } from '../glob.js';
 import { type Node, docsUrl, findVariable, staticString } from '../utils.js';
@@ -47,8 +47,6 @@ export const defaultDeny: readonly string[] = [
 const matchesPackage = (specifier: string, names: readonly string[]) =>
   names.some((name) => specifier === name || specifier.startsWith(`${name}/`));
 
-const builtins = new Set(builtinModules);
-const isBuiltin = (specifier: string) => specifier.startsWith('node:') || builtins.has(specifier);
 /** Relative, absolute, subpath-import (`#x`) and URL specifiers are not bare package names. */
 const isBare = (specifier: string) => !/^(?:[./#]|[a-z][a-z0-9+.-]*:)/i.test(specifier);
 

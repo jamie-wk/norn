@@ -1,6 +1,7 @@
+import { isBuiltin } from 'node:module';
 import { declaresActivityCode, type Analyzer } from './analyze.js';
-import { isBuiltin, isRelative, type Project } from './project.js';
-import { patternNames, type AstNode, type ImportInfo, type ParsedModule } from './source.js';
+import { isRelative, type Project } from './project.js';
+import { patternNames, staticKey, type AstNode, type ImportInfo, type ParsedModule } from './source.js';
 
 /** Packages that cannot run in the Temporal workflow sandbox. */
 export const WORKER_ONLY_PACKAGES: readonly string[] = [
@@ -29,7 +30,6 @@ function importText(imp: ImportInfo, typeOnly: boolean): string {
  */
 export function checkWorkflowCode(project: Project, analyzer: Analyzer, workflowFiles: readonly string[]): void {
   const reported = new Set<string>();
-  const checked = new Set<string>();
   const report = (mod: ParsedModule, node: AstNode, message: string, hint: string) => {
     const key = `${mod.file}:${node.start}`;
     if (reported.has(key)) return;
@@ -37,17 +37,17 @@ export function checkWorkflowCode(project: Project, analyzer: Analyzer, workflow
     analyzer.error('import-boundary', mod, node, message, hint);
   };
 
+  // Shared across workflow files: a module reached before was already checked, and report keeps the first chain.
+  const visited = new Set<string>();
   for (const start of [...workflowFiles].sort()) {
+    if (visited.has(start)) continue;
+    visited.add(start);
     const queue: Array<{ file: string; chain: string[] }> = [{ file: start, chain: [start] }];
-    const visited = new Set<string>([start]);
     while (queue.length > 0) {
       const { file, chain } = queue.shift()!;
       const mod = project.module(file);
       if (mod.errors.length > 0) continue;
-      if (!checked.has(file)) {
-        checked.add(file);
-        checkDeterminism(mod, analyzer);
-      }
+      checkDeterminism(mod, analyzer);
       const via = chain.length > 1 ? ` (workflow code: ${chain.map((f) => project.rel(f)).join(' → ')})` : '';
       for (const imp of mod.imports) {
         if (imp.typeOnly) continue;
@@ -106,8 +106,11 @@ export function checkWorkflowCode(project: Project, analyzer: Analyzer, workflow
 // Determinism
 // ---------------------------------------------------------------------------------------------
 
-const TEMPORAL_POLYFILL = /^(?:@js-temporal\/polyfill|temporal-polyfill)(?:\/.*)?$/;
-const WATCHED = new Set(['setTimeout', 'setInterval', 'setImmediate', 'process', 'Temporal', 'crypto', 'performance', 'WeakRef', 'FinalizationRegistry']);
+export const TEMPORAL_POLYFILL = /^(?:@js-temporal\/polyfill|temporal-polyfill)(?:\/.*)?$/;
+export const WATCHED = new Set(['setTimeout', 'setInterval', 'setImmediate', 'process', 'Temporal', 'crypto', 'performance', 'WeakRef', 'FinalizationRegistry']);
+/** Objects through which globals can also be reached, as in `globalThis.process`. */
+const GLOBAL_OBJECTS = new Set(['globalThis', 'window', 'self', 'global']);
+const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'StaticBlock']);
 
 const MESSAGES: Record<string, [message: string, hint: string]> = {
   setTimeout: [
@@ -164,6 +167,20 @@ function blockDeclarations(statements: AstNode[], scope: Scope): void {
   }
 }
 
+/** `var` declarations anywhere below `node` (they are function-scoped), not inside nested functions. */
+function hoistedVars(node: AstNode, scope: Scope): void {
+  if (node.type === 'VariableDeclaration' && node.kind === 'var') for (const d of node.declarations) for (const id of patternNames(d.id)) scope.add(id.name);
+  for (const k in node) {
+    const value = node[k];
+    for (const child of Array.isArray(value) ? value : [value]) {
+      if (child && typeof child === 'object' && typeof child.type === 'string' && !FUNCTIONS.has(child.type)) hoistedVars(child, scope);
+    }
+  }
+}
+
+const staticProperty = (member: AstNode): string | undefined =>
+  member.computed ? (typeof member.property.value === 'string' ? member.property.value : undefined) : member.property.name;
+
 function checkDeterminism(mod: ParsedModule, analyzer: Analyzer): void {
   // `Temporal` imported from a polyfill still has a real-clock `Now`.
   const polyfillTemporal = new Set<string>();
@@ -175,19 +192,18 @@ function checkDeterminism(mod: ParsedModule, analyzer: Analyzer): void {
     analyzer.error('determinism', mod, node, message, hint);
   };
 
-  const visitReference = (node: AstNode, parent: AstNode | undefined, scopes: Scope[]) => {
-    const name = node.name as string;
-    if (!WATCHED.has(name)) return;
-    const isTemporal = name === 'Temporal';
-    if (bound(scopes, name) && !(isTemporal && polyfillTemporal.has(name))) return;
-    if (isTemporal) {
-      if (parent?.type === 'MemberExpression' && parent.object === node) {
-        const prop = parent.computed ? parent.property.value : parent.property.name;
-        if (prop === 'Now') report(parent, 'Temporal.Now');
-      }
+  /** A use of global `name` (or of a polyfill `Temporal`) at `node`: an identifier or a `globalThis.name` member. */
+  const visitReference = (name: string, node: AstNode, parent: AstNode | undefined, scopes: Scope[]) => {
+    // Polyfill imports live in the module scope; only an inner declaration shadows them.
+    const temporal = polyfillTemporal.has(name) ? !bound(scopes.slice(1), name) : name === 'Temporal' && !bound(scopes, name);
+    if (temporal) {
+      if (parent?.type === 'MemberExpression' && parent.object === node && staticProperty(parent) === 'Now') report(parent, 'Temporal.Now');
+      const destructuresNow =
+        parent?.type === 'VariableDeclarator' && parent.init === node && parent.id.type === 'ObjectPattern' && parent.id.properties.some((p: AstNode) => p.type === 'Property' && staticKey(p) === 'Now');
+      if (destructuresNow) report(node, 'Temporal.Now');
       return;
     }
-    report(node, name);
+    if (name !== 'Temporal' && WATCHED.has(name) && !bound(scopes, name)) report(node, name);
   };
 
   const walk = (node: AstNode, parent: AstNode | undefined, key: string | undefined, scopes: Scope[]): void => {
@@ -205,8 +221,12 @@ function checkDeterminism(mod: ParsedModule, analyzer: Analyzer): void {
         if (parent.type === 'LabeledStatement' || parent.type === 'BreakStatement' || parent.type === 'ContinueStatement') return;
         if (parent.type === 'ExportSpecifier') return;
       }
-      visitReference(node, parent, scopes);
+      visitReference(node.name, node, parent, scopes);
       return;
+    }
+    if (node.type === 'MemberExpression' && node.object.type === 'Identifier' && GLOBAL_OBJECTS.has(node.object.name) && !bound(scopes, node.object.name)) {
+      const name = staticProperty(node);
+      if (name && WATCHED.has(name)) return visitReference(name, node, parent, []);
     }
 
     let inner = scopes;
@@ -216,6 +236,7 @@ function checkDeterminism(mod: ParsedModule, analyzer: Analyzer): void {
       case 'StaticBlock': {
         const scope: Scope = new Set();
         blockDeclarations(node.body, scope);
+        if (node.type !== 'BlockStatement') for (const stmt of node.body) hoistedVars(stmt, scope);
         inner = [...scopes, scope];
         break;
       }
@@ -231,6 +252,7 @@ function checkDeterminism(mod: ParsedModule, analyzer: Analyzer): void {
         const scope: Scope = new Set();
         if (node.type === 'FunctionExpression' && node.id) scope.add(node.id.name);
         for (const p of node.params) for (const id of patternNames(p)) scope.add(id.name);
+        hoistedVars(node.body, scope);
         inner = [...scopes, scope];
         break;
       }

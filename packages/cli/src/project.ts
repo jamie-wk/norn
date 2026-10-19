@@ -1,11 +1,7 @@
-import { existsSync, statSync } from 'node:fs';
-import { builtinModules } from 'node:module';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { readModule, type ParsedModule } from './source.js';
+import { parseModule, type ParsedModule } from './source.js';
 
-const builtins = new Set(builtinModules);
-
-export const isBuiltin = (specifier: string): boolean => specifier.startsWith('node:') || builtins.has(specifier) || builtins.has(specifier.split('/')[0]!);
 export const isRelative = (specifier: string): boolean => specifier.startsWith('./') || specifier.startsWith('../') || specifier === '.' || specifier === '..' || isAbsolute(specifier);
 
 const isFile = (path: string) => existsSync(path) && statSync(path).isFile();
@@ -37,6 +33,7 @@ export function resolveRelative(fromFile: string, specifier: string): string | u
 export class Project {
   readonly root: string;
   private readonly cache = new Map<string, ParsedModule>();
+  private readonly resolved = new Map<string, string | undefined>();
 
   constructor(root: string) {
     this.root = root;
@@ -49,14 +46,17 @@ export class Project {
   module(file: string): ParsedModule {
     let mod = this.cache.get(file);
     if (!mod) {
-      mod = readModule(file);
+      mod = parseModule(file, readFileSync(file, 'utf8'));
       this.cache.set(file, mod);
     }
     return mod;
   }
 
   resolve(fromFile: string, specifier: string): string | undefined {
-    return isRelative(specifier) ? resolveRelative(fromFile, specifier) : undefined;
+    if (!isRelative(specifier)) return undefined;
+    const key = `${dirname(fromFile)}\0${specifier}`;
+    if (!this.resolved.has(key)) this.resolved.set(key, resolveRelative(fromFile, specifier));
+    return this.resolved.get(key);
   }
 
   /**

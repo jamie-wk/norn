@@ -160,15 +160,13 @@ For custom bundling setups:
 interface NornRegistry {
   workflowsPath: string; // the generated workflows barrel (.ts in development, .js once compiled)
   taskQueues: readonly string[];
-  workflows: readonly RegistryWorkflow[]; // { name, className, taskQueue }
   activities: readonly string[]; // registered names, including prefixes
   searchAttributes: Readonly<Record<string, SearchAttributeType>>;
-  schedules: readonly ScheduleSpec[];
   createContainer(options?: RegistryContainerOptions): Container;
 }
 ```
 
-`defineRegistry(registry)` type-checks a hand-written one. `createTestEnv()` from `@norn/testing` and `norn schedules sync` read the same object.
+`defineRegistry(registry)` type-checks a hand-written one. `createTestEnv()` from `@norn/testing` reads the same object; `norn schedules sync` reads `.norn/schedules.json`.
 
 ## Other exports
 
@@ -186,7 +184,7 @@ interface NornRegistry {
 | `startHealthServer(options)`, `HealthServer`, `HealthServerOptions`, `Readiness` | Health server |
 | `installRuntime(options?, env?)`, `InstallRuntimeOptions` | Runtime, logs and metrics |
 | `correlationActivityInterceptor` | Activity interceptor factory |
-| `defineRegistry(registry)`, `NornRegistry`, `RegistryWorkflow`, `RegistryContainerOptions`, `ScheduleSpec`, `ScheduleOverlap` | Registry |
+| `defineRegistry(registry)`, `NornRegistry`, `RegistryContainerOptions`, `ScheduleSpec`, `ScheduleOverlap` | Registry |
 | `interceptors` (from `@norn/worker/workflow-interceptors`) | Workflow interceptors (bundled into the sandbox) |
 
 ## License

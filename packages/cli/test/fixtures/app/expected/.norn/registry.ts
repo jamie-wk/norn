@@ -11,11 +11,6 @@ const ext = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
 export const registry = {
   workflowsPath: fileURLToPath(new URL(`./workflows${ext}`, import.meta.url)),
   taskQueues: ['carts', 'orders', 'reports'],
-  workflows: [
-    { name: 'OrderWorkflow', className: 'OrderWorkflow', taskQueue: 'orders' },
-    { name: 'ReportWorkflow', className: 'ReportWorkflow', taskQueue: 'reports' },
-    { name: 'ShoppingCart', className: 'CartWorkflow', taskQueue: 'carts' },
-  ],
   activities: [
     'buildReport',
     'inventory.release',
@@ -24,26 +19,5 @@ export const registry = {
     'payments.refund-charge',
   ],
   searchAttributes: { CartSize: 'int', CustomerId: 'keyword', OrderStatus: 'keyword' },
-  schedules: [
-    {
-      id: 'nightly-report',
-      workflowType: 'ReportWorkflow',
-      taskQueue: 'reports',
-      cron: ['0 2 * * *'],
-      input: { kind: 'daily' },
-      overlap: 'buffer-one',
-      timeZone: 'America/New_York',
-      note: 'Nightly totals',
-    },
-    {
-      id: 'report-workflow',
-      workflowType: 'ReportWorkflow',
-      taskQueue: 'reports',
-      cron: ['0 9 * * 1', '0 9 * * 4'],
-      input: { kind: 'weekly' },
-      pauseOnFailure: true,
-      paused: true,
-    },
-  ],
   createContainer: createNornContainer,
 } satisfies NornRegistry;
