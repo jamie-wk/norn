@@ -35,7 +35,6 @@
     "dist",
     "bin",
     "src",
-    "!src/**/*.test.ts",
     "README.md"
   ],
   "engines": {
@@ -50,8 +49,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "clean": "rm -rf dist *.tsbuildinfo"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "oxc-parser": "^0.154.0",

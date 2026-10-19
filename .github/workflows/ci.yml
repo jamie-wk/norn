@@ -29,6 +29,7 @@ jobs:
       - run: pnpm check:pack
       - name: Generated code is up to date
         run: pnpm gen:check
+      - run: pnpm docs:build
 
   test:
     name: Tests (Node ${{ matrix.node }})

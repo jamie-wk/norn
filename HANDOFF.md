@@ -18,8 +18,7 @@ docs published, and the repo ready for the maintainer to run the release. Keep t
 | Review | Done for determinism, continue-as-new, codec crypto, hono security, DI container, worker shutdown, client error mapping and packaging; confirmed findings fixed with tests. |
 | Agent skill | `skills/norn/SKILL.md`, trialled by an agent building a new workflow in the example (gen, typecheck and tests green). |
 
-Fixed in this pass: deterministic `pnpm build` order (`tooling/build.mjs`; the `@norn/testing` devDependency cycle
-made `pnpm -r` order arbitrary), CLI bin stub (`packages/cli/bin/norn.js`) so the bin links before `dist/` exists,
+Fixed in this pass: CLI bin stub (`packages/cli/bin/norn.js`) so the bin links before `dist/` exists,
 `nornErrorHandler` sends `HTTPException`s as the JSON error body, `createTestEnv` waits for the dev server's search
 attributes and registers them on the time-skipping server, `continueAsNew(() => input)` reads the input after handlers
 drain, `codecServer` requires `auth` and `temporalWebhook` requires `verify` (`false` to opt out), both have

@@ -9,8 +9,7 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "build": "node tooling/build.mjs",
-    "build:all": "pnpm -r build",
+    "build": "pnpm -r --filter \"./packages/*\" build",
     "typecheck": "pnpm -r --parallel typecheck",
     "lint": "oxlint --deny-warnings packages examples e2e tooling",
     "test": "vitest run --project unit",
@@ -24,18 +23,15 @@
     "docs:build": "pnpm --filter @norn/docs build",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish",
+    "release": "changeset publish",
     "e2e:build": "pnpm build && pnpm --filter @norn/example-orders-worker build"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "3.0.3",
-    "@temporalio/activity": "1.24.0",
-    "@temporalio/client": "1.24.0",
     "@temporalio/common": "1.24.0",
     "@temporalio/testing": "1.24.0",
     "@temporalio/worker": "1.24.0",
-    "@temporalio/workflow": "1.24.0",
     "@types/node": "^22.18.0",
     "esbuild": "0.28.2",
     "oxlint": "1.88.0",

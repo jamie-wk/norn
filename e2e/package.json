@@ -10,7 +10,6 @@
   "dependencies": {
     "@norn/client": "workspace:^",
     "@norn/codec": "workspace:^",
-    "@norn/core": "workspace:^",
     "@norn/example-orders-contracts": "workspace:^",
     "@norn/example-orders-provider": "workspace:^",
     "@temporalio/client": "1.24.0",

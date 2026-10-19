@@ -44,7 +44,6 @@
   "files": [
     "dist",
     "src",
-    "!src/**/*.test.ts",
     "README.md"
   ],
   "engines": {
@@ -56,8 +55,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "clean": "rm -rf dist *.tsbuildinfo"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@norn/core": "workspace:^",
@@ -87,7 +85,6 @@
     "@temporalio/client": "1.24.0",
     "@temporalio/common": "1.24.0",
     "@temporalio/workflow": "1.24.0",
-    "@temporalio/activity": "1.24.0",
     "@norn/workflow": "workspace:^",
     "vitest": "5.0.5",
     "esbuild": "0.28.2"

@@ -13,7 +13,5 @@
   "dependencies": {
     "@norn/core": "workspace:^"
   },
-  "devDependencies": {
-    "@norn/example-orders-worker": "workspace:^"
-  }
+  "devDependencies": {}
 }
