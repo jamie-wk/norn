@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, vi, type Mock } from 'vitest';
 import type { AnyWorkflowContract, Duration } from '@norn-ts/core';
-import type { WorkflowClient } from '@norn-ts/client';
 import { createTestEnv, type TestEnv, type TestEnvOptions } from './env.js';
 import { buildMocks, type ActivitiesRefLike, type ActivityImpls, type MethodFn, type MockedActivities, type RefInstance } from './mocks.js';
 
@@ -46,7 +45,7 @@ export function useTestEnv(options: TestEnvOptions = {}): TestEnv {
     get mode() {
       return current().mode;
     },
-    workflow: <C extends AnyWorkflowContract>(contract: C): WorkflowClient<C> => current().workflow(contract),
+    workflow: ((target: AnyWorkflowContract) => current().workflow(target)) as TestEnv['workflow'],
     sleep: (duration: Duration) => current().sleep(duration),
     teardown: () => current().teardown(),
     [Symbol.asyncDispose]: () => current().teardown(),

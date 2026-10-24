@@ -297,6 +297,27 @@ export function contract<C extends WorkflowClass>() {
     }) as unknown as GeneratedContract<C, D>;
 }
 
+/**
+ * The contract of a decorated workflow class, read from its decorators at runtime. Types come from
+ * the class, so every handler method is offered for signal, query and update; using one as the
+ * wrong kind fails at runtime.
+ */
+export type ClassContract<C extends WorkflowClass> = Omit<
+  WorkflowContract<
+    WorkflowInput<C>,
+    WorkflowOutput<C>,
+    { [K in HandlerMethodKey<C>]: SignalRef<MethodArgs<C, K>> },
+    { [K in HandlerMethodKey<C>]: QueryRef<MethodResult<C, K>, MethodArgs<C, K>> },
+    { [K in HandlerMethodKey<C>]: UpdateRef<MethodResult<C, K>, MethodArgs<C, K>> },
+    SearchAttributeTypes,
+    string
+  >,
+  'workflowId'
+> & {
+  /** Builds the workflow ID from the template's fields (checked at runtime). */
+  workflowId(params: Partial<NonNullable<WorkflowInput<C>>>): string;
+};
+
 // ---------------------------------------------------------------------------------------------
 // Runtime construction shared by both forms
 // ---------------------------------------------------------------------------------------------
@@ -306,7 +327,7 @@ function mapNames(specs: Record<string, { name: string | undefined }> | undefine
   return Object.fromEntries(Object.entries(specs).map(([key, spec]) => [key, spec.name ?? key]));
 }
 
-interface ContractParts {
+export interface ContractParts {
   name: string;
   taskQueue: string;
   id: string | undefined;
@@ -332,7 +353,8 @@ function refs(kind: 'signal' | 'query' | 'update', names: Record<string, string>
   return Object.freeze(out);
 }
 
-function buildContract(parts: ContractParts): AnyWorkflowContract {
+/** @internal Builds a contract object; used by `contractOf()` in @norn-ts/workflow. */
+export function buildContract(parts: ContractParts): AnyWorkflowContract {
   const { name, taskQueue, id } = parts;
   if (typeof name !== 'string' || name.trim() === '') throw new NornConfigError('A workflow contract needs a name');
   if (typeof taskQueue !== 'string' || taskQueue.trim() === '') {

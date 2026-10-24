@@ -1,16 +1,18 @@
-import { expect, it } from 'vitest';
-import { mockActivities, useTestEnv } from '@norn-ts/testing/vitest';
-import { PaymentActivities } from '../.norn/activities';
-import { OrderWorkflow } from '../.norn/contracts';
-import { registry } from '../.norn/registry';
+import { expect, it, vi } from 'vitest';
+import { useTestEnv } from '@norn-ts/testing/vitest';
+import { OrderWorkflow } from '../src/workflows/order.workflow';
 
-const payments = mockActivities(PaymentActivities, {
-  charge: async (orderId, cents) => ({ id: `ch_${orderId}`, cents }),
-  refund: async () => true,
-});
+const payments = {
+  charge: vi.fn(async (orderId: string, cents: number) => ({ id: `ch_${orderId}`, cents })),
+  refund: vi.fn(async (_chargeId: string) => true),
+};
 
 // One time-skipping Temporal server and worker for this file. The first run downloads the server.
-const env = useTestEnv({ registry, mode: 'time-skipping', activities: payments });
+const env = useTestEnv({
+  workflows: new URL('../src/workflows/index.ts', import.meta.url),
+  activities: { payments },
+  mode: 'time-skipping',
+});
 
 it('keeps the charge when nobody cancels', async () => {
   const order = await env.workflow(OrderWorkflow).start({ orderId: 'o-1', cents: 500 });

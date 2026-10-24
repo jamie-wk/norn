@@ -1,5 +1,5 @@
-// pnpm dev: a local Temporal server (unless one is already running), norn gen --watch, and the
-// worker, restarted whenever you change a file. Ctrl+C stops everything.
+// pnpm dev: a local Temporal server (unless one is already running) and the worker, restarted
+// whenever you change a file. Ctrl+C stops everything.
 import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { connect } from 'node:net';
@@ -33,11 +33,7 @@ if (process.env.TEMPORAL_ADDRESS) {
   console.log('Temporal is running on localhost:7233. Web UI: http://localhost:8233');
 }
 
-// Generate once before the worker starts, so it never imports a missing .norn/.
-const gen = await new Promise<number | null>((resolve) => run('norn', ['gen']).on('close', resolve));
-if (gen !== 0) console.error('norn gen failed; fix the errors above and save, and watch mode will retry.');
-
-const children = [run('norn', ['gen', '--watch']), run('tsx', ['watch', '--clear-screen=false', 'src/worker.ts'])];
+const children = [run('tsx', ['watch', '--clear-screen=false', 'src/worker.ts'])];
 
 let stopping = false;
 async function stop() {

@@ -3,8 +3,8 @@ import { DefaultLogger, Runtime, type LogLevel, type WorkerOptions } from '@temp
 import { defineSearchAttributeKey, type DataConverter } from '@temporalio/common';
 import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, toMs, type Duration, type SearchAttributeType } from '@norn-ts/core';
 import { createClient, type NornClient, type WorkflowClient } from '@norn-ts/client';
-import { bundleWorkflows, createWorker, type NornRegistry, type NornWorker, type RegistryContainerOptions } from '@norn-ts/worker';
-import type { AnyWorkflowContract } from '@norn-ts/core';
+import { bundleWorkflows, createWorker, plainRegistry, type NornRegistry, type NornWorker, type RegistryContainerOptions } from '@norn-ts/worker';
+import type { AnyWorkflowContract, ClassContract, WorkflowClass } from '@norn-ts/core';
 import { activityMap, type ActivitySource } from './mocks.js';
 
 export type TestEnvMode = 'local' | 'time-skipping';
@@ -14,8 +14,13 @@ export interface TestEnvOptions {
   registry?: NornRegistry;
   /** `'local'` (default) runs a real dev server; `'time-skipping'` fast-forwards timers. */
   mode?: TestEnvMode;
-  /** Replace activities by registered name: `mockActivities()` results or `{ name: fn }`. */
-  activities?: ActivitySource | readonly ActivitySource[];
+  /** A module exporting your `@Workflow` classes; a worker runs them with `activities`. Use instead of `registry`. */
+  workflows?: string | URL;
+  /**
+   * With `workflows`: activity objects by namespace, e.g. `{ payments: { charge: vi.fn(...) } }`.
+   * With `registry`: replacements by registered name, `mockActivities()` results or `{ name: fn }`.
+   */
+  activities?: ActivitySource | readonly ActivitySource[] | Readonly<Record<string, object>>;
   /** Container overrides, e.g. a fake service: `{ overrides: [[Mailer, fakeMailer]] }`. */
   container?: RegistryContainerOptions;
   /** Search attributes to register on the server, in addition to the registry's. */
@@ -39,6 +44,7 @@ export interface TestEnv extends AsyncDisposable {
   readonly worker: NornWorker | undefined;
   readonly mode: TestEnvMode;
   workflow<C extends AnyWorkflowContract>(contract: C): WorkflowClient<C>;
+  workflow<W extends WorkflowClass>(workflowClass: W): WorkflowClient<ClassContract<W>>;
   /** Advances time: skips it on the time-skipping server, sleeps for real on the dev server. */
   sleep(duration: Duration): Promise<void>;
   teardown(): Promise<void>;
@@ -116,9 +122,11 @@ export async function createTestEnv(options: TestEnvOptions = {}): Promise<TestE
   quietRuntime(options.logLevel);
   const mode = options.mode ?? 'local';
   if (mode !== 'local' && mode !== 'time-skipping') throw new NornConfigError(`mode must be 'local' or 'time-skipping'`);
-  const overrides = activityMap(options.activities);
+  const registry =
+    options.registry ?? (options.workflows ? await plainRegistry(options.workflows, (options.activities ?? {}) as Record<string, object>) : undefined);
+  const overrides = options.registry ? activityMap(options.activities as ActivitySource) : undefined;
 
-  const searchAttributes = { ...options.registry?.searchAttributes, ...options.searchAttributes };
+  const searchAttributes = { ...registry?.searchAttributes, ...options.searchAttributes };
   let temporal: TestWorkflowEnvironment;
   if (mode === 'time-skipping') {
     const path = options.serverPath ?? process.env.NORN_TEMPORAL_TEST_SERVER_PATH;
@@ -148,17 +156,17 @@ export async function createTestEnv(options: TestEnvOptions = {}): Promise<TestE
   let worker: NornWorker | undefined;
   let running: Promise<void> | undefined;
   try {
-    if (options.registry && options.worker !== false) {
+    if (registry && options.worker !== false) {
       const payloadConverterPath = (options.dataConverter as { payloadConverterPath?: string } | undefined)?.payloadConverterPath;
       worker = await createWorker({
-        registry: options.registry,
+        registry,
         connection: temporal.nativeConnection,
         namespace: temporal.namespace ?? 'default',
         taskQueues: options.taskQueues,
         container: options.container,
         activityOverrides: overrides,
         dataConverter: options.dataConverter,
-        workflowBundle: await cachedBundle(options.registry.workflowsPath, payloadConverterPath),
+        workflowBundle: await cachedBundle(registry.workflowsPath, payloadConverterPath),
         handleSignals: false,
         health: false,
         versioning: false,
@@ -195,7 +203,7 @@ export async function createTestEnv(options: TestEnvOptions = {}): Promise<TestE
     client,
     worker,
     mode,
-    workflow: (contract) => client.workflow(contract),
+    workflow: ((target: AnyWorkflowContract) => client.workflow(target)) as TestEnv['workflow'],
     sleep: (duration) => temporal.sleep(toMs(duration)),
     teardown,
     [Symbol.asyncDispose]: teardown,

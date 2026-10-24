@@ -248,10 +248,10 @@ importers:
       '@norn-ts/core':
         specifier: workspace:^
         version: link:../core
-    devDependencies:
       '@norn-ts/workflow':
         specifier: workspace:^
         version: link:../workflow
+    devDependencies:
       '@temporalio/client':
         specifier: 1.24.0
         version: 1.24.0
@@ -427,6 +427,9 @@ importers:
       '@norn-ts/core':
         specifier: workspace:^
         version: link:../core
+      '@norn-ts/workflow':
+        specifier: workspace:^
+        version: link:../workflow
     devDependencies:
       '@norn-ts/client':
         specifier: workspace:^
@@ -434,9 +437,6 @@ importers:
       '@norn-ts/codec':
         specifier: workspace:^
         version: link:../codec
-      '@norn-ts/workflow':
-        specifier: workspace:^
-        version: link:../workflow
       '@temporalio/activity':
         specifier: 1.24.0
         version: 1.24.0

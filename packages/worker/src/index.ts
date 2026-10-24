@@ -1,3 +1,4 @@
+export { activityFunctions, plainRegistry } from './plain.js';
 export { createWorker, type CreateWorkerOptions, type NornWorker, type NornWorkerState } from './worker.js';
 export {
   resolveWorkerConfig,

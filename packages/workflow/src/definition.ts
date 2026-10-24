@@ -3,10 +3,13 @@ import {
   NORN,
   NornConfigError,
   SEARCH_ATTRIBUTE_TYPES,
+  buildContract,
   classTag,
   methodTags,
   templateKeys,
+  type ClassContract,
   type SearchAttributeType,
+  type WorkflowClass,
 } from '@norn-ts/core';
 
 export type VersioningBehavior = 'pinned' | 'auto-upgrade';
@@ -192,4 +195,26 @@ export function describeWorkflow(cls: Function): WorkflowDefinition {
   if (options.versioning !== undefined) definition.versioning = options.versioning;
   cache.set(cls, definition);
   return definition;
+}
+
+const contracts = new WeakMap<Function, unknown>();
+
+/** The client contract of a `@Workflow` class: its type name, task queue, ID template and handler names. */
+export function contractOf<C extends WorkflowClass>(cls: C): ClassContract<C> {
+  let contract = contracts.get(cls);
+  if (!contract) {
+    const def = describeWorkflow(cls);
+    const names = (handlers: HandlerDefinition[]) => Object.fromEntries(handlers.map((h) => [h.method, h.name]));
+    contract = buildContract({
+      name: def.name,
+      taskQueue: def.taskQueue,
+      id: def.idTemplate,
+      signals: names(def.signals),
+      queries: names(def.queries),
+      updates: names(def.updates),
+      searchAttributes: def.searchAttributes,
+    });
+    contracts.set(cls, contract);
+  }
+  return contract as ClassContract<C>;
 }

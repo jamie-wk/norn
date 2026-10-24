@@ -24,7 +24,10 @@ import {
   type RefArgs,
   type RefResult,
   type SearchAttributeValues,
+  type ClassContract,
+  type WorkflowClass,
 } from '@norn-ts/core';
+import { contractOf, isWorkflowClass } from '@norn-ts/workflow';
 import { correlationInterceptor, runWithCorrelationId } from './correlation.js';
 import { toNornError, type ErrorContext } from './errors.js';
 import { resolveWorkflowId, startOptions, type StartOptions } from './options.js';
@@ -138,6 +141,8 @@ export interface WorkflowClient<C extends AnyWorkflowContract = AnyWorkflowContr
 
 export interface NornClient extends AsyncDisposable {
   workflow<C extends AnyWorkflowContract>(contract: C): WorkflowClient<C>;
+  /** A `@Workflow` class works as its own contract. */
+  workflow<W extends WorkflowClass>(workflowClass: W): WorkflowClient<ClassContract<W>>;
   /** The underlying Temporal client. */
   readonly temporal: Client;
   readonly connection: ConnectionLike;
@@ -248,9 +253,10 @@ export function createClient(options: ClientOptions = {}): NornClient {
     };
   };
 
-  const workflow = <C extends AnyWorkflowContract>(contract: C): WorkflowClient<C> => {
+  const workflow = <C extends AnyWorkflowContract>(contractOrClass: C | WorkflowClass): WorkflowClient<C> => {
+    const contract = (isWorkflowClass(contractOrClass) ? contractOf(contractOrClass) : contractOrClass) as C;
     if (contract?.kind !== 'norn.workflow') {
-      throw new NornConfigError('workflow() expects a contract from .norn/contracts.ts, contract() or defineWorkflow()');
+      throw new NornConfigError('workflow() expects a @Workflow class or a contract from contract() or defineWorkflow()');
     }
     const typeQuery = `WorkflowType = ${JSON.stringify(contract.name)}`;
     const visibility = (query?: string) => (query ? `${typeQuery} AND (${query})` : typeQuery);
@@ -327,5 +333,5 @@ export function createClient(options: ClientOptions = {}): NornClient {
     closed = true;
     if (ownsConnection) await connection.close();
   };
-  return { workflow, temporal, connection, close, [Symbol.asyncDispose]: close };
+  return { workflow: workflow as NornClient['workflow'], temporal, connection, close, [Symbol.asyncDispose]: close };
 }

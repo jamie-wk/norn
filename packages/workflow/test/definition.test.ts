@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NornConfigError } from '@norn-ts/core';
-import { Query, Signal, Update, Validate, Workflow, describeWorkflow, isWorkflowClass } from '../src/index.ts';
+import { Query, Signal, Update, Validate, Workflow, contractOf, describeWorkflow, isWorkflowClass } from '../src/index.ts';
 
 class InvalidItemError extends Error {}
 
@@ -207,5 +207,31 @@ describe('definition-time validation', () => {
         async run() {}
       }
     }).toThrow(/already/);
+  });
+});
+
+describe('contractOf', () => {
+  @Workflow({ taskQueue: 'q', id: 'thing-{key}' })
+  class Thing {
+    @Signal('poke') nudge() {}
+    @Query() count() {
+      return 1;
+    }
+    async run(_input: { key: string }) {}
+  }
+
+  it('reads the type name, task queue, ID template and handler names from the class', () => {
+    const contract = contractOf(Thing);
+    expect(contract).toBe(contractOf(Thing));
+    expect(contract).toMatchObject({ name: 'Thing', taskQueue: 'q', idTemplate: 'thing-{key}' });
+    expect(contract.signals).toEqual({ nudge: { kind: 'signal', name: 'poke' } });
+    expect(contract.queries).toEqual({ count: { kind: 'query', name: 'count' } });
+    expect(contract.workflowId({ key: 'k1' })).toBe('thing-k1');
+  });
+
+  it('rejects a class without @Workflow', () => {
+    expect(() => contractOf(class NotOne {
+      async run() {}
+    })).toThrow(NornConfigError);
   });
 });

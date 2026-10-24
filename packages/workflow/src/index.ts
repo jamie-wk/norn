@@ -1,6 +1,7 @@
 export { Workflow, Signal, Query, Update, Validate, Schedule, type ScheduleOptions } from './decorators.js';
 export {
   describeWorkflow,
+  contractOf,
   isWorkflowClass,
   type WorkflowOptions,
   type WorkflowDefinition,
@@ -18,6 +19,7 @@ export {
   activityName,
   type ActivitiesRef,
   type ActivityProxy,
+  type ActivitiesOf,
   type ActivityOverrides,
   type ActivityMethodKey,
 } from './activities.js';

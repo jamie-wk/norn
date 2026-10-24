@@ -73,7 +73,10 @@ function override(options: ActivityOptions, layer: ActivityOptions): ActivityOpt
  * Returns typed functions that schedule the referenced activities. Call it from workflow code,
  * typically as a class field: `private pay = useActivities(activities.payments)`.
  */
-export function useActivities<R extends ActivitiesRef<any, any>>(ref: R, overrides?: ActivityOverrides<R>): ActivityProxy<R> {
+export function useActivities<T>(namespace: string, options?: ActivityOptions & { methods?: Partial<Record<ActivityMethodKey<T>, ActivityOptions>> }): ActivitiesOf<T>;
+export function useActivities<R extends ActivitiesRef<any, any>>(ref: R, overrides?: ActivityOverrides<R>): ActivityProxy<R>;
+export function useActivities(ref: ActivitiesRef<any, any> | string, overrides?: ActivityOptions & { methods?: Partial<Record<string, ActivityOptions>> }): unknown {
+  if (typeof ref === 'string') return byNamespace(ref, overrides);
   if (!ref || ref.kind !== 'norn.activities') {
     throw new NornConfigError('useActivities() needs a reference from the generated activities registry');
   }
@@ -91,5 +94,31 @@ export function useActivities<R extends ActivitiesRef<any, any>>(ref: R, overrid
     const fn = scheduled[type]!;
     proxy[method] = (...args: unknown[]) => fn(...args);
   }
-  return Object.freeze(proxy) as ActivityProxy<R>;
+  return Object.freeze(proxy);
+}
+
+/** Typed functions for each method of an activity class `T`, as seen from workflow code. */
+export type ActivitiesOf<T> = {
+  [K in ActivityMethodKey<T>]: T[K] extends (...args: infer A) => infer Ret ? (...args: A) => Promise<Awaited<Ret>> : never;
+};
+
+/** `useActivities<T>('payments')`: schedules `payments.<method>`; the worker registers the same names. */
+function byNamespace(namespace: string, options: (ActivityOptions & { methods?: Partial<Record<string, ActivityOptions>> }) | undefined): unknown {
+  if (namespace === '') throw new NornConfigError('useActivities: the namespace must be a non-empty string');
+  const { methods: perMethod, ...shared } = options ?? {};
+  const cache = new Map<string, (...args: unknown[]) => Promise<unknown>>();
+  return new Proxy({}, {
+    get(_target, method) {
+      if (typeof method !== 'string' || method === 'then') return undefined;
+      let fn = cache.get(method);
+      if (!fn) {
+        const merged = override(shared, perMethod?.[method] ?? {});
+        const temporalOptions = toActivityOptions(merged);
+        const scheduled = (merged.local ? proxyLocalActivities(temporalOptions) : proxyActivities(temporalOptions)) as Record<string, (...args: unknown[]) => Promise<unknown>>;
+        fn = scheduled[`${namespace}.${method}`]!;
+        cache.set(method, fn);
+      }
+      return fn;
+    },
+  });
 }

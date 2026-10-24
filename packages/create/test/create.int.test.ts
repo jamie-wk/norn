@@ -35,12 +35,6 @@ beforeAll(async () => {
 
 afterAll(() => rmSync(join(dir, '..'), { recursive: true, force: true }));
 
-it('generates .norn/ without errors', () => {
-  const result = run('norn gen');
-  expect(result.output).not.toContain('error');
-  expect(result.status).toBe(0);
-});
-
 it('typechecks', () => {
   const result = run('tsc --noEmit');
   expect(result.output).toBe('');
