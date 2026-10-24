@@ -37,16 +37,16 @@ export interface ActivityOptions {
 
 /** Temporal SDK activity options produced from {@link ActivityOptions}. */
 export interface TemporalActivityOptions {
-  startToCloseTimeout?: string;
-  scheduleToCloseTimeout?: string;
-  scheduleToStartTimeout?: string;
-  heartbeatTimeout?: string;
+  startToCloseTimeout?: `${number}ms`;
+  scheduleToCloseTimeout?: `${number}ms`;
+  scheduleToStartTimeout?: `${number}ms`;
+  heartbeatTimeout?: `${number}ms`;
   taskQueue?: string;
   summary?: string;
   retry?: {
-    initialInterval?: string;
+    initialInterval?: `${number}ms`;
     backoffCoefficient?: number;
-    maximumInterval?: string;
+    maximumInterval?: `${number}ms`;
     maximumAttempts?: number;
     nonRetryableErrorTypes?: string[];
   };

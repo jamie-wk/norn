@@ -1,4 +1,5 @@
 import { condition } from '@temporalio/workflow';
+import { toMs, type Duration } from '@norn-ts/core';
 import { Query, Signal, Update, Validate, Workflow, asFailure, setSearchAttributes, transitions, useActivities, useChild } from '@norn-ts/workflow';
 import { InventoryActivities, LoyaltyActivities, NotificationActivities, PaymentActivities } from '../../.norn/activities.ts';
 import { InvalidItemError, OrderStateError, OutOfStockError, PaymentDeclinedError, itemError, type LineItem, type OrderInput, type OrderStatus, type OrderView } from '../domain.ts';
@@ -140,7 +141,7 @@ export class OrderWorkflow {
     await this.notify.email(input.email, 'order_paid', { orderId: this.orderId, totalCents: this.totalCents });
 
     // The customer may cancel for a while after paying; a dispute stops fulfilment.
-    await condition(() => this.cancelReason !== undefined || this.disputed, input.cancelWindow ?? '1 hour');
+    await condition(() => this.cancelReason !== undefined || this.disputed, toMs((input.cancelWindow ?? '1 hour') as Duration));
     if (this.disputed) {
       await this.inventory.release(this.orderId);
       return this.finish('charged_back');

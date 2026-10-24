@@ -115,7 +115,7 @@ export const registry = {
 } satisfies NornRegistry;
 ```
 
-These files import worker code, so only the worker (and tests) import them. See [the `@norn-ts/worker` README](https://github.com/jamie-wk/norn/tree/main/packages/worker#the-registry) for every field.
+These files import worker code, so only the worker (and tests) import them. See [the `@norn-ts/worker` reference](/norn/reference/worker/#the-registry) for every field.
 
 ### `schedules.json` and `search-attributes.json`
 

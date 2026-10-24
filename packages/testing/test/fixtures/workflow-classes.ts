@@ -1,3 +1,4 @@
+import type { Duration } from '@temporalio/common';
 import { condition, sleep } from '@temporalio/workflow';
 import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
 import { NotifyActivities } from './refs.ts';
@@ -16,7 +17,7 @@ export class ReminderWorkflow {
     return { stage: this.stage, snoozed: this.snoozed };
   }
 
-  async run(input: { userId: string; email: string; delay?: string }) {
+  async run(input: { userId: string; email: string; delay?: Duration }) {
     await sleep(input.delay ?? '1 day');
     this.stage = 'sending';
     const id = await this.notify.email(input.email, `reminder after ${this.snoozed} snoozes`);

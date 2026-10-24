@@ -102,16 +102,16 @@ Norn weaves those threads into code that reads like the story it tells: a class 
 
 | Package | What it does |
 | --- | --- |
-| [`@norn-ts/core`](https://github.com/jamie-wk/norn/tree/main/packages/core#readme) | Workflow-safe building blocks: contracts, durations, ID templates, errors, state machines, business-day calendars. |
-| [`@norn-ts/workflow`](https://github.com/jamie-wk/norn/tree/main/packages/workflow#readme) | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `@Schedule`; `useActivities`, `useChild`, `useExternal`, `continueAsNew`. |
-| [`@norn-ts/activity`](https://github.com/jamie-wk/norn/tree/main/packages/activity#readme) | `@Activities`, `@Activity`, `@NonRetryable`, `@Service`, tokens, `provide()`, the container, activity context helpers. |
-| [`@norn-ts/client`](https://github.com/jamie-wk/norn/tree/main/packages/client#readme) | `createClient()`: typed start, execute, signal, query, update, with-start operations, list and count. |
-| [`@norn-ts/worker`](https://github.com/jamie-wk/norn/tree/main/packages/worker#readme) | `createWorker()`: one worker per task queue, health checks, graceful drain, versioning, bundling, metrics. |
-| [`@norn-ts/testing`](https://github.com/jamie-wk/norn/tree/main/packages/testing#readme) | `createTestEnv()`, typed `mockActivities()`, `createFakeClient()`, replay checks, the Vitest decorator plugin. |
-| [`@norn-ts/codec`](https://github.com/jamie-wk/norn/tree/main/packages/codec#readme) | AES-256-GCM payload encryption with key rotation; a payload converter for `bigint` and TC39 Temporal values. |
-| [`@norn-ts/hono`](https://github.com/jamie-wk/norn/tree/main/packages/hono#readme) | Hono middleware with correlation IDs, an error handler, webhook-to-signal routing and a codec server. |
-| [`@norn-ts/cli`](https://github.com/jamie-wk/norn/tree/main/packages/cli#readme) | `norn gen`, `norn bundle`, `norn schedules sync`, `norn histories pull`. |
-| [`@norn-ts/eslint-plugin`](https://github.com/jamie-wk/norn/tree/main/packages/eslint-plugin#readme) | Editor-time determinism and import-boundary rules for workflow files. |
+| [`@norn-ts/core`](/norn/reference/core/) | Workflow-safe building blocks: contracts, durations, ID templates, errors, state machines, business-day calendars. |
+| [`@norn-ts/workflow`](/norn/reference/workflow/) | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `@Schedule`; `useActivities`, `useChild`, `useExternal`, `continueAsNew`. |
+| [`@norn-ts/activity`](/norn/reference/activity/) | `@Activities`, `@Activity`, `@NonRetryable`, `@Service`, tokens, `provide()`, the container, activity context helpers. |
+| [`@norn-ts/client`](/norn/reference/client/) | `createClient()`: typed start, execute, signal, query, update, with-start operations, list and count. |
+| [`@norn-ts/worker`](/norn/reference/worker/) | `createWorker()`: one worker per task queue, health checks, graceful drain, versioning, bundling, metrics. |
+| [`@norn-ts/testing`](/norn/reference/testing/) | `createTestEnv()`, typed `mockActivities()`, `createFakeClient()`, replay checks, the Vitest decorator plugin. |
+| [`@norn-ts/codec`](/norn/reference/codec/) | AES-256-GCM payload encryption with key rotation; a payload converter for `bigint` and TC39 Temporal values. |
+| [`@norn-ts/hono`](/norn/reference/hono/) | Hono middleware with correlation IDs, an error handler, webhook-to-signal routing and a codec server. |
+| [`@norn-ts/cli`](/norn/reference/cli/) | `norn gen`, `norn bundle`, `norn schedules sync`, `norn histories pull`. |
+| [`@norn-ts/eslint-plugin`](/norn/reference/eslint-plugin/) | Editor-time determinism and import-boundary rules for workflow files. |
 
 ## Requirements
 

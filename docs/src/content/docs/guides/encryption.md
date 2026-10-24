@@ -117,7 +117,7 @@ If you use other codecs too (for example compression), pass them all in the orde
 
 ## Payload format
 
-For other-language consumers: an encrypted payload has metadata `encoding: binary/encrypted` and `encryption-key-id: <id>`, and data `IV (12 bytes) || AES-256-GCM ciphertext || tag (16 bytes)`. The plaintext is the original `temporal.api.common.v1.Payload` serialised as protobuf (so the original encoding is hidden too), and the additional authenticated data is the UTF-8 key ID. Tagged JSON values look like `{"$norn":"bigint","v":"123"}`. Details are in the [`@norn-ts/codec` README](https://github.com/jamie-wk/norn/tree/main/packages/codec#format).
+For other-language consumers: an encrypted payload has metadata `encoding: binary/encrypted` and `encryption-key-id: <id>`, and data `IV (12 bytes) || AES-256-GCM ciphertext || tag (16 bytes)`. The plaintext is the original `temporal.api.common.v1.Payload` serialised as protobuf (so the original encoding is hidden too), and the additional authenticated data is the UTF-8 key ID. Tagged JSON values look like `{"$norn":"bigint","v":"123"}`. Details are in the [`@norn-ts/codec` reference](/norn/reference/codec/#format).
 
 ## Security notes
 

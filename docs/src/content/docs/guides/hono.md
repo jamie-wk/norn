@@ -2,7 +2,7 @@
 title: "Hono integration"
 ---
 
-[`@norn-ts/hono`](https://github.com/jamie-wk/norn/tree/main/packages/hono#readme) connects a [Hono](https://hono.dev) API to Temporal: a middleware that puts a Norn client on every request with a correlation ID, an error handler that turns Norn errors into JSON responses with the right status, a webhook handler that routes provider events to signals and updates, and a codec server for the Temporal UI.
+[`@norn-ts/hono`](/norn/reference/hono/) connects a [Hono](https://hono.dev) API to Temporal: a middleware that puts a Norn client on every request with a correlation ID, an error handler that turns Norn errors into JSON responses with the right status, a webhook handler that routes provider events to signals and updates, and a codec server for the Temporal UI.
 
 ```sh
 pnpm add @norn-ts/hono @norn-ts/client hono @temporalio/client @temporalio/common

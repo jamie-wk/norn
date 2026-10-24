@@ -214,4 +214,4 @@ const http = await container.resolve(HttpClient);
 const activities = await container.activities();
 ```
 
-`deps` on an entry is what `norn gen` writes; it takes precedence over `inject`. See the [`@norn-ts/activity` README](https://github.com/jamie-wk/norn/tree/main/packages/activity#createcontaineroptions) for every option.
+`deps` on an entry is what `norn gen` writes; it takes precedence over `inject`. See the [`@norn-ts/activity` reference](/norn/reference/activity/#createcontaineroptions) for every option.

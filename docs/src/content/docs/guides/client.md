@@ -32,7 +32,7 @@ const norn = createClient({
 
 | Option | Description |
 | --- | --- |
-| `address`, `namespace`, `apiKey` | Connection settings, defaulting to `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE` and `TEMPORAL_API_KEY`. An API key, or `TEMPORAL_TLS=true`, turns TLS on. Empty variables count as unset. For mTLS client certificates pass your own `connection`. |
+| `address`, `namespace`, `apiKey` | Connection settings, defaulting to `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE` and `TEMPORAL_API_KEY`. An API key, or `TEMPORAL_TLS=true`, turns TLS on. Empty variables count as unset. For mTLS, set `tls`. |
 | `tls` | The SDK's TLS options, for mTLS with client certificates (`{ clientCertPair: { crt, key } }`) or a custom CA. |
 | `connectTimeout` | A `Duration`. |
 | `connection` | An existing `Connection` to use instead of opening one. |
