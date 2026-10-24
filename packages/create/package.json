@@ -1,6 +1,6 @@
 {
   "name": "@norn-ts/create",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Scaffolds a new Norn project: pnpm create @norn-ts my-app.",
   "license": "MIT",
   "type": "module",
