@@ -8,18 +8,12 @@ import {
   NornConfigError,
   formatDuration,
   formatWorkflowId,
-  isWorkflowContract,
-  type AnyWorkflowContract,
-  type ContractInput,
-  type ContractOutput,
   type Duration,
-  type IdParamsFor,
-  type RefArgs,
   type WorkflowClass,
   type WorkflowInput,
   type WorkflowOutput,
 } from '../core/index.js';
-import { describeWorkflow } from './definition.js';
+import { describeWorkflow, type WorkflowDefinition } from './definition.js';
 
 export interface ChildOptions {
   /** Explicit workflow ID. Required when the child has no ID template. */
@@ -34,35 +28,24 @@ export interface ChildOptions {
   memo?: Record<string, unknown>;
 }
 
-type Target = WorkflowClass | AnyWorkflowContract;
-type InputOf<T> = T extends AnyWorkflowContract ? ContractInput<T> : WorkflowInput<T>;
-type OutputOf<T> = T extends AnyWorkflowContract ? ContractOutput<T> : WorkflowOutput<T>;
 type InstanceOf<T> = T extends abstract new (...args: any[]) => infer I ? I : never;
 type MethodKey<T> = { [K in keyof InstanceOf<T>]: InstanceOf<T>[K] extends (...args: any[]) => any ? K : never }[keyof InstanceOf<T>] &
   string;
 
-/** Signal methods of a class target, or signal keys of a contract target. */
-type SignalKey<T> = T extends AnyWorkflowContract ? keyof T['signals'] & string : Exclude<MethodKey<T>, 'run'>;
-type SignalArgs<T, K> = T extends AnyWorkflowContract
-  ? K extends keyof T['signals']
-    ? RefArgs<T['signals'][K]>
-    : never
-  : K extends keyof InstanceOf<T>
-    ? InstanceOf<T>[K] extends (...args: infer A) => any
-      ? A
-      : never
-    : never;
+/** Handler methods of a workflow class (the kind is checked at runtime). */
+type SignalKey<T> = Exclude<MethodKey<T>, 'run'>;
+type SignalArgs<T, K> = K extends keyof InstanceOf<T> ? (InstanceOf<T>[K] extends (...args: infer A) => any ? A : never) : never;
 
 type AsArgs<X> = X extends any[] ? X : never;
 
-type StartArgs<T> = InputOf<T> extends undefined
-  ? [input?: InputOf<T>, options?: ChildOptions]
-  : [input: InputOf<T>, options?: ChildOptions];
+type StartArgs<T> = WorkflowInput<T> extends undefined
+  ? [input?: WorkflowInput<T>, options?: ChildOptions]
+  : [input: WorkflowInput<T>, options?: ChildOptions];
 
 export interface ChildHandle<T> {
   readonly workflowId: string;
   readonly firstExecutionRunId: string;
-  result(): Promise<OutputOf<T>>;
+  result(): Promise<WorkflowOutput<T>>;
   signal<K extends SignalKey<T>>(signal: K, ...args: AsArgs<SignalArgs<T, K>>): Promise<void>;
 }
 
@@ -70,7 +53,7 @@ export interface ChildRef<T> {
   /** Starts the child and returns a handle once it is running. */
   start(...args: StartArgs<T>): Promise<ChildHandle<T>>;
   /** Starts the child and waits for its result. */
-  execute(...args: StartArgs<T>): Promise<OutputOf<T>>;
+  execute(...args: StartArgs<T>): Promise<WorkflowOutput<T>>;
 }
 
 export interface ExternalRef<T> {
@@ -79,37 +62,10 @@ export interface ExternalRef<T> {
   cancel(): Promise<void>;
 }
 
-interface TargetInfo {
-  name: string;
-  taskQueue: string;
-  idTemplate: string | undefined;
-  signalName(key: string): string;
-}
-
-function info(target: Target): TargetInfo {
-  if (isWorkflowContract(target)) {
-    return {
-      name: target.name,
-      taskQueue: target.taskQueue,
-      idTemplate: target.idTemplate,
-      signalName: (key) => {
-        const ref = (target.signals as Record<string, { name: string }>)[key];
-        if (!ref) throw new NornConfigError(`Workflow ${target.name} has no signal "${key}"`);
-        return ref.name;
-      },
-    };
-  }
-  const def = describeWorkflow(target);
-  return {
-    name: def.name,
-    taskQueue: def.taskQueue,
-    idTemplate: def.idTemplate,
-    signalName: (key) => {
-      const handler = def.signals.find((s) => s.method === key);
-      if (!handler) throw new NornConfigError(`Workflow ${def.name} has no @Signal method "${key}"`);
-      return handler.name;
-    },
-  };
+function signalName(def: WorkflowDefinition, key: string): string {
+  const handler = def.signals.find((s) => s.method === key);
+  if (!handler) throw new NornConfigError(`Workflow ${def.name} has no @Signal method "${key}"`);
+  return handler.name;
 }
 
 const CLOSE_POLICY = {
@@ -118,21 +74,18 @@ const CLOSE_POLICY = {
   'request-cancel': ParentClosePolicy.REQUEST_CANCEL,
 } as const;
 
-function wrapHandle<T>(handle: ChildWorkflowHandle<any>, target: TargetInfo): ChildHandle<T> {
+function wrapHandle<T>(handle: ChildWorkflowHandle<any>, def: WorkflowDefinition): ChildHandle<T> {
   return {
     workflowId: handle.workflowId,
     firstExecutionRunId: handle.firstExecutionRunId,
-    result: () => handle.result() as Promise<OutputOf<T>>,
-    signal: (key, ...args) => handle.signal(target.signalName(key), ...(args as unknown[])),
+    result: () => handle.result() as Promise<WorkflowOutput<T>>,
+    signal: (key, ...args) => handle.signal(signalName(def, key), ...(args as unknown[])),
   };
 }
 
-/**
- * Returns a typed reference for starting a child workflow. Accepts a `@Workflow` class from the
- * same bundle, or a contract for a workflow implemented elsewhere.
- */
-export function useChild<T extends Target>(target: T, defaults: ChildOptions = {}): ChildRef<T> {
-  const t = info(target);
+/** Returns a typed reference for starting a child workflow from its `@Workflow` class. */
+export function useChild<T extends WorkflowClass>(target: T, defaults: ChildOptions = {}): ChildRef<T> {
+  const t = describeWorkflow(target);
   const start = async (input?: unknown, options: ChildOptions = {}) => {
     const o = { ...defaults, ...options };
     let workflowId = o.workflowId;
@@ -159,13 +112,11 @@ export function useChild<T extends Target>(target: T, defaults: ChildOptions = {
  * Returns a typed handle to another running workflow, for signals and cancellation. Pass the
  * ID template's fields, or `{ workflowId }`.
  */
-export function useExternal<T extends Target>(
+export function useExternal<T extends WorkflowClass>(
   target: T,
-  id:
-    | (T extends AnyWorkflowContract ? IdParamsFor<InputOf<T>, T['idTemplate']> : Partial<NonNullable<InputOf<T>>>)
-    | { workflowId: string; runId?: string },
+  id: Partial<NonNullable<WorkflowInput<T>>> | { workflowId: string; runId?: string },
 ): ExternalRef<T> {
-  const t = info(target);
+  const t = describeWorkflow(target);
   const explicit = id as { workflowId?: string; runId?: string };
   let workflowId = explicit.workflowId;
   if (workflowId === undefined) {
@@ -177,7 +128,7 @@ export function useExternal<T extends Target>(
   const handle = getExternalWorkflowHandle(workflowId, explicit.runId);
   return {
     workflowId,
-    signal: (key, ...args) => handle.signal(t.signalName(key), ...(args as unknown[])),
+    signal: (key, ...args) => handle.signal(signalName(t, key), ...(args as unknown[])),
     cancel: () => handle.cancel(),
   };
 }

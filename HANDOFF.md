@@ -11,15 +11,17 @@ Keep the rules in [CLAUDE.md](./CLAUDE.md): pnpm, TDD, happy + sad paths, no los
 | `@norn-ts/create` | Starter without codegen. The scaffold test generates it, typechecks it, runs its tests on the time-skipping server and builds it for production. |
 | Verified by hand | `pnpm dev` + `pnpm order` (start, cancel, refund); the compiled worker under plain `node`, both bundling at startup and with `NORN_WORKFLOW_BUNDLE`. |
 | Docs | 14 pages. `pnpm docs:build` passes, with twoslash and the link validator. |
-| Release | `.changeset/norn-2.md` takes `@norn-ts/norn` and `@norn-ts/create` to 2.0.0. |
+| Release | `@norn-ts/norn` and `@norn-ts/create` 2.0.0 are on npm. 2.0.1 (`file://` strings for `workflows`, monorepo docs) waits on its version PR. |
 
 Removed in 2.0: `@norn-ts/cli` (codegen, lock file, `schedules sync`, `histories pull`, `bundle`), `@norn-ts/activity` (decorators, DI container), `@norn-ts/codec`, `@norn-ts/hono`, `@norn-ts/eslint-plugin`, the orders example and the e2e suite, `@Schedule`, correlation IDs, the health server, Prometheus/versioning options, `mockActivities()`, `createFakeClient()`, `assertReplays()`. The docs' Recipes page covers HTTP APIs, monorepos, schedules, encryption and tracing with the SDK.
 
 ## Maintainer steps
 
-1. Merge PR #3 (PR #2 is closed as superseded), then merge the "chore: version packages" PR to publish
-   `@norn-ts/norn@2.0.0` and `@norn-ts/create@2.0.0`. The `NPM_TOKEN` secret covers the whole `@norn-ts` scope, including the new name.
-2. Deprecate the old packages on npm, pointing at `@norn-ts/norn`:
+1. Releases: merging to `main` makes the Release workflow push `changeset-release/main`; merging that branch's
+   "chore: version packages" PR publishes. Actions can't open that PR until the repo setting "Allow GitHub
+   Actions to create and approve pull requests" is on; until then open it by hand
+   (`gh pr create --base main --head changeset-release/main --title "chore: version packages"`).
+2. Deprecate the old packages on npm, pointing at `@norn-ts/norn` (not done yet):
    `npm deprecate @norn-ts/core "Replaced by @norn-ts/norn"` (and `workflow`, `activity`, `client`, `worker`, `testing`, `cli`, `codec`, `hono`, `eslint-plugin`).
 
 ## Design decisions worth keeping

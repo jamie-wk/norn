@@ -3,8 +3,8 @@ import {
   NORN,
   NornConfigError,
   SEARCH_ATTRIBUTE_TYPES,
-  buildContract,
   classTag,
+  formatWorkflowId,
   methodTags,
   templateKeys,
   type ClassContract,
@@ -203,16 +203,24 @@ const contracts = new WeakMap<Function, unknown>();
 export function contractOf<C extends WorkflowClass>(cls: C): ClassContract<C> {
   let contract = contracts.get(cls);
   if (!contract) {
+    // describeWorkflow() has validated the options and handler names.
     const def = describeWorkflow(cls);
-    const names = (handlers: HandlerDefinition[]) => Object.fromEntries(handlers.map((h) => [h.method, h.name]));
-    contract = buildContract({
+    const id = def.idTemplate;
+    const refs = (handlers: HandlerDefinition[]) =>
+      Object.freeze(Object.fromEntries(handlers.map((h) => [h.method, Object.freeze({ kind: h.kind, name: h.name })])));
+    contract = Object.freeze({
+      kind: 'norn.workflow',
       name: def.name,
       taskQueue: def.taskQueue,
-      id: def.idTemplate,
-      signals: names(def.signals),
-      queries: names(def.queries),
-      updates: names(def.updates),
+      idTemplate: id,
+      signals: refs(def.signals),
+      queries: refs(def.queries),
+      updates: refs(def.updates),
       searchAttributes: def.searchAttributes,
+      workflowId(params: unknown): string {
+        if (id === undefined) throw new NornConfigError(`Workflow ${def.name} has no ID template; pass an explicit workflowId`);
+        return formatWorkflowId(id, params);
+      },
     });
     contracts.set(cls, contract);
   }

@@ -2,11 +2,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 coverage/
-.tools/
 .env*.local
 .DS_Store
 docs/.astro/
 docs/dist/
-workflow-bundle-*.js
 *.log
 .claude/worktrees/
