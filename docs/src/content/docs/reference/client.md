@@ -65,7 +65,7 @@ interface NornClient extends AsyncDisposable {
 | `address` | `TEMPORAL_ADDRESS`, then `localhost:7233` | Server address. |
 | `namespace` | `TEMPORAL_NAMESPACE`, then `default` | Namespace. |
 | `apiKey` | `TEMPORAL_API_KEY` | API key (Temporal Cloud). Turns TLS on. |
-| `tls` | `true` with an API key, otherwise `TEMPORAL_TLS === 'true'` | `true`, or the SDK's TLS options, such as `{ clientCertPair: { crt, key } }` for mTLS or a custom CA. |
+| `tls` | `true` with an API key or `TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY` (mTLS file paths, read at creation), otherwise `TEMPORAL_TLS === 'true'` | `true`, or the SDK's TLS options, such as `{ clientCertPair: { crt, key } }` for mTLS or a custom CA. |
 | `connectTimeout` | SDK default | A `Duration`. |
 | `connection` | lazy connection | An existing `Connection`. Norn does not close connections it did not open. |
 | `client` | new client | An existing Temporal `Client` to wrap, such as a test environment's. Its connection, namespace, data converter and interceptors are used as-is (no correlation interceptor is added). |

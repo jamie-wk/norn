@@ -30,7 +30,8 @@ Everything else is configured through options or environment variables, so the s
 | `TEMPORAL_ADDRESS` | `address` | `localhost:7233` | Temporal frontend address (`host:port`). |
 | `TEMPORAL_NAMESPACE` | `namespace` | `default` | Namespace to poll. |
 | `TEMPORAL_API_KEY` | `apiKey` | none | API key (Temporal Cloud). Turns TLS on. |
-| `TEMPORAL_TLS` | `tls` | `false` | `true` turns TLS on without an API key. For mTLS client certificates pass your own `connection` (`TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY` are read by the CLI only). |
+| `TEMPORAL_TLS` | `tls` | `false` | `true` turns TLS on without an API key. |
+| `TEMPORAL_TLS_CERT`, `TEMPORAL_TLS_KEY` | | none | Client certificate and key file paths for mTLS. Set both or neither; they turn TLS on. |
 | `NORN_TASK_QUEUES` | `taskQueues` | every queue in the registry | Comma-separated subset of task queues to poll, such as `orders,shipping`. |
 | `NORN_HEALTH_PORT` | `health.port` | off | Port for the [health server](#health-checks). `0` picks a free port. |
 | `NORN_SHUTDOWN_GRACE` | `shutdownGraceTime` | `30s` | How long in-flight activities may run after shutdown starts. Any `Duration`: `60s`, `2m`, `PT90S`. |

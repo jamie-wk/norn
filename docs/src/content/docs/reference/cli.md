@@ -446,10 +446,10 @@ With `--dry-run` the summary starts with `Dry run:` and says `would be created`,
 | `TEMPORAL_ADDRESS` | `localhost:7233` | Server address. |
 | `TEMPORAL_NAMESPACE` | `default` | Namespace. |
 | `TEMPORAL_API_KEY` | none | API key auth; enables TLS. |
-| `TEMPORAL_TLS_CERT`, `TEMPORAL_TLS_KEY` | none | Client certificate and key file paths for mTLS. Set both or neither. Only the CLI reads these two. |
+| `TEMPORAL_TLS_CERT`, `TEMPORAL_TLS_KEY` | none | Client certificate and key file paths for mTLS. Set both or neither. |
 | `TEMPORAL_TLS` | none | `true` to use TLS without either of the above. |
 
-An empty `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE` or `TEMPORAL_API_KEY` counts as unset, the same as in `createClient()` and `createWorker()`.
+An empty variable counts as unset. The CLI, `createClient()` and `createWorker()` resolve these with the same `connectionSettings()` from `@norn-ts/core`.
 
 ## `norn histories pull`
 

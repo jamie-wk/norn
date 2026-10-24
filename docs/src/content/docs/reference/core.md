@@ -115,7 +115,7 @@ Type helpers read the phantom types: `ContractInput<C>`, `ContractOutput<C>`, `I
 | `'datetime'` | `DATETIME` | `Date` |
 | `'keywordList'` | `KEYWORD_LIST` | `string[]` |
 
-`SEARCH_ATTRIBUTE_TYPES` lists the Norn names. `TEMPORAL_SEARCH_ATTRIBUTE_TYPES` maps each to Temporal's name, as `defineSearchAttributeKey()` takes it.
+`SEARCH_ATTRIBUTE_TYPES` lists the Norn names. `TEMPORAL_SEARCH_ATTRIBUTE_TYPES` maps each to Temporal's name, as `defineSearchAttributeKey()` takes it. `isSearchAttributeValue(type, value)` is the value check the client and `setSearchAttributes()` share: numbers must be finite, and dates valid.
 
 ## Durations
 
@@ -317,14 +317,16 @@ The workflow sandbox freezes `Symbol`, so Norn cannot use `Symbol.metadata`. Dec
 | `SignalRef`, `QueryRef`, `UpdateRef`, `HandlerRef`, `RefArgs<R>`, `RefResult<R>` | Handler reference types |
 | `ManualWorkflowDef`, `ManualContract<D>`, `TypeSpec`, `SignalSpec`, `QuerySpec`, `UpdateSpec` | Manual contract types |
 | `WorkflowClass`, `WorkflowInput<C>`, `WorkflowOutput<C>`, `HandlerMethodKey<C>`, `GeneratedWorkflowDef<C>`, `GeneratedContract<C, D>` | Generated contract types |
-| `SearchAttributeType`, `SearchAttributeTypes`, `SearchAttributeValue<T>`, `SEARCH_ATTRIBUTE_TYPES`, `TEMPORAL_SEARCH_ATTRIBUTE_TYPES` | Search attribute types |
+| `SearchAttributeType`, `SearchAttributeTypes`, `SearchAttributeValue<T>`, `SEARCH_ATTRIBUTE_TYPES`, `TEMPORAL_SEARCH_ATTRIBUTE_TYPES`, `isSearchAttributeValue(type, value)` | Search attribute types |
 | `Duration`, `toMs(duration)`, `formatDuration(duration)` | Durations |
 | `templateKeys(template)`, `formatWorkflowId(template, input)`, `TemplateKeys<T>`, `MissingTemplateKeys<T, Input>`, `IDENTIFIER` | ID templates. `IDENTIFIER` is the name rule for template keys and workflow, handler and activity names. |
-| `ScheduleOverlap` | `@Schedule`'s `overlap` values: `'skip' \| 'buffer-one' \| 'buffer-all' \| 'cancel-other' \| 'terminate-other' \| 'allow-all'` |
+| `ScheduleOverlap`, `SCHEDULE_OVERLAPS` | `@Schedule`'s `overlap` values: `'skip' \| 'buffer-one' \| 'buffer-all' \| 'cancel-other' \| 'terminate-other' \| 'allow-all'` |
 | `NornError`, `NornConfigError`, `WorkflowAlreadyStartedError`, `WorkflowNotFoundError`, `WorkflowClosedError`, `UpdateRejectedError`, `QueryFailedError`, `WorkflowFailedError`, `TemporalUnavailableError`, `NornErrorOptions` | Errors |
+| `NORN_ERROR_STATUS`, `NornCoreErrorCode` | Each core error code and its HTTP status, such as `WORKFLOW_NOT_FOUND: 404` |
 | `isNornError(value)`, `errorTypeOf(error)` | Error helpers |
 | `transitions(table, initial)`, `Transitions`, `TransitionTable`, `TransitionSnapshot` | State machine |
 | `businessCalendar(options?)`, `BusinessCalendar`, `BusinessCalendarOptions` | Business days |
-| `ActivityOptions`, `RetryOptions`, `TemporalActivityOptions`, `toActivityOptions(options)`, `DEFAULT_ACTIVITY_TIMEOUT` | Activity options |
+| `ActivityOptions`, `RetryOptions`, `TemporalActivityOptions`, `toActivityOptions(options)`, `DEFAULT_ACTIVITY_TIMEOUT`, `activityName(ref, method)` | Activity options. `activityName()` is the registered type name: `prefix + (name ?? method)`. |
+| `connectionSettings(env, overrides?)`, `ConnectionSettings`, `ConnectionOverrides` | Temporal connection settings from options and `TEMPORAL_*` variables (empty counts as unset), as the client, worker and CLI resolve them. Certificate files are paths; reading them is left to the caller. |
 | `NORN`, `tagMethod`, `readMethodTag`, `setClassTag`, `classTag`, `methodTags`, `MethodTag` | Decorator metadata |
 | `CORRELATION_HEADER` | `'norn-correlation-id'`, the Temporal header that carries correlation IDs |

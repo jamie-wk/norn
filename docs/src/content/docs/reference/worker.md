@@ -52,7 +52,8 @@ await worker.run();
 | `TEMPORAL_ADDRESS` | `address` | `localhost:7233` | Temporal frontend address. |
 | `TEMPORAL_NAMESPACE` | `namespace` | `default` | Namespace to poll. |
 | `TEMPORAL_API_KEY` | `apiKey` | none | API key; turns TLS on. |
-| `TEMPORAL_TLS` | `tls` | `false` | `true` turns TLS on without an API key. For mTLS, pass your own `connection`. |
+| `TEMPORAL_TLS` | `tls` | `false` | `true` turns TLS on without an API key. |
+| `TEMPORAL_TLS_CERT`, `TEMPORAL_TLS_KEY` | | none | Client certificate and key file paths for mTLS. Set both or neither; they turn TLS on. |
 | `NORN_TASK_QUEUES` | `taskQueues` | every queue in the registry | Comma-separated subset to poll. |
 | `NORN_HEALTH_PORT` | `health.port` | off | Health server port; `0` picks a free one. |
 | `NORN_SHUTDOWN_GRACE` | `shutdownGraceTime` | `30s` | How long in-flight activities may run after shutdown starts. Any `Duration`. |
@@ -91,7 +92,7 @@ interface NornWorker extends AsyncDisposable {
 | `address` | `TEMPORAL_ADDRESS`, then `localhost:7233` | Temporal frontend address. |
 | `namespace` | `TEMPORAL_NAMESPACE`, then `default` | Namespace to poll. |
 | `apiKey` | `TEMPORAL_API_KEY` | API key; turns TLS on. |
-| `tls` | `true` with an API key or `TEMPORAL_TLS=true` | `boolean`. For mTLS, pass your own `connection`. |
+| `tls` | `true` with an API key, mTLS files or `TEMPORAL_TLS=true` | `boolean`. mTLS certificates come from `TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY`, or pass your own `connection`. |
 | `connection` | Norn connects | An existing `NativeConnection`. Norn closes only connections it opened. |
 | `versioning` | from `NORN_DEPLOYMENT_NAME` + `NORN_BUILD_ID` | `{ deploymentName, buildId, defaultBehavior? }`, or `false` to ignore the environment. `defaultBehavior` is `'auto-upgrade'` (default) or `'pinned'`, for workflows that don't set `versioning` in `@Workflow`. |
 | `health` | `NORN_HEALTH_PORT`, else off | `{ port, host? }` (`host` defaults to `0.0.0.0`), or `false`. |
