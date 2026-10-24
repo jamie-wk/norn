@@ -1,4 +1,4 @@
-import { NornConfigError } from '@norn-ts/core';
+import { NornConfigError, activityName } from '@norn-ts/core';
 
 type AnyFn = (...args: any[]) => any;
 
@@ -6,7 +6,7 @@ type AnyFn = (...args: any[]) => any;
 export interface ActivitiesRefLike<T = unknown, M extends string = string> {
   readonly kind: 'norn.activities';
   readonly prefix: string;
-  readonly methods: Readonly<Record<M, unknown>>;
+  readonly methods: Readonly<Record<M, { readonly name?: string }>>;
   readonly __type?: T;
 }
 
@@ -46,7 +46,7 @@ export function buildMocks<R extends ActivitiesRefLike<any, any>, W extends Reco
     if (typeof impl !== 'function') throw new NornConfigError(`Mock for ${method} must be a function`);
     const fn = wrap(impl as AnyFn, method);
     out[method] = fn;
-    map[`${ref.prefix}${method}`] = fn;
+    map[activityName(ref, method)] = fn;
   }
   Object.defineProperty(out, ACTIVITY_MAP, { value: map, enumerable: false });
   return out as MockedActivities<R, W>;

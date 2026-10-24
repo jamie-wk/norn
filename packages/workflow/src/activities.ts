@@ -1,5 +1,5 @@
 import { proxyActivities, proxyLocalActivities } from '@temporalio/workflow';
-import { NornConfigError, toActivityOptions, type ActivityOptions } from '@norn-ts/core';
+import { NornConfigError, activityName, toActivityOptions, type ActivityOptions } from '@norn-ts/core';
 
 /** Public method names of an activity class. */
 export type ActivityMethodKey<T> = { [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never }[keyof T] & string;
@@ -54,12 +54,7 @@ export type ActivityProxy<R> =
 /** Per-method overrides for a proxy, applied on top of the registry's options. */
 export type ActivityOverrides<R> = R extends ActivitiesRef<any, infer M> ? ActivityOptions & { methods?: Partial<Record<M, ActivityOptions>> } : never;
 
-/** The registered activity type name for a method of a reference. */
-export function activityName(ref: ActivitiesRef, method: string): string {
-  const options = ref.methods[method];
-  if (!options) throw new NornConfigError(`Activity ${ref.prefix}${method} is not registered`);
-  return `${ref.prefix}${options.name ?? method}`;
-}
+export { activityName };
 
 /** Applies an override layer; its `retries` replaces an inherited `retry.maximumAttempts`, and vice versa. */
 function override(options: ActivityOptions, layer: ActivityOptions): ActivityOptions {

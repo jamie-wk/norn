@@ -104,3 +104,10 @@ export function toActivityOptions(o: ActivityOptions): TemporalActivityOptions {
   if (Object.keys(retry).length > 0) out.retry = retry;
   return out;
 }
+
+/** The registered activity type name for a method of an activity reference: `prefix + (name ?? method)`. */
+export function activityName(ref: { readonly prefix: string; readonly methods: Readonly<Record<string, { readonly name?: string } | undefined>> }, method: string): string {
+  const options = ref.methods[method];
+  if (!options) throw new NornConfigError(`Activity ${ref.prefix}${method} is not registered`);
+  return `${ref.prefix}${options.name ?? method}`;
+}

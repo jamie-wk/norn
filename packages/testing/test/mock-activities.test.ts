@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { MockActivityEnvironment } from '@temporalio/testing';
 import { NornConfigError } from '@norn-ts/core';
 import { activityMap, mockActivities } from '../src/index.ts';
+import { defineActivities } from '@norn-ts/workflow';
+import type { NotifyActivities as NotifyActivities$ } from './fixtures/activities.ts';
 import { NotifyActivities } from './fixtures/refs.ts';
 
 describe('mockActivities', () => {
@@ -11,6 +13,12 @@ describe('mockActivities', () => {
     expect(Object.keys(map)).toEqual(['notify.email']);
     expect(await new MockActivityEnvironment().run(map['notify.email']!, 'a@b.c', 'hi')).toBe('sent to a@b.c');
     expect(mocks.email.calls).toEqual([['a@b.c', 'hi']]);
+  });
+
+  it('registers a renamed activity under its registered name', () => {
+    const Renamed = defineActivities<NotifyActivities$>()({ prefix: 'notify.', methods: { email: { name: 'send-email' }, audit: {} } });
+    const map = activityMap(mockActivities(Renamed, { email: async () => 'x' }));
+    expect(Object.keys(map)).toEqual(['notify.send-email']);
   });
 
   it('merges several mock sets and plain records', () => {
