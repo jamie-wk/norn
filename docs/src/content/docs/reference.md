@@ -89,7 +89,7 @@ A number of milliseconds, or a string: `'500ms'`, `'30s'`, `'5 minutes'`, `'1h30
 | Variable | Used by | Description |
 | --- | --- | --- |
 | `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_API_KEY`, `TEMPORAL_TLS` | worker, client | Connection settings. |
-| `NORN_WORKFLOW_BUNDLE` | worker | A prebuilt workflow bundle. |
+| `NORN_WORKFLOW_BUNDLE` | worker | A prebuilt workflow bundle, for workers with `workflows`. |
 | `NORN_TEMPORAL_CLI_PATH`, `NORN_TEMPORAL_TEST_SERVER_PATH` | testing | Existing Temporal binaries instead of downloads. |
 | `NORN_TEST_LOG_LEVEL` | testing | SDK log level in tests. Default `WARN`. |
 | `NORN_DEV_CONDITIONS` | worker | Extra export conditions for the workflow bundler, for monorepos that resolve packages to source. |

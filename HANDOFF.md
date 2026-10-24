@@ -3,22 +3,22 @@
 Norn 2.0 cuts the framework down to its core: write workflows and activities as plain, typed classes.
 Keep the rules in [CLAUDE.md](./CLAUDE.md): pnpm, TDD, happy + sad paths, no loss of type safety.
 
-## Status (2026-10-23)
+## Status (2026-10-24)
 
 | Area | State |
 | --- | --- |
 | `@norn-ts/norn` | One package with subpath exports (`/workflow`, `/worker`, `/client`, `/testing`, `/vitest`, `/vite`). Unit, type and integration tests pass. |
 | `@norn-ts/create` | Starter without codegen. The scaffold test generates it, typechecks it, runs its tests on the time-skipping server and builds it for production. |
 | Verified by hand | `pnpm dev` + `pnpm order` (start, cancel, refund); the compiled worker under plain `node`, both bundling at startup and with `NORN_WORKFLOW_BUNDLE`. |
-| Docs | 13 pages. `pnpm docs:build` passes, with twoslash and the link validator. |
+| Docs | 14 pages. `pnpm docs:build` passes, with twoslash and the link validator. |
 | Release | `.changeset/norn-2.md` takes `@norn-ts/norn` and `@norn-ts/create` to 2.0.0. |
 
 Removed in 2.0: `@norn-ts/cli` (codegen, lock file, `schedules sync`, `histories pull`, `bundle`), `@norn-ts/activity` (decorators, DI container), `@norn-ts/codec`, `@norn-ts/hono`, `@norn-ts/eslint-plugin`, the orders example and the e2e suite, `@Schedule`, correlation IDs, the health server, Prometheus/versioning options, `mockActivities()`, `createFakeClient()`, `assertReplays()`. The docs' Recipes page covers HTTP APIs, schedules, encryption and tracing with the SDK.
 
 ## Maintainer steps
 
-1. Merge, then merge the "Version Packages" PR to publish `@norn-ts/norn@2.0.0` and `@norn-ts/create@2.0.0`.
-   `@norn-ts/norn` is a new package name: set up npm trusted publishing (or `NPM_TOKEN`) for it before the release run.
+1. Merge PR #3 (PR #2 is closed as superseded), then merge the "chore: version packages" PR to publish
+   `@norn-ts/norn@2.0.0` and `@norn-ts/create@2.0.0`. The `NPM_TOKEN` secret covers the whole `@norn-ts` scope, including the new name.
 2. Deprecate the old packages on npm, pointing at `@norn-ts/norn`:
    `npm deprecate @norn-ts/core "Replaced by @norn-ts/norn"` (and `workflow`, `activity`, `client`, `worker`, `testing`, `cli`, `codec`, `hono`, `eslint-plugin`).
 

@@ -29,7 +29,7 @@ await worker.run(); // resolves after a graceful shutdown; rejects if a worker f
 | `TEMPORAL_NAMESPACE` | `namespace` | `default` | Namespace to poll. |
 | `TEMPORAL_API_KEY` | `apiKey` | none | API key (Temporal Cloud). Turns TLS on. |
 | `TEMPORAL_TLS` | `tls` | `false` | `true` turns TLS on without an API key. |
-| `NORN_WORKFLOW_BUNDLE` | `workflowBundle` | bundle at startup | Path of a [prebuilt workflow bundle](#prebuilt-workflow-bundle). |
+| `NORN_WORKFLOW_BUNDLE` | `workflowBundle` | bundle at startup | Path of a [prebuilt workflow bundle](#prebuilt-workflow-bundle). Ignored by an activity-only worker. |
 
 Options win over environment variables, and empty variables count as unset. For mTLS client certificates, connect yourself and pass the connection:
 
@@ -110,6 +110,8 @@ await bundleWorkflows(new URL('../src/workflows/index.ts', import.meta.url), { o
 ```sh
 NORN_WORKFLOW_BUNDLE=dist/workflow-bundle.js node dist/worker.js
 ```
+
+With a prebuilt bundle the worker writes nothing to disk, so it runs on a read-only filesystem. Bundling at startup writes a small entry file to the OS temp directory.
 
 ### Dockerfile
 

@@ -20,7 +20,7 @@ Temporal runs your code **durably**. A workflow is ordinary async TypeScript, bu
 | Web UI | Every workflow and its history, in a browser. | `http://localhost:8233` locally |
 | Workflow | Deterministic code that decides what happens next. | A class with `@Workflow`; its `run()` method is the main line |
 | Workflow ID | The unique name of one execution, such as `order-o-42`. | The `id: 'order-{orderId}'` template |
-| Activity | One step that does I/O, such as an HTTP call. Retried by Temporal. | `@Activity` methods on an `@Activities` class, called through `useActivities()` |
+| Activity | One step that does I/O, such as an HTTP call. Retried by Temporal. | Methods of a plain activity class, called through `useActivities<T>('namespace')` |
 | Worker | Your process. It polls the server and runs workflows and activities. | `createWorker({ workflows, activities })` |
 | Task queue | A named queue linking work to the workers that can do it. | `@Workflow({ taskQueue: 'orders' })` |
 | Signal | A message into a running workflow, with no reply. | `@Signal()` |

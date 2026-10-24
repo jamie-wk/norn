@@ -171,10 +171,10 @@ Client calls throw Norn error classes instead of the SDK's, so API code can bran
 | `WorkflowNotFoundError` | `WORKFLOW_NOT_FOUND` | 404 | No workflow with that ID exists. |
 | `WorkflowClosedError` | `WORKFLOW_CLOSED` | 409 | A signal, update, cancel or terminate to a workflow that has finished. |
 | `UpdateRejectedError` | `UPDATE_REJECTED` | 422 | A validator rejected the update, or its handler threw an `ApplicationFailure` or a `failOn` error. `failureType` is the error's name. |
-| `QueryFailedError` | `QUERY_FAILED` | 500 | The query isn't registered, or its handler threw. |
+| `QueryFailedError` | `QUERY_FAILED` | 500 | The query handler threw, or the running worker doesn't register that query (for example an older deployment). |
 | `WorkflowFailedError` | `WORKFLOW_FAILED` | 500 | `result()` of a failed workflow. `failureType` is the failure's type, or `Cancelled`, `Terminated` or `TimedOut`. |
 | `TemporalUnavailableError` | `TEMPORAL_UNAVAILABLE` | 503 | The server can't be reached, or is rate-limiting. |
-| `NornConfigError` | `CONFIG` | 500 | Invalid options or input, such as a missing ID template field. |
+| `NornConfigError` | `CONFIG` | 500 | Invalid options or input, such as a missing ID template field, or a handler method used as the wrong kind. Thrown before any call to the server. |
 
 ```ts
 import { UpdateRejectedError, WorkflowClosedError } from '@norn-ts/norn/client';

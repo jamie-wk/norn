@@ -119,7 +119,7 @@ A Temporal workflow is woven from the same three threads. Its **event history** 
 
 - Documentation: https://jamie-wk.github.io/norn/
 - Source and issues: https://github.com/jamie-wk/norn
-- Changelog: [`packages/norn/CHANGELOG.md`](./packages/norn/CHANGELOG.md) and GitHub releases
+- Changelog and the 1.x → 2.0 upgrade guide: https://jamie-wk.github.io/norn/project/changelog/
 
 ## Contributing
 
