@@ -12,6 +12,9 @@ import {
   update,
 } from '@norn-ts/core';
 import { createFakeClient } from '../src/index.ts';
+import { clientConformance } from './client-conformance.ts';
+import { Counters } from './fixtures/contracts.ts';
+import { NegativeError } from './fixtures/workflow-classes.ts';
 
 const Orders = defineWorkflow({
   name: 'OrderWorkflow',
@@ -153,4 +156,22 @@ describe('createFakeClient', () => {
   it('explains that the fake has no Temporal client', () => {
     expect(() => createFakeClient().temporal).toThrow(/fake client/);
   });
+});
+
+describe('createFakeClient conformance', () => {
+  const fake = createFakeClient();
+  fake.stub(Counters, {
+    updates: {
+      add: (n) => {
+        if (n < 0) throw new NegativeError('n must not be negative');
+        return n;
+      },
+    },
+    queries: {
+      broken: () => {
+        throw new Error('broken query');
+      },
+    },
+  });
+  clientConformance(() => ({ norn: fake, finish: async (counterId) => fake.complete(`counter-${counterId}`, 0) }));
 });

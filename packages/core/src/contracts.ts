@@ -34,6 +34,21 @@ export const TEMPORAL_SEARCH_ATTRIBUTE_TYPES = Object.freeze({
   keywordList: 'KEYWORD_LIST',
 } as const satisfies Record<SearchAttributeType, string>);
 
+const SEARCH_ATTRIBUTE_VALUE: Record<SearchAttributeType, (value: unknown) => boolean> = {
+  text: (v) => typeof v === 'string',
+  keyword: (v) => typeof v === 'string',
+  int: Number.isInteger,
+  double: Number.isFinite,
+  bool: (v) => typeof v === 'boolean',
+  datetime: (v) => v instanceof Date && !Number.isNaN(v.getTime()),
+  keywordList: (v) => Array.isArray(v) && v.every((s) => typeof s === 'string'),
+};
+
+/** Whether a value fits a search attribute type (finite numbers only, valid dates). */
+export function isSearchAttributeValue(attributeType: SearchAttributeType, value: unknown): boolean {
+  return SEARCH_ATTRIBUTE_VALUE[attributeType](value);
+}
+
 export const SEARCH_ATTRIBUTE_TYPES: readonly SearchAttributeType[] = Object.freeze([
   'text',
   'keyword',

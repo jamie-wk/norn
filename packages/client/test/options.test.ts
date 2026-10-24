@@ -96,4 +96,11 @@ describe('toTypedSearchAttributes', () => {
   it('rejects values of the wrong type', () => {
     expect(() => toTypedSearchAttributes(Orders, { CustomerId: 5 } as never)).toThrow(/CustomerId.*keyword/);
   });
+
+  it('rejects non-finite doubles, as workflows do', () => {
+    const Scores = defineWorkflow({ name: 'Scores', taskQueue: 'q', input: type<{ id: string }>(), searchAttributes: { Score: 'double' } });
+    expect(toTypedSearchAttributes(Scores, { Score: 1.5 })).toHaveLength(1);
+    expect(() => toTypedSearchAttributes(Scores, { Score: Number.NaN })).toThrow(/Score.*double/);
+    expect(() => toTypedSearchAttributes(Scores, { Score: Number.POSITIVE_INFINITY })).toThrow(/Score.*double/);
+  });
 });

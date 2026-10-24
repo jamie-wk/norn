@@ -6,7 +6,7 @@ import {
   workflowInfo,
 } from '@temporalio/workflow';
 import { ApplicationFailure, defineSearchAttributeKey } from '@temporalio/common';
-import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, type SearchAttributeType } from '@norn-ts/core';
+import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, isSearchAttributeValue } from '@norn-ts/core';
 import { definitionFor } from './implement.js';
 
 export interface ContinueAsNewOptions {
@@ -52,16 +52,6 @@ export function isFailure(error: unknown, type: ErrorType): boolean {
   return asFailure(error, type) !== undefined;
 }
 
-const VALID: Record<SearchAttributeType, (value: unknown) => boolean> = {
-  text: (v) => typeof v === 'string',
-  keyword: (v) => typeof v === 'string',
-  int: Number.isInteger,
-  double: Number.isFinite,
-  bool: (v) => typeof v === 'boolean',
-  datetime: (v) => v instanceof Date && !Number.isNaN(v.getTime()),
-  keywordList: (v) => Array.isArray(v) && v.every((s) => typeof s === 'string'),
-};
-
 export type SearchAttributeInput = string | number | boolean | Date | string[] | null;
 
 /**
@@ -77,7 +67,7 @@ export function setSearchAttributes(values: Record<string, SearchAttributeInput>
       throw new NornConfigError(`Workflow ${type} does not declare search attribute ${name} in @Workflow({ searchAttributes })`);
     }
     const saType = def.searchAttributes[name]!;
-    if (value !== null && !VALID[saType](value)) {
+    if (value !== null && !isSearchAttributeValue(saType, value)) {
       throw new NornConfigError(`Workflow ${type}: search attribute ${name} is ${saType}, got ${JSON.stringify(value)}`);
     }
     return { key: defineSearchAttributeKey(name, TEMPORAL_SEARCH_ATTRIBUTE_TYPES[saType]), value };

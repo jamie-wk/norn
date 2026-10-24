@@ -168,7 +168,7 @@ it('makes declined cards non-retryable', async () => {
 
 ## API tests: `createFakeClient()`
 
-API routes shouldn't need a Temporal server to test. `createFakeClient()` is an in-memory `NornClient` that enforces the same rules and throws the same errors as the real one: 409 for duplicate starts and closed workflows, 404 for unknown IDs, `ifRunning` / `ifClosed` semantics, ID templates.
+API routes shouldn't need a Temporal server to test. `createFakeClient()` is an in-memory `NornClient` that enforces the same rules and throws the same errors as the real one (a shared conformance suite runs the same scenarios against both): 409 for duplicate starts and closed workflows, 404 for unknown IDs, `ifRunning` / `ifClosed` semantics, ID templates.
 
 ```ts
 import { expect, it } from 'vitest';
@@ -209,7 +209,7 @@ it('maps a rejected cancel to 422', async () => {
 | --- | --- |
 | `calls` | Every call, in order: `{ op, workflow, workflowId, name?, args?, input?, options? }`. |
 | `started(contract)` | Inputs of every new execution of a contract, including with-start. Rejected, failed and reused starts are not counted. |
-| `stub(contract, { signals, queries, updates, onStart })` | Implementations for handlers. Queries and updates without a stub throw; signals without one are accepted and recorded. |
+| `stub(contract, { signals, queries, updates, onStart })` | Implementations for handlers. Queries and updates without a stub throw; signals without one are accepted and recorded. An update stub that throws rejects the update (`UpdateRejectedError`), like a validator. |
 | `complete(workflowId, result)` / `fail(workflowId, failureType, message?)` | Finish the latest run, so `result()` resolves or throws `WorkflowFailedError`. |
 | `failNext(error)` | Make the next call reject, for example with `TemporalUnavailableError`. |
 | `reset()` | Clear everything. |

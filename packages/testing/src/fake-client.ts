@@ -1,5 +1,8 @@
 import {
   NornConfigError,
+  NornError,
+  QueryFailedError,
+  UpdateRejectedError,
   WorkflowAlreadyStartedError,
   WorkflowClosedError,
   WorkflowFailedError,
@@ -9,8 +12,9 @@ import {
   type ContractOutput,
   type RefArgs,
   type RefResult,
+  errorTypeOf,
 } from '@norn-ts/core';
-import { resolveWorkflowId, type NornClient, type StartOptions, type WorkflowClient, type WorkflowHandle, type WorkflowStatus, type WorkflowSummary } from '@norn-ts/client';
+import { resolveWorkflowId, startOptions, type NornClient, type StartOptions, type WorkflowClient, type WorkflowHandle, type WorkflowStatus, type WorkflowSummary } from '@norn-ts/client';
 
 type Keys<R> = keyof R & string;
 type Args<R> = RefArgs<R> extends infer A extends unknown[] ? A : never;
@@ -64,6 +68,20 @@ export interface FakeNornClient extends NornClient {
 
 let runCounter = 0;
 
+/** A stub's error as the real client would surface it: NornErrors as they are, anything else wrapped. */
+function asNornError(error: unknown, wrap: (message: string) => NornError): unknown {
+  return error instanceof NornError ? error : wrap(error instanceof Error ? error.message : String(error));
+}
+
+/** Runs an update stub; a throw means the workflow rejected the update, as with a validator. */
+async function runUpdate(fn: (...a: unknown[]) => unknown, args: unknown[], workflowId: string, update: string): Promise<unknown> {
+  try {
+    return await fn(...args);
+  } catch (error) {
+    throw asNornError(error, (message) => new UpdateRejectedError({ workflowId, update, failureType: errorTypeOf(error), message, cause: error }));
+  }
+}
+
 /**
  * An in-memory stand-in for `createClient()`, for unit-testing API routes without Temporal.
  * Enforces the same ID rules and errors as a real server: 409 for duplicates and closed
@@ -110,7 +128,8 @@ export function createFakeClient(): FakeNornClient {
   });
 
   const startExecution = (contract: AnyWorkflowContract, input: unknown, opts: StartOptions = {}, reuseRunning = false): Execution => {
-    const workflowId = resolveWorkflowId(contract, input, opts.workflowId);
+    // The real client's validation: bad ifRunning/ifClosed, search attributes and durations throw here too.
+    const { workflowId } = startOptions(contract, input, opts);
     const existing = executions.get(workflowId);
     if (existing?.status === 'RUNNING') {
       if (reuseRunning || opts.ifRunning === 'useExisting') return existing;
@@ -162,7 +181,11 @@ export function createFakeClient(): FakeNornClient {
         find(workflowId);
         const fn = stub().queries?.[key] as ((...a: unknown[]) => unknown) | undefined;
         if (!fn) throw new NornConfigError(`No fake query ${key} for ${contract.name}; add it with fake.stub()`);
-        return fn(...args) as never;
+        try {
+          return fn(...args) as never;
+        } catch (error) {
+          throw asNornError(error, (message) => new QueryFailedError({ workflowId, query: key, message, cause: error }));
+        }
       },
       async update(key, ...args) {
         log('update', key, args);
@@ -170,7 +193,7 @@ export function createFakeClient(): FakeNornClient {
         running(workflowId);
         const fn = stub().updates?.[key] as ((...a: unknown[]) => unknown) | undefined;
         if (!fn) throw new NornConfigError(`No fake update ${key} for ${contract.name}; add it with fake.stub()`);
-        return (await fn(...args)) as never;
+        return (await runUpdate(fn, args, workflowId, key)) as never;
       },
       async result() {
         takeFailure();
@@ -202,7 +225,7 @@ export function createFakeClient(): FakeNornClient {
   const workflow = <C extends AnyWorkflowContract>(contract: C): WorkflowClient<C> => {
     if (contract?.kind !== 'norn.workflow') throw new NornConfigError('workflow() expects a contract');
     const startWith = (op: FakeOp, input: unknown, opts: StartOptions<C> | undefined, reuse: boolean) => {
-      const workflowId = resolveWorkflowId(contract, input, opts?.workflowId);
+      const { workflowId } = startOptions(contract, input, opts);
       calls.push({ op, workflow: contract.name, workflowId, input, ...(opts && Object.keys(opts).length ? { options: opts } : {}) });
       takeFailure();
       return startExecution(contract, input, opts, reuse);
@@ -235,7 +258,7 @@ export function createFakeClient(): FakeNornClient {
         calls.at(-1)!.args = operation.args as unknown[];
         const fn = stubs.get(contract.name)?.updates?.[operation.update] as ((...a: unknown[]) => unknown) | undefined;
         if (!fn) throw new NornConfigError(`No fake update ${operation.update} for ${contract.name}; add it with fake.stub()`);
-        const result = await fn(...(operation.args as unknown[]));
+        const result = await runUpdate(fn, operation.args as unknown[], exec.workflowId, operation.update);
         return { handle: handleFor(contract, exec.workflowId, exec.runId), result: result as never };
       },
       list() {

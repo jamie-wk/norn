@@ -3,6 +3,7 @@ import {
   NornConfigError,
   TEMPORAL_SEARCH_ATTRIBUTE_TYPES,
   formatDuration,
+  isSearchAttributeValue,
   type AnyWorkflowContract,
   type Duration,
   type SearchAttributeType,
@@ -50,19 +51,7 @@ const REUSE: Record<IfClosed, 'ALLOW_DUPLICATE' | 'ALLOW_DUPLICATE_FAILED_ONLY' 
 };
 
 function checkValue(name: string, type: SearchAttributeType, value: unknown): void {
-  const ok =
-    type === 'text' || type === 'keyword'
-      ? typeof value === 'string'
-      : type === 'int'
-        ? Number.isInteger(value)
-        : type === 'double'
-          ? typeof value === 'number'
-          : type === 'bool'
-            ? typeof value === 'boolean'
-            : type === 'datetime'
-              ? value instanceof Date && !Number.isNaN(value.getTime())
-              : Array.isArray(value) && value.every((v) => typeof v === 'string');
-  if (!ok) throw new NornConfigError(`Search attribute ${name} is declared as ${type} but got ${JSON.stringify(value)}`);
+  if (!isSearchAttributeValue(type, value)) throw new NornConfigError(`Search attribute ${name} is declared as ${type} but got ${JSON.stringify(value)}`);
 }
 
 /** Converts `{ Name: value }` into Temporal's typed search attribute pairs, checked against the contract. */
