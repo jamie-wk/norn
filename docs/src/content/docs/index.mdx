@@ -1,6 +1,230 @@
 ---
-title: Norn
+title: Typed Temporal workflows for TypeScript
+description: Typed, decorator-driven Temporal workflows for TypeScript. Write classes; Norn generates the wiring and checks it at compile time.
 template: splash
 hero:
-  tagline: TODO
+  title: Durable workflows that read like plain TypeScript
+  tagline: Norn is a decorator-driven framework on top of the Temporal TypeScript SDK. Write workflows and activities as classes, and get typed clients, dependency injection and production defaults, all checked at compile time.
+  image:
+    file: ../../assets/logo.svg
+  actions:
+    - text: Quickstart
+      link: /norn/start/quickstart/
+      icon: right-arrow
+    - text: What is Norn?
+      link: /norn/start/introduction/
+      variant: minimal
+    - text: GitHub
+      link: https://github.com/jamie-wk/norn
+      icon: external
+      variant: minimal
 ---
+
+import { Card, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Running in a minute
+
+All you need is Node.js 22.18 or later. `pnpm dev` downloads and starts a local Temporal server for you.
+
+```sh
+pnpm create @norn-ts my-app
+cd my-app
+pnpm dev
+```
+
+Then, in a second terminal, run `pnpm order` and open the link it prints. You will see an order workflow running in the Temporal Web UI. The [quickstart](/norn/start/quickstart/) walks you through what you just ran.
+
+## A workflow is a class
+
+A workflow charges a card, then waits five minutes for a cancellation. If the worker crashes during the wait, Temporal replays the history on another worker and the timer carries on where it was.
+
+```ts
+// src/workflows/order.workflow.ts
+import { condition } from '@temporalio/workflow';
+import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
+import { PaymentActivities } from '../../.norn/activities.js';
+
+@Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
+export class OrderWorkflow {
+  private status: 'pending' | 'paid' | 'refunded' = 'pending';
+  private canceled = false;
+  private readonly payments = useActivities(PaymentActivities);
+
+  @Signal() cancel(_reason: string) {
+    this.canceled = true;
+  }
+
+  @Query() getStatus() {
+    return this.status;
+  }
+
+  async run(input: { orderId: string; cents: number }) {
+    const charge = await this.payments.charge(input.orderId, input.cents);
+    this.status = 'paid';
+    if (await condition(() => this.canceled, '5 minutes')) {
+      await this.payments.refund(charge.id);
+      this.status = 'refunded';
+    }
+    return this.status;
+  }
+}
+```
+
+`norn gen` reads the decorators and generates a typed contract. Your API code uses the contract, never the workflow itself. Every name and argument is checked against the class. Hover over the code below to see the types:
+
+```ts twoslash
+// @errors: 2345 2561
+// @filename: order.workflow.ts
+import { Query, Signal, Workflow } from '@norn-ts/workflow';
+@Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
+export class OrderWorkflow {
+  private status: 'pending' | 'paid' | 'refunded' = 'pending';
+  @Signal() cancel(_reason: string) {}
+  @Query() getStatus() {
+    return this.status;
+  }
+  async run(input: { orderId: string; cents: number }) {
+    return this.status;
+  }
+}
+// @filename: contracts.ts
+import { contract } from '@norn-ts/core';
+import type { OrderWorkflow as OrderWorkflow$ } from './order.workflow.js';
+export const OrderWorkflow = contract<typeof OrderWorkflow$>()({
+  name: 'OrderWorkflow',
+  taskQueue: 'orders',
+  id: 'order-{orderId}',
+  signals: { cancel: 'cancel' },
+  queries: { getStatus: 'getStatus' },
+});
+// @filename: api.ts
+import { createClient } from '@norn-ts/client';
+// ---cut---
+import { OrderWorkflow } from './contracts.js';
+
+const norn = createClient();
+// The workflow ID, order-o-42, comes from the template.
+const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-42', cents: 1999 });
+
+const status = await order.query('getStatus');
+//    ^?
+
+// Typos and wrong arguments are compile errors:
+await order.signal('cancel', 42);
+await norn.workflow(OrderWorkflow).start({ orderID: 'o-43', cents: 1999 });
+```
+
+## Compared with the raw SDK
+
+Norn doesn't hide Temporal. It removes the repetition around it. Here is the same workflow and the same API call written both ways:
+
+<Tabs>
+<TabItem label="Temporal SDK">
+
+```ts
+// workflows.ts
+import { condition, defineQuery, defineSignal, proxyActivities, setHandler } from '@temporalio/workflow';
+import type * as activities from './activities.js';
+
+export const cancelSignal = defineSignal<[reason: string]>('cancel');
+export const statusQuery = defineQuery<string>('getStatus');
+
+const { charge, refund } = proxyActivities<typeof activities>({
+  startToCloseTimeout: '30s',
+  retry: { maximumAttempts: 4, nonRetryableErrorTypes: ['CardDeclinedError'] },
+});
+
+export async function orderWorkflow(input: { orderId: string; cents: number }): Promise<string> {
+  let status = 'pending';
+  let canceled = false;
+  setHandler(cancelSignal, () => void (canceled = true));
+  setHandler(statusQuery, () => status);
+
+  const ch = await charge(input.orderId, input.cents);
+  status = 'paid';
+  if (await condition(() => canceled, '5 minutes')) {
+    await refund(ch.id);
+    status = 'refunded';
+  }
+  return status;
+}
+
+// api.ts: the type name, task queue and ID format are repeated by hand,
+// and signaling means importing the workflow module into the API.
+const handle = await client.workflow.start('orderWorkflow', {
+  taskQueue: 'orders',
+  workflowId: `order-${orderId}`,
+  args: [{ orderId, cents }],
+});
+await handle.signal(cancelSignal, 'changed my mind');
+```
+
+</TabItem>
+<TabItem label="Norn">
+
+```ts
+// src/activities/payment.activities.ts: retry policy lives next to the activity
+@Activities({ prefix: 'payments.' })
+export class PaymentActivities {
+  constructor(private readonly gateway: PaymentGateway) {}
+
+  @Activity({ timeout: '30s', retries: 3 })
+  @NonRetryable([CardDeclinedError])
+  async charge(orderId: string, cents: number) {
+    return this.gateway.charge({ orderId, cents, idempotencyKey: `charge-${orderId}` });
+  }
+}
+
+// src/workflows/order.workflow.ts: the class shown above
+
+// api.ts: name, task queue and ID come from the contract, and everything is typed
+const order = await norn.workflow(OrderWorkflow).start({ orderId, cents });
+await order.signal('cancel', 'changed my mind');
+```
+
+</TabItem>
+</Tabs>
+
+[Coming from the Temporal SDK](/norn/start/coming-from-temporal/) maps each SDK concept to its Norn equivalent.
+
+## What you get
+
+<CardGrid>
+  <Card title="Types from end to end" icon="approve-check">
+    Workflow IDs, inputs, results, signals, queries, updates and search attributes are checked at compile time, from
+    the API route to the activity.
+  </Card>
+  <Card title="Activities with dependency injection" icon="puzzle">
+    Activities are classes with constructor-injected services. `norn gen` writes the wiring with no reflection, and
+    checks for cycles.
+  </Card>
+  <Card title="Safe by construction" icon="warning">
+    Workflows get type-only activity references, so worker code never leaks into the sandbox. ESLint rules catch
+    non-determinism as you type.
+  </Card>
+  <Card title="Tests that skip time" icon="rocket">
+    `useTestEnv()` and `mockActivities()` test a five-minute timer, or a five-day one, in milliseconds. `assertReplays()`
+    catches breaking changes before you deploy.
+  </Card>
+  <Card title="HTTP in a few lines" icon="seti:json">
+    Hono middleware for a typed client per request, error responses with the right status codes, and webhooks routed
+    to signals.
+  </Card>
+  <Card title="Production defaults" icon="setting">
+    Health checks, graceful shutdown, worker versioning, Prometheus metrics, correlation IDs and AES-GCM payload
+    encryption with key rotation.
+  </Card>
+</CardGrid>
+
+## Where next
+
+<CardGrid>
+  <LinkCard title="Quickstart" href="/norn/start/quickstart/" description="Create a project and run your first workflow." />
+  <LinkCard title="Tutorial" href="/norn/tutorial/" description="Grow the starter into a full order service." />
+  <LinkCard
+    title="Durable execution in 5 minutes"
+    href="/norn/concepts/durable-execution/"
+    description="New to Temporal? Start with the ideas."
+  />
+  <LinkCard title="Guides" href="/norn/guides/workflows/" description="Workflows, activities, testing, deployment and more." />
+</CardGrid>

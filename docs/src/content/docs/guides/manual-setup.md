@@ -1,6 +1,11 @@
 ---
-title: "Getting started"
+title: "Manual setup"
+description: Add Norn to a project by hand, from an empty directory to a tested workflow with an HTTP API.
 ---
+
+:::tip[Starting a new project?]
+`pnpm create @norn-ts my-app` does all of this for you. See the [quickstart](/norn/start/quickstart/). This page is for adding Norn to an existing project, or for seeing every piece that the starter sets up.
+:::
 
 This walkthrough builds a small order service from an empty directory: a workflow, an activity class with an injected service, a worker, an HTTP endpoint that starts the workflow, and a test. It takes about fifteen minutes.
 

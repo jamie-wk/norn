@@ -1,5 +1,5 @@
 import starlight from '@astrojs/starlight';
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightLlmsTxt from 'starlight-llms-txt';
 
@@ -9,6 +9,8 @@ export default defineConfig({
   site: 'https://jamie-wk.github.io',
   base: '/norn',
   trailingSlash: 'always',
+  // The only images are SVGs, so there is nothing for sharp to optimize.
+  image: { service: passthroughImageService() },
   integrations: [
     starlight({
       title: 'Norn',

@@ -1,5 +1,6 @@
 ---
 title: "Introduction"
+description: What Norn is, what it adds to the Temporal TypeScript SDK, and what you need to use it.
 ---
 
 Norn is an open-source (MIT) framework for writing [Temporal](https://temporal.io) workflows in TypeScript. It sits on top of the official Temporal TypeScript SDK (1.24) and keeps everything that makes Temporal good: durable execution, the deterministic workflow sandbox, retries, timers, signals, updates and worker versioning. What it changes is how your code is organised and how much of it you have to write by hand.
@@ -87,7 +88,7 @@ The Temporal TypeScript SDK is deliberately low level. That is a strength, but m
 - **Activity dependencies.** Real activities need database pools, HTTP clients and SDK clients, created once and disposed on shutdown, some per execution. Norn has a small, compile-time dependency container built for exactly this.
 - **Production plumbing.** Health endpoints, SIGTERM draining, worker versioning, Prometheus metrics, correlation IDs, error mapping to HTTP statuses, payload encryption, replay tests. Every team writes these; Norn ships them.
 
-Norn does not hide Temporal. Every wrapper exposes the underlying SDK object (`handle.temporal`, `client.temporal`, `workerOptions`, `plugins`), and inside workflows you still import `sleep`, `condition`, `patched` and friends from `@temporalio/workflow`. If you know Temporal, you already know most of Norn. If you don't, the [Temporal docs](https://docs.temporal.io) remain the best place to learn the concepts; these docs focus on how Norn expresses them.
+Norn does not hide Temporal. Every wrapper exposes the underlying SDK object (`handle.temporal`, `client.temporal`, `workerOptions`, `plugins`), and inside workflows you still import `sleep`, `condition`, `patched` and friends from `@temporalio/workflow`. If you know Temporal, you already know most of Norn: [Coming from the Temporal SDK](/norn/start/coming-from-temporal/) maps one to the other. If you don't, start with [Durable execution in 5 minutes](/norn/concepts/durable-execution/), which explains the ideas these docs build on.
 
 ## Why the name Norn
 
@@ -116,6 +117,6 @@ Norn weaves those threads into code that reads like the story it tells: a class 
 
 - **Node.js 22.18 or later** (tested on 22, 24 and 26).
 - **A Temporal service**: Temporal Cloud, a self-hosted cluster or `temporal server start-dev` locally.
-- **TypeScript 5.0+ or 7** with **TC39 standard decorators**. Do **not** enable `experimentalDecorators`: Norn's decorators are standard decorators, and the legacy ones have a different signature. See [Getting started](/norn/guides/manual-setup/#2-typescript) for the tsconfig.
+- **TypeScript 5.0+ or 7** with **TC39 standard decorators**. Do **not** enable `experimentalDecorators`: Norn's decorators are standard decorators, and the legacy ones have a different signature. `pnpm create @norn-ts` sets this up for you; [Manual setup](/norn/guides/manual-setup/#2-typescript) shows the tsconfig.
 
-Next: [Getting started](/norn/guides/manual-setup/).
+Next: the [quickstart](/norn/start/quickstart/) gets a workflow running in a few minutes.

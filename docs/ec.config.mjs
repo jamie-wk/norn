@@ -9,8 +9,8 @@ export default defineEcConfig({
       twoslashOptions: {
         compilerOptions: {
           target: 99,
-          module: 199,
-          moduleResolution: 99,
+          module: 99,
+          moduleResolution: 100,
           strict: true,
           useDefineForClassFields: true,
           verbatimModuleSyntax: true,
