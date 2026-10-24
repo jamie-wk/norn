@@ -1,4 +1,13 @@
-import type { ScheduleOverlap } from '@norn-ts/worker';
+import {
+  IDENTIFIER,
+  SCHEDULE_OVERLAPS as OVERLAPS,
+  SEARCH_ATTRIBUTE_TYPES,
+  templateKeys,
+  toActivityOptions,
+  type ActivityOptions,
+  type ScheduleOverlap,
+  type SearchAttributeType,
+} from '@norn-ts/core';
 import type { NornGenError, NornGenErrorCode } from './errors.js';
 import { Fn, Ref, evaluateLiteral, isObject, type Literal, type LiteralContext, type LiteralObject } from './literal.js';
 import { isRelative, type Project } from './project.js';
@@ -10,10 +19,7 @@ export interface Location {
   column: number;
 }
 
-export type SearchAttributeType = 'text' | 'keyword' | 'int' | 'double' | 'bool' | 'datetime' | 'keywordList';
-export const SEARCH_ATTRIBUTE_TYPES: readonly SearchAttributeType[] = ['text', 'keyword', 'int', 'double', 'bool', 'datetime', 'keywordList'];
-export type { ScheduleOverlap };
-export const OVERLAPS: readonly ScheduleOverlap[] = ['skip', 'buffer-one', 'buffer-all', 'cancel-other', 'terminate-other', 'allow-all'];
+export { IDENTIFIER, OVERLAPS, SEARCH_ATTRIBUTE_TYPES, type ScheduleOverlap, type SearchAttributeType };
 
 export interface HandlerModel {
   /** Method that implements the handler. */
@@ -105,8 +111,6 @@ const PACKAGES: Record<string, ReadonlySet<string>> = {
 };
 const HANDLER_KINDS = { Signal: 'signal', Query: 'query', Update: 'update' } as const;
 type HandlerKind = (typeof HANDLER_KINDS)[keyof typeof HANDLER_KINDS];
-// A copy of @norn-ts/core's IDENTIFIER: the CLI has no runtime dependency on core (checks.test.ts keeps them equal).
-export const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
 const WORKFLOW_KEYS = new Set(['taskQueue', 'name', 'id', 'versioning', 'searchAttributes', 'failOn', 'drainHandlers']);
 const SIGNAL_KEYS = new Set(['name', 'description', 'unfinishedPolicy', 'dedupeBy']);
@@ -427,6 +431,13 @@ export class Analyzer {
         invalid('name', `workflow name ${JSON.stringify(o.name)} must be a valid identifier: it is the workflow's export name in the bundle`);
       }
       if (o.id !== undefined && typeof o.id !== 'string') invalid('id', 'id must be an ID template string, such as "order-{orderId}"');
+      else if (typeof o.id === 'string') {
+        try {
+          templateKeys(o.id);
+        } catch (error) {
+          invalid('id', (error as Error).message);
+        }
+      }
       if (o.versioning !== undefined && o.versioning !== 'pinned' && o.versioning !== 'auto-upgrade') {
         invalid('versioning', "versioning must be 'pinned' or 'auto-upgrade'");
       }
@@ -474,6 +485,11 @@ export class Analyzer {
           }
           if (!this.checkMember(member, d)) continue;
           const method = member.key!;
+          if ((d.name === 'Query' || d.name === 'Validate') && member.node.value?.async) {
+            // Temporal runs both synchronously; the runtime decorators reject async ones at import.
+            this.error('invalid-member', member.mod, member.node, `@${d.name} ${method}() must be synchronous`, `Remove async from ${method}()`);
+            continue;
+          }
           if (d.name === 'Validate') {
             const arg = d.args[0];
             const update = arg ? this.literal(member.mod, arg, { label: '@Validate', whole: '@Validate update name' }) : undefined;
@@ -744,10 +760,10 @@ export class Analyzer {
     const fail = (key: string, message: string) => {
       this.error('invalid-option', mod, (node && propertyNode(node, key)) ?? dec.node, `@Activity option "${key}" ${message}`);
     };
-    const duration = (v: Literal) => (typeof v === 'string' && v.trim() !== '') || (typeof v === 'number' && v >= 0);
+    const before = this.errors.length;
     if (o.name !== undefined && (typeof o.name !== 'string' || o.name === '')) fail('name', 'must be a non-empty string');
     for (const key of ['timeout', 'scheduleToClose', 'scheduleToStart', 'heartbeat']) {
-      if (o[key] !== undefined && !duration(o[key])) fail(key, "must be a duration such as '30s' or a number of milliseconds");
+      if (o[key] !== undefined && typeof o[key] !== 'string' && typeof o[key] !== 'number') fail(key, "must be a duration such as '30s' or a number of milliseconds");
     }
     if (o.retries !== undefined && !(typeof o.retries === 'number' && Number.isInteger(o.retries) && o.retries >= 0)) fail('retries', 'must be a non-negative integer');
     if (o.local !== undefined && typeof o.local !== 'boolean') fail('local', 'must be a boolean');
@@ -761,6 +777,14 @@ export class Analyzer {
       else {
         for (const key of Object.keys(o.retry)) if (!RETRY_KEYS.has(key)) fail('retry', `has no field "${key}"; use ${[...RETRY_KEYS].join(', ')}`);
         if (o.retries !== undefined && o.retry.maximumAttempts !== undefined) fail('retries', 'cannot be combined with retry.maximumAttempts');
+      }
+    }
+    // Once the shape is right, the runtime's own translation checks values (durations, ranges).
+    if (this.errors.length === before) {
+      try {
+        toActivityOptions(o as ActivityOptions);
+      } catch (error) {
+        this.error('invalid-option', mod, node ?? dec.node, `@Activity options: ${(error as Error).message.replace(/^Activity options: /, '')}`);
       }
     }
   }

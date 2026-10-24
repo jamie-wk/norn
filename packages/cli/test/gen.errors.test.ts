@@ -204,6 +204,54 @@ describe('workflow structure', () => {
     expect(errors).toHaveLength(17);
   });
 
+  it('applies the runtime decorators\' rules, so gen fails where importing would', async () => {
+    const { project, removeDir } = await import('./helpers.ts');
+    const file = 'src/rules.ts';
+    const acts = 'src/acts.ts';
+    const dir = project({
+      [file]: [
+        "import { Query, Update, Validate, Workflow } from '@norn-ts/workflow';",
+        '',
+        "@Workflow({ taskQueue: 'q', id: 'order-{order-id}' })",
+        'export class BadIdWorkflow {',
+        '  async run(_input: { orderId: string }) {}',
+        '}',
+        '',
+        "@Workflow({ taskQueue: 'q' })",
+        'export class AsyncHandlersWorkflow {',
+        '  @Query() async status() { return 1; }',
+        '  @Update() change(n: number) { return n; }',
+        "  @Validate('change') async checkChange(_n: number) {}",
+        '  async run() {}',
+        '}',
+        '',
+      ].join('\n'),
+      [acts]: [
+        "import { Activities, Activity } from '@norn-ts/activity';",
+        '',
+        "@Activities({ prefix: 'a.' })",
+        'export class BadActivities {',
+        '  @Activity({ timeout: 0 }) async zero() {}',
+        '  @Activity({ retry: { backoffCoefficient: 0.5 } }) async slow() {}',
+        "  @Activity({ heartbeat: 'soon' }) async vague() {}",
+        '}',
+        '',
+      ].join('\n'),
+    });
+    try {
+      const { errors } = await generate({ cwd: dir, write: false });
+      expectError(errors, { code: 'invalid-option', file, line: 3, message: 'order-id' });
+      expectError(errors, { code: 'invalid-member', file, line: 10, message: 'synchronous' });
+      expectError(errors, { code: 'invalid-member', file, line: 12, message: 'synchronous' });
+      expectError(errors, { code: 'invalid-option', file: acts, line: 5, message: 'greater than zero' });
+      expectError(errors, { code: 'invalid-option', file: acts, line: 6, message: 'backoffCoefficient' });
+      expectError(errors, { code: 'invalid-option', file: acts, line: 7, message: 'heartbeat: Invalid duration "soon"' });
+      expect(errors).toHaveLength(6);
+    } finally {
+      removeDir(dir);
+    }
+  });
+
   it('reports syntax errors with their location', async () => {
     const { project, removeDir } = await import('./helpers.ts');
     const dir = project({ 'src/broken.ts': "import { Workflow } from '@norn-ts/workflow';\n\nconst x = ;\n" });

@@ -59,10 +59,20 @@ function check(condition: boolean, message: string): asserts condition {
   if (!condition) throw new NornConfigError(`Activity options: ${message}`);
 }
 
+/** A duration field as Temporal wants it; parse errors name the field. */
+function durationOf(duration: Duration, field: string): `${number}ms` {
+  try {
+    return formatDuration(duration);
+  } catch (error) {
+    throw new NornConfigError(`Activity options: ${field}: ${(error as Error).message}`, { cause: error });
+  }
+}
+
 /** Temporal treats zero as unset (timeouts) or rejects it (retry intervals), so these must be positive. */
 function positive(duration: Duration, field: string): `${number}ms` {
+  const ms = durationOf(duration, field);
   check(toMs(duration) > 0, `${field} must be greater than zero`);
-  return formatDuration(duration);
+  return ms;
 }
 
 /** Translates Norn activity options into Temporal SDK options. */
@@ -75,8 +85,8 @@ export function toActivityOptions(o: ActivityOptions): TemporalActivityOptions {
     out.startToCloseTimeout = `${DEFAULT_ACTIVITY_TIMEOUT}ms`;
   }
   if (!o.local) {
-    if (o.scheduleToStart !== undefined) out.scheduleToStartTimeout = formatDuration(o.scheduleToStart);
-    if (o.heartbeat !== undefined) out.heartbeatTimeout = formatDuration(o.heartbeat);
+    if (o.scheduleToStart !== undefined) out.scheduleToStartTimeout = durationOf(o.scheduleToStart, 'scheduleToStart');
+    if (o.heartbeat !== undefined) out.heartbeatTimeout = durationOf(o.heartbeat, 'heartbeat');
     if (o.taskQueue !== undefined) out.taskQueue = o.taskQueue;
   }
   if (o.summary !== undefined) out.summary = o.summary;

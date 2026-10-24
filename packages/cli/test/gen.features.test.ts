@@ -171,7 +171,7 @@ export class W {
     expectError(errors, { code: 'invalid-option', line: 5, message: 'has no field "jitter"' });
     expectError(errors, { code: 'invalid-option', line: 5, message: '"local" must be a boolean' });
     expectError(errors, { code: 'invalid-option', line: 5, message: 'cannot be combined with retry.maximumAttempts' });
-    expectError(errors, { code: 'invalid-option', line: 6, message: '"timeout" must be a duration' });
+    expectError(errors, { code: 'invalid-option', line: 6, message: 'timeout: Invalid duration' });
     expectError(errors, { code: 'invalid-option', line: 8, message: 'provides must be a class or token' });
     expectError(errors, { code: 'invalid-option', file: 'src/w.ts', line: 2, message: '@Workflow has no option "retries"' });
     expectError(errors, { code: 'invalid-option', file: 'src/w.ts', line: 2, message: '@Workflow has no option "description"' });
