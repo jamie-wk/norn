@@ -9,12 +9,13 @@ import {
 import { NornConfigError, TemporalUnavailableError } from '@norn-ts/core';
 import type { Container } from '@norn-ts/activity';
 import { correlationActivityInterceptor } from './activity-interceptors.js';
+import { workerSet, type WorkerSetState } from './worker-set.js';
 import { bundleWorkflows } from './bundle.js';
 import { resolveWorkerConfig, type ResolvedWorkerConfig, type WorkerConfigOptions } from './config.js';
 import { startHealthServer, type HealthServer } from './health.js';
 import type { RegistryContainerOptions } from './registry.js';
 
-export type NornWorkerState = 'INITIALIZED' | 'RUNNING' | 'STOPPING' | 'STOPPED' | 'FAILED';
+export type NornWorkerState = WorkerSetState;
 
 export interface CreateWorkerOptions extends WorkerConfigOptions {
   /** An existing connection, e.g. from a test environment. Otherwise Norn connects and closes it. */
@@ -159,7 +160,7 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
     throw error;
   }
 
-  let state: NornWorkerState = 'INITIALIZED';
+  const set = workerSet(workers, cleanup, log, { taskQueues: config.taskQueues, namespace: config.namespace });
   let health: HealthServer | undefined;
   if (config.healthPort !== undefined) {
     try {
@@ -168,7 +169,7 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
         host: config.healthHost,
         ready: () => {
           const details = Object.fromEntries(config.taskQueues.map((q, i) => [q, workers[i]!.getState()]));
-          return { ready: state === 'RUNNING' && Object.values(details).every((s) => s === 'RUNNING'), details };
+          return { ready: set.state === 'RUNNING' && Object.values(details).every((s) => s === 'RUNNING'), details };
         },
       });
     } catch (error) {
@@ -181,7 +182,7 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
 
   const onSignal = (signal: NodeJS.Signals) => {
     log.info(`Norn worker received ${signal}; shutting down gracefully`, { gracePeriod: config.shutdownGraceTime });
-    void shutdown();
+    void set.shutdown();
   };
   if (config.handleSignals) {
     process.once('SIGTERM', onSignal);
@@ -192,60 +193,19 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
     });
   }
 
-  let runPromise: Promise<void> | undefined;
-  const shutdown = async (): Promise<void> => {
-    if (state === 'STOPPED' || state === 'FAILED') return;
-    if (state === 'INITIALIZED') {
-      state = 'STOPPED';
-      await cleanup();
-      return;
-    }
-    if (state === 'RUNNING') {
-      state = 'STOPPING';
-      for (const w of workers) if (w.getState() === 'RUNNING') w.shutdown();
-    }
-    await runPromise?.catch(() => undefined);
-  };
-
-  const run = (): Promise<void> => {
-    if (runPromise) return runPromise;
-    if (state !== 'INITIALIZED') return Promise.reject(new NornConfigError(`Cannot run a worker that is ${state}`));
-    state = 'RUNNING';
-    log.info('Norn worker started', { taskQueues: config.taskQueues, namespace: config.namespace });
-    runPromise = (async () => {
-      const results = await Promise.allSettled(
-        workers.map(async (w) => {
-          try {
-            await w.run();
-          } catch (error) {
-            // One failed worker stops the others, so the process exits and gets restarted.
-            for (const other of workers) if (other !== w && other.getState() === 'RUNNING') other.shutdown();
-            throw error;
-          }
-        }),
-      );
-      const failure = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
-      state = failure ? 'FAILED' : 'STOPPED';
-      await cleanup();
-      if (failure) throw failure.reason;
-      log.info('Norn worker stopped');
-    })();
-    return runPromise;
-  };
-
   return {
     taskQueues: config.taskQueues,
     config,
     get state() {
-      return state;
+      return set.state;
     },
     get healthPort() {
       return health?.port;
     },
-    run,
-    shutdown,
+    run: () => set.run(),
+    shutdown: () => set.shutdown(),
     async [Symbol.asyncDispose]() {
-      await shutdown();
+      await set.shutdown();
     },
   };
 }
