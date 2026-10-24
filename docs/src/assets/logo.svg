@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke-linecap="round" stroke-width="5">
+  <title>Norn</title>
+  <path d="M10 14c14 0 14 36 28 36s14-36 16-36" stroke="#5b4cc4"/>
+  <path d="M10 32c14 0 14-18 28-18s14 36 16 36" stroke="#8a7cf0"/>
+  <path d="M10 50c14 0 14-18 28-18h16" stroke="#c4bbff"/>
+</svg>

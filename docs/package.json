@@ -3,13 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "The Norn documentation site (VitePress).",
+  "description": "The Norn documentation site (Astro Starlight).",
   "scripts": {
-    "dev": "vitepress dev",
-    "build": "vitepress build",
-    "preview": "vitepress preview"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
   },
   "devDependencies": {
-    "vitepress": "1.6.4"
+    "@astrojs/starlight": "0.42.6",
+    "astro": "7.3.8",
+    "starlight-links-validator": "0.27.0",
+    "starlight-llms-txt": "0.12.0"
   }
 }
