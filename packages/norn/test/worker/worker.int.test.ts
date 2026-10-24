@@ -115,6 +115,17 @@ describe('createWorker', () => {
     expect(worker.taskQueues).toEqual(['w-activities']);
     await worker.shutdown();
   });
+
+  it('ignores NORN_WORKFLOW_BUNDLE on an activity-only worker', async () => {
+    vi.stubEnv('NORN_WORKFLOW_BUNDLE', join(tmpdir(), 'norn-missing-bundle.js'));
+    try {
+      const worker = await createWorker({ ...base(), workflows: undefined, workflowBundle: undefined, taskQueues: ['w-activities'] });
+      expect(worker.taskQueues).toEqual(['w-activities']);
+      await worker.shutdown();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
 });
 
 describe('startup failures', () => {

@@ -28,7 +28,7 @@ It's published as one package, `@norn-ts/norn`, plus the scaffolder `@norn-ts/cr
 | `packages/norn/src/core` | Errors (code + HTTP status), durations, ID templates, class contracts, activity options, metadata tagging. Workflow-safe. Root export `.` re-exports the public parts. |
 | `packages/norn/src/workflow` | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `implement()`, `contractOf()`, `useActivities<T>(namespace)`, `useChild()`, `useExternal()`, `continueAsNew()`, `asFailure()`, `setSearchAttributes()`. Export `./workflow`. |
 | `packages/norn/src/client` | `createClient()` → `workflow(WorkflowClass)` typed client with Norn error mapping and with-start operations. Export `./client`. |
-| `packages/norn/src/worker` | `createWorker({ workflows, activities })`, `loadWorkflows()` (bundle entry), `bundleWorkflows()`, webpack hook. Export `./worker`. |
+| `packages/norn/src/worker` | `createWorker({ workflows, activities })`, `loadWorkflows()` (task queues), `writeEntry()` (bundle entry), `bundleWorkflows()`, webpack hook. Export `./worker`. |
 | `packages/norn/src/testing` | `createTestEnv()` (`./testing`), `useTestEnv()` (`./vitest`), `standardDecorators()` (`./vite`). |
 | `packages/norn/test/<area>` | Tests per area; `fixtures/` hold workflow classes and plain activity classes. |
 | `packages/create` | `pnpm create @norn-ts`: scaffolds the starter in `template/` (`_gitignore` is renamed on copy; `.claude/skills/norn/SKILL.md` must equal `skills/norn/SKILL.md`, a test checks). |
@@ -61,7 +61,7 @@ set `NORN_TEMPORAL_CLI_PATH=$(which temporal)`.
 - Vite 8 / oxc does not lower decorators: tests rely on `standardDecorators()` (esbuild pre-transform) in `vitest.config.ts`.
 - The workflow sandbox freezes `Symbol`, so `Symbol.metadata` can't be used; metadata is stored by tagging functions/classes with `Symbol.for('norn.*')` (`packages/norn/src/core/meta.ts`).
 - Temporal's bundler needs swc `decoratorVersion: '2022-03'` and `.js`→`.ts` extension aliases: `nornWebpackConfigHook()` in `packages/norn/src/worker/bundler.ts`.
-- Temporal runs workflows by **export name** and calls them as functions, so `loadWorkflows()` writes an entry that wraps each class with `implement()` and exports it under its type name.
+- Temporal runs workflows by **export name** and calls them as functions, so `writeEntry()` (in `load.ts`) writes an entry that wraps each class with `implement()` and exports it under its type name.
 - Node can't run decorators (type stripping doesn't lower them): dev uses tsx, builds use esbuild `--target=node22`, Vitest uses `standardDecorators()`.
 - The macOS temp dir is a symlink and webpack resolves realpaths, so the bundle entry path goes through `realpath()`.
 - The package resolves to `src/*.ts` via the `@norn/source` export condition in dev/tests; published builds use `dist`.

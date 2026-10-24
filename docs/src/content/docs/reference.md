@@ -34,7 +34,7 @@ For workflow code. Safe in the workflow sandbox.
 | `bundleWorkflows(workflows, { outFile?, payloadConverterPath?, plugins?, webpackConfigHook?, ... })` | Bundles a workflows module ahead of time. |
 | `resolveWorkerConfig(options, env?)` | The connection settings `createWorker()` would use. |
 | `activityFunctions(activities)` | The activity functions `createWorker()` registers: `{ 'payments.charge': fn, ... }`. |
-| `loadWorkflows(workflows)` | Reads a workflows module: task queues, search attributes and the bundle entry. |
+| `loadWorkflows(workflows)` | Reads a workflows module: its resolved path, task queues and search attributes. Writes nothing. |
 | `nornWebpackConfigHook()`, `composeWebpackHooks()` | Norn's webpack settings, for custom bundling. |
 
 ## `@norn-ts/norn/client`

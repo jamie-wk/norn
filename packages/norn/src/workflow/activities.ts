@@ -33,8 +33,7 @@ export type ActivitiesOf<T> = {
 
 /** `useActivities<T>('payments')`: schedules `payments.<method>`; the worker registers the same names. */
 function byNamespace(namespace: string, options: (ActivityOptions & { methods?: Partial<Record<string, ActivityOptions>> }) | undefined): unknown {
-  if (typeof namespace !== 'string') throw new NornConfigError('useActivities: the namespace must be a non-empty string');
-  if (namespace === '') throw new NornConfigError('useActivities: the namespace must be a non-empty string');
+  if (typeof namespace !== 'string' || namespace === '') throw new NornConfigError('useActivities: the namespace must be a non-empty string');
   const { methods: perMethod, ...shared } = options ?? {};
   const cache = new Map<string, (...args: unknown[]) => Promise<unknown>>();
   return new Proxy({}, {

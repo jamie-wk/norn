@@ -2,7 +2,7 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { bundleWorkflowCode, type BundleOptions } from '@temporalio/worker';
 import { nornWebpackConfigHook, composeWebpackHooks } from './bundler.js';
-import { loadWorkflows, type LoadedWorkflows } from './load.js';
+import { loadWorkflows, writeEntry } from './load.js';
 
 export interface BundleWorkflowsOptions {
   /** Also write the bundle to this file, for `createWorker({ workflowBundle: { codePath } })` in production. */
@@ -20,12 +20,12 @@ export interface BundleWorkflowsOptions {
  * resolution. `createWorker()` does this at startup; run it at build time to ship the bundle instead.
  */
 export async function bundleWorkflows(workflows: string | URL, options: BundleWorkflowsOptions = {}): Promise<{ code: string }> {
-  return bundleEntry(await loadWorkflows(workflows), options);
+  return bundleEntry(await writeEntry((await loadWorkflows(workflows)).path), options);
 }
 
-/** @internal Bundles an entry written by `loadWorkflows()`. */
+/** @internal Bundles a module as is, e.g. an entry from `writeEntry()`, resolving packages from `nodeModules`. */
 export async function bundleEntry(
-  { workflowsPath, nodeModules }: Pick<LoadedWorkflows, 'workflowsPath' | 'nodeModules'>,
+  { workflowsPath, nodeModules }: { workflowsPath: string; nodeModules: string },
   options: BundleWorkflowsOptions = {},
 ): Promise<{ code: string }> {
   const hook = nornWebpackConfigHook({ modules: [nodeModules] });

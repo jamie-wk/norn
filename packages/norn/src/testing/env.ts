@@ -5,6 +5,7 @@ import { defineSearchAttributeKey, type DataConverter } from '@temporalio/common
 import { NornConfigError, TEMPORAL_SEARCH_ATTRIBUTE_TYPES, toMs, type Duration, type SearchAttributeType } from '../core/index.js';
 import { createClient, type NornClient, type WorkflowClient } from '../client/index.js';
 import { createWorker, loadWorkflows, type NornWorker } from '../worker/index.js';
+import { writeEntry } from '../worker/load.js';
 import { bundleEntry } from '../worker/bundle.js';
 import type { ClassContract, WorkflowClass } from '../core/index.js';
 
@@ -156,7 +157,7 @@ export async function createTestEnv(options: TestEnvOptions = {}): Promise<TestE
         namespace: temporal.namespace ?? 'default',
         taskQueues: options.taskQueues,
         dataConverter: options.dataConverter,
-        workflowBundle: await cachedBundle(loaded.workflowsPath, payloadConverterPath, loaded.nodeModules),
+        workflowBundle: await writeEntry(loaded.path).then((e) => cachedBundle(e.workflowsPath, payloadConverterPath, e.nodeModules)),
         handleSignals: false,
         shutdownGraceTime: '5s',
       });

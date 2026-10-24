@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { fileURLToPath } from 'node:url';
@@ -13,7 +13,7 @@ const bin = join(pkgDir, 'node_modules/.bin');
 let dir: string;
 
 function run(script: string) {
-  // Run the binaries directly: the scripts' inner commands (`norn`, `tsc`, `vitest`) come from PATH.
+  // Run the binaries directly: the scripts' inner commands (`esbuild`, `tsc`, `vitest`) come from PATH.
   const [command, ...args] = script.split(' ') as [string, ...string[]];
   const result = spawnSync(join(bin, command), args, {
     cwd: dir,
@@ -48,7 +48,8 @@ it("passes its own tests on Temporal's time-skipping server", () => {
 });
 
 it('builds for production: the worker and the workflows module it loads', () => {
-  const result = run('esbuild src/worker.ts src/workflows/index.ts --bundle --platform=node --target=node22 --format=esm --packages=external --outdir=dist');
+  // The starter's own build script, so the test follows it when it changes.
+  const result = run(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).scripts.build);
   expect(result.status).toBe(0);
   expect(existsSync(join(dir, 'dist/worker.js')) && existsSync(join(dir, 'dist/workflows/index.js'))).toBe(true);
 });

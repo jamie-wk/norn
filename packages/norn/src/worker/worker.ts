@@ -2,7 +2,7 @@ import { NativeConnection, Runtime, Worker, type WorkerOptions, type WorkerPlugi
 import { NornConfigError, TemporalUnavailableError } from '../core/index.js';
 import { bundleEntry } from './bundle.js';
 import { resolveWorkerConfig, type ResolvedWorkerConfig, type WorkerConfigOptions } from './config.js';
-import { activityFunctions, loadWorkflows } from './load.js';
+import { activityFunctions, loadWorkflows, writeEntry } from './load.js';
 
 export type NornWorkerState = 'INITIALIZED' | 'RUNNING' | 'STOPPING' | 'STOPPED' | 'FAILED';
 
@@ -99,9 +99,12 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
     }
 
     const payloadConverterPath = (options.dataConverter as { payloadConverterPath?: string } | undefined)?.payloadConverterPath;
-    const prebuilt = process.env.NORN_WORKFLOW_BUNDLE ? { codePath: process.env.NORN_WORKFLOW_BUNDLE } : undefined;
+    // Only a worker with workflows takes the env bundle: an activity-only worker must not start running workflows.
+    const prebuilt = loaded && process.env.NORN_WORKFLOW_BUNDLE ? { codePath: process.env.NORN_WORKFLOW_BUNDLE } : undefined;
     const workflowBundle =
-      options.workflowBundle ?? prebuilt ?? (loaded ? await bundleEntry(loaded, { payloadConverterPath, plugins: options.plugins }) : undefined);
+      options.workflowBundle ??
+      prebuilt ??
+      (loaded ? await bundleEntry(await writeEntry(loaded.path), { payloadConverterPath, plugins: options.plugins }) : undefined);
 
     const create = (taskQueue: string) =>
       Worker.create({

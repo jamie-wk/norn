@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { mkdir, realpath, writeFile } from 'node:fs/promises';
+import { mkdir, realpath, rename, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
@@ -45,21 +45,15 @@ function nodeModulesOf(file: string): string {
 }
 
 export interface LoadedWorkflows {
-  /** The bundle entry: wraps each exported class with `implement()`, under its workflow type name. */
-  workflowsPath: string;
-  /** The project's `node_modules`, where the bundler resolves packages for the entry. */
-  nodeModules: string;
+  /** The workflows module, after the compiled `.js` fallback. */
+  path: string;
   /** Every task queue the exported workflows declare. */
   taskQueues: string[];
   /** The search attributes the exported workflows declare. */
   searchAttributes: Record<string, SearchAttributeType>;
 }
 
-/**
- * Reads the `@Workflow` classes a module exports (importing it once in Node) and writes the bundle
- * entry Temporal needs: Temporal runs exported functions by name, so each class is wrapped with
- * `implement()` and exported under its workflow type name.
- */
+/** Reads the `@Workflow` classes a module exports, importing it once in Node. Writes nothing. */
 export async function loadWorkflows(workflows: string | URL): Promise<LoadedWorkflows> {
   const path = compiledFallback(workflows instanceof URL ? fileURLToPath(workflows) : resolve(workflows));
   const exported = Object.values(await import(pathToFileURL(path).href)).filter(isWorkflowClass);
@@ -67,17 +61,27 @@ export async function loadWorkflows(workflows: string | URL): Promise<LoadedWork
   const defs = exported.map((cls) => describeWorkflow(cls));
   const taskQueues = [...new Set(defs.map((def) => def.taskQueue))];
   const searchAttributes = Object.assign({}, ...defs.map((def) => def.searchAttributes)) as Record<string, SearchAttributeType>;
+  return { path, taskQueues, searchAttributes };
+}
 
+/**
+ * @internal Writes the bundle entry Temporal needs for a workflows module: Temporal runs exported
+ * functions by name, so each class is wrapped with `implement()` and exported under its workflow type name.
+ */
+export async function writeEntry(path: string): Promise<{ workflowsPath: string; nodeModules: string }> {
   // realpath: webpack resolves symlinks (macOS /tmp), and Temporal writes its own entry next to this one.
   const entryDir = join(await realpath(tmpdir()), 'norn', createHash('sha256').update(path).digest('hex').slice(0, 16));
   await mkdir(entryDir, { recursive: true });
   const workflowsPath = join(entryDir, 'workflows.cjs');
   const implementModule = fileURLToPath(new URL(`../workflow/index${ext}`, import.meta.url));
+  // Write then rename: parallel processes (Vitest forks) share this file, and a reader must never see it half-written.
+  const tmp = `${workflowsPath}.${process.pid}`;
   await writeFile(
-    workflowsPath,
+    tmp,
     `const user = require(${JSON.stringify(path)});\n` +
       `const { implement, isWorkflowClass } = require(${JSON.stringify(implementModule)});\n` +
       `for (const value of Object.values(user)) if (isWorkflowClass(value)) { const fn = implement(value); exports[fn.workflowType] = fn; }\n`,
   );
-  return { workflowsPath, nodeModules: nodeModulesOf(path), taskQueues, searchAttributes };
+  await rename(tmp, workflowsPath);
+  return { workflowsPath, nodeModules: nodeModulesOf(path) };
 }

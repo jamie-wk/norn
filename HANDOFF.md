@@ -26,7 +26,7 @@ Removed in 2.0: `@norn-ts/cli` (codegen, lock file, `schedules sync`, `histories
 
 - **No codegen.** Workflows call activities with `useActivities<T>('namespace', options)` and `import type`, so activity code never reaches the sandbox. The worker registers `{ namespace: instance }` as `namespace.<method>`.
 - **The workflow class is the contract.** `contractOf(cls)` reads name, task queue, ID template and handler names from the decorators; importing a workflow class in Node is safe (it only tags metadata). Types can't tell signals from queries, so the client checks the kind at call time and throws `NornConfigError` before any network call.
-- **The bundle entry.** Temporal runs exported *functions*, so `loadWorkflows()` writes a 3-line CommonJS entry (in the OS temp dir) that wraps each exported class with `implement()` under its workflow type name. Webpack resolves its packages from the project's `node_modules` via `resolve.modules`.
+- **The bundle entry.** Temporal runs exported *functions*, so `writeEntry()` writes a 3-line CommonJS entry (in the OS temp dir, atomically, and only when bundling) that wraps each exported class with `implement()` under its workflow type name. Webpack resolves its packages from the project's `node_modules` via `resolve.modules`.
 - **Production.** esbuild compiles `src/worker.ts` and `src/workflows/index.ts`; a `.ts` workflows path that's gone after the build falls back to the `.js` next to it. `NORN_WORKFLOW_BUNDLE` skips bundling at startup.
 - **Sandbox rule.** `pnpm check:deps` fails if `src/core` or `src/workflow` import Node built-ins, other folders, or packages other than `@temporalio/workflow` / `common`.
 - Activity `retries` counts retries **after** the first attempt (`maximumAttempts = retries + 1`).
