@@ -13,7 +13,7 @@ Keep the rules in [CLAUDE.md](./CLAUDE.md): pnpm, TDD, happy + sad paths, no los
 | Docs | 14 pages. `pnpm docs:build` passes, with twoslash and the link validator. |
 | Release | `.changeset/norn-2.md` takes `@norn-ts/norn` and `@norn-ts/create` to 2.0.0. |
 
-Removed in 2.0: `@norn-ts/cli` (codegen, lock file, `schedules sync`, `histories pull`, `bundle`), `@norn-ts/activity` (decorators, DI container), `@norn-ts/codec`, `@norn-ts/hono`, `@norn-ts/eslint-plugin`, the orders example and the e2e suite, `@Schedule`, correlation IDs, the health server, Prometheus/versioning options, `mockActivities()`, `createFakeClient()`, `assertReplays()`. The docs' Recipes page covers HTTP APIs, schedules, encryption and tracing with the SDK.
+Removed in 2.0: `@norn-ts/cli` (codegen, lock file, `schedules sync`, `histories pull`, `bundle`), `@norn-ts/activity` (decorators, DI container), `@norn-ts/codec`, `@norn-ts/hono`, `@norn-ts/eslint-plugin`, the orders example and the e2e suite, `@Schedule`, correlation IDs, the health server, Prometheus/versioning options, `mockActivities()`, `createFakeClient()`, `assertReplays()`. The docs' Recipes page covers HTTP APIs, monorepos, schedules, encryption and tracing with the SDK.
 
 ## Maintainer steps
 

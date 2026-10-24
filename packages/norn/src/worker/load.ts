@@ -55,7 +55,8 @@ export interface LoadedWorkflows {
 
 /** Reads the `@Workflow` classes a module exports, importing it once in Node. Writes nothing. */
 export async function loadWorkflows(workflows: string | URL): Promise<LoadedWorkflows> {
-  const path = compiledFallback(workflows instanceof URL ? fileURLToPath(workflows) : resolve(workflows));
+  // A URL, a file:// string (from import.meta.resolve()), or a path.
+  const path = compiledFallback(workflows instanceof URL || workflows.startsWith('file:') ? fileURLToPath(workflows) : resolve(workflows));
   const exported = Object.values(await import(pathToFileURL(path).href)).filter(isWorkflowClass);
   if (exported.length === 0) throw new NornConfigError(`${path} exports no @Workflow classes`);
   const defs = exported.map((cls) => describeWorkflow(cls));
