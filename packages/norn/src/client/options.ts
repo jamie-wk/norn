@@ -2,6 +2,7 @@ import { defineSearchAttributeKey, type SearchAttributePair, type Priority, type
 import {
   NornConfigError,
   TEMPORAL_SEARCH_ATTRIBUTE_TYPES,
+  isSearchAttributeValue,
   formatDuration,
   type AnyWorkflowContract,
   type Duration,
@@ -47,22 +48,6 @@ const REUSE: Record<IfClosed, 'ALLOW_DUPLICATE' | 'ALLOW_DUPLICATE_FAILED_ONLY' 
   reject: 'REJECT_DUPLICATE',
 };
 
-function checkValue(name: string, type: SearchAttributeType, value: unknown): void {
-  const ok =
-    type === 'text' || type === 'keyword'
-      ? typeof value === 'string'
-      : type === 'int'
-        ? Number.isInteger(value)
-        : type === 'double'
-          ? typeof value === 'number'
-          : type === 'bool'
-            ? typeof value === 'boolean'
-            : type === 'datetime'
-              ? value instanceof Date && !Number.isNaN(value.getTime())
-              : Array.isArray(value) && value.every((v) => typeof v === 'string');
-  if (!ok) throw new NornConfigError(`Search attribute ${name} is declared as ${type} but got ${JSON.stringify(value)}`);
-}
-
 /** Converts `{ Name: value }` into Temporal's typed search attribute pairs, checked against the contract. */
 export function toTypedSearchAttributes<C extends AnyWorkflowContract>(contract: C, values: SearchAttributeValues<C>): SearchAttributePair[] {
   const pairs: SearchAttributePair[] = [];
@@ -70,7 +55,9 @@ export function toTypedSearchAttributes<C extends AnyWorkflowContract>(contract:
     if (value === undefined) continue;
     const type = contract.searchAttributes[name] as SearchAttributeType | undefined;
     if (!type) throw new NornConfigError(`Workflow ${contract.name} does not declare search attribute ${name}`);
-    checkValue(name, type, value);
+    if (!isSearchAttributeValue(type, value)) {
+      throw new NornConfigError(`Search attribute ${name} is declared as ${type} but got ${JSON.stringify(value)}`);
+    }
     pairs.push({ key: defineSearchAttributeKey(name, TEMPORAL_SEARCH_ATTRIBUTE_TYPES[type]), value } as SearchAttributePair);
   }
   return pairs;
@@ -90,10 +77,7 @@ export function resolveWorkflowId(contract: AnyWorkflowContract, input: unknown,
     if (typeof explicit !== 'string' || explicit === '') throw new NornConfigError('workflowId must be a non-empty string');
     return explicit;
   }
-  if (contract.idTemplate === undefined) {
-    throw new NornConfigError(`Workflow ${contract.name} has no ID template; pass { workflowId }`);
-  }
-  return contract.workflowId(input as never);
+  return contract.workflowId(input);
 }
 
 /** Builds Temporal start options from a contract, its input and Norn start options. */

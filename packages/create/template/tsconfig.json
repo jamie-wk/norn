@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", ".norn", "test", "scripts", "norn.config.ts", "vitest.config.ts"]
+  "include": ["src", "test", "scripts", "vitest.config.ts"]
 }

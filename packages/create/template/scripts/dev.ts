@@ -33,14 +33,14 @@ if (process.env.TEMPORAL_ADDRESS) {
   console.log('Temporal is running on localhost:7233. Web UI: http://localhost:8233');
 }
 
-const children = [run('tsx', ['watch', '--clear-screen=false', 'src/worker.ts'])];
+const worker = run('tsx', ['watch', '--clear-screen=false', 'src/worker.ts']);
 
 let stopping = false;
 async function stop() {
   if (stopping) return;
   stopping = true;
-  for (const child of children) child.kill('SIGTERM');
-  await Promise.all(children.map((child) => (child.exitCode === null ? new Promise((r) => child.once('close', r)) : undefined)));
+  worker.kill('SIGTERM');
+  if (worker.exitCode === null) await new Promise((r) => worker.once('close', r));
   await temporal?.teardown();
   process.exit(0);
 }

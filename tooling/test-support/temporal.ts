@@ -33,11 +33,6 @@ export async function createLocalEnv(options: LocalEnvOptions = {}): Promise<Tes
   return env;
 }
 
-let queueCounter = 0;
-export function uniqueQueue(prefix = 'test'): string {
-  return `${prefix}-${process.pid}-${Date.now()}-${queueCounter++}`;
-}
-
 export interface RunningWorkers {
   stop(): Promise<void>;
 }

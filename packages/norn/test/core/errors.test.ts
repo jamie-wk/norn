@@ -9,7 +9,6 @@ import {
   QueryFailedError,
   WorkflowFailedError,
   TemporalUnavailableError,
-  errorTypeOf,
   isNornError,
 } from '../../src/core/index.ts';
 
@@ -54,26 +53,5 @@ describe('error classes', () => {
     expect(isNornError(new Error('x'))).toBe(false);
     expect(isNornError('x')).toBe(false);
     expect(isNornError(undefined)).toBe(false);
-  });
-});
-
-describe('errorTypeOf', () => {
-  class PaymentRejectedError extends Error {}
-  class NamedError extends Error {
-    override name = 'CustomName';
-  }
-
-  it('uses a custom error name when set', () => {
-    expect(errorTypeOf(new NamedError('x'))).toBe('CustomName');
-  });
-
-  it('falls back to the constructor name for subclasses that keep the default name', () => {
-    expect(errorTypeOf(new PaymentRejectedError('x'))).toBe('PaymentRejectedError');
-  });
-
-  it('returns Error for plain errors and non-error values', () => {
-    expect(errorTypeOf(new Error('x'))).toBe('Error');
-    expect(errorTypeOf('boom')).toBe('Error');
-    expect(errorTypeOf(null)).toBe('Error');
   });
 });
