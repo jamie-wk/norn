@@ -26,13 +26,11 @@ pnpm lint                      # oxlint --deny-warnings
 pnpm typecheck
 pnpm test                      # unit (vitest project "unit")
 pnpm test:integration          # real Temporal dev server / time-skipping server
-pnpm e2e:build && pnpm test:e2e
 pnpm check:deps && pnpm check:pack
-pnpm --filter @norn/example-orders-worker gen      # regenerate the example's .norn/
 pnpm docs:build
 ```
 
-Run a single package with `npx vitest run --project unit packages/client`.
+Run one area with `npx vitest run --project unit packages/norn/test/client`.
 
 Integration tests use existing Temporal binaries when `NORN_TEMPORAL_CLI_PATH` / `NORN_TEMPORAL_TEST_SERVER_PATH` are set (for example in a gitignored `.env.test.local`); otherwise the SDK downloads them.
 

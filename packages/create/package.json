@@ -53,19 +53,14 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@norn-ts/activity": "workspace:^",
-    "@norn-ts/cli": "workspace:^",
-    "@norn-ts/client": "workspace:^",
-    "@norn-ts/core": "workspace:^",
-    "@norn-ts/testing": "workspace:^",
-    "@norn-ts/worker": "workspace:^",
-    "@norn-ts/workflow": "workspace:^",
+    "@norn-ts/norn": "workspace:^",
     "@temporalio/activity": "1.24.0",
     "@temporalio/client": "1.24.0",
     "@temporalio/common": "1.24.0",
     "@temporalio/testing": "1.24.0",
     "@temporalio/worker": "1.24.0",
     "@temporalio/workflow": "1.24.0",
+    "esbuild": "0.28.2",
     "tsx": "4.23.15",
     "typescript": "7.0.2",
     "vitest": "5.0.5"

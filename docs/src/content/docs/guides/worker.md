@@ -1,68 +1,37 @@
 ---
 title: "Worker & deployment"
+description: createWorker(), connection settings, task queues, graceful shutdown, production builds and a Dockerfile.
 ---
 
-`createWorker()` from `@norn-ts/worker` turns the generated registry into a production worker process: one Temporal worker per task queue, activities built by the dependency container, a prebuilt or on-the-fly workflow bundle, health endpoints, graceful shutdown on SIGTERM, correlation IDs and optional worker versioning.
+`createWorker()` runs your workflows and activities: one Temporal worker per task queue, a workflow bundle built at startup or ahead of time, and graceful shutdown on SIGTERM.
 
 ```ts
 // src/worker.ts
-import { createWorker, installRuntime } from '@norn-ts/worker';
-import { registry } from '../.norn/registry';
-
-// log level and Prometheus metrics from the environment; optional
-installRuntime();
+import { createWorker } from '@norn-ts/norn/worker';
+import { PaymentActivities } from './activities/payment.activities';
+import { StripeGateway } from './services/stripe';
 
 const worker = await createWorker({
-  registry,
-  // 4xx from providers are final, 5xx retried
-  container: { errors: { http: true } },
+  workflows: new URL('./workflows/index.ts', import.meta.url),
+  activities: { payments: new PaymentActivities(new StripeGateway(process.env.STRIPE_KEY!)) },
 });
-// resolves after a graceful shutdown; rejects if a worker fails
-await worker.run();
+await worker.run(); // resolves after a graceful shutdown; rejects if a worker fails
 ```
 
-Everything else is configured through options or environment variables, so the same image runs in every environment.
+- **`workflows`** is the module that exports your `@Workflow` classes. The worker imports it once to learn their task queues, then bundles it for the workflow sandbox.
+- **`activities`** maps a namespace to an object. Every method of `activities.payments` is registered as `payments.<method>`, the names `useActivities<PaymentActivities>('payments')` schedules. Build your dependencies here, with plain constructors.
 
-## Environment variables
+## Connection settings
 
 | Variable | Option | Default | Description |
 | --- | --- | --- | --- |
 | `TEMPORAL_ADDRESS` | `address` | `localhost:7233` | Temporal frontend address (`host:port`). |
 | `TEMPORAL_NAMESPACE` | `namespace` | `default` | Namespace to poll. |
 | `TEMPORAL_API_KEY` | `apiKey` | none | API key (Temporal Cloud). Turns TLS on. |
-| `TEMPORAL_TLS` | `tls` | `false` | `true` turns TLS on without an API key. For mTLS client certificates pass your own `connection` (`TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY` are read by the CLI only). |
-| `NORN_TASK_QUEUES` | `taskQueues` | every queue in the registry | Comma-separated subset of task queues to poll, such as `orders,shipping`. |
-| `NORN_HEALTH_PORT` | `health.port` | off | Port for the [health server](#health-checks). `0` picks a free port. |
-| `NORN_SHUTDOWN_GRACE` | `shutdownGraceTime` | `30s` | How long in-flight activities may run after shutdown starts. Any `Duration`: `60s`, `2m`, `PT90S`. |
-| `NORN_DEPLOYMENT_NAME` | `versioning.deploymentName` | none | Worker deployment name. Set with `NORN_BUILD_ID` to enable [worker versioning](/norn/guides/versioning/). |
-| `NORN_BUILD_ID` | `versioning.buildId` | none | Build ID of this worker version, such as the git SHA. |
-| `NORN_WORKFLOW_BUNDLE` | `workflowBundle` | bundle at startup | Path of a prebuilt workflow bundle from `norn bundle` / `bundleWorkflows()`. |
-| `NORN_METRICS_ADDRESS` | `installRuntime({ metricsAddress })` | off | `host:port` for the Prometheus endpoint, such as `0.0.0.0:9464` or `[::]:9464`. |
-| `NORN_LOG_LEVEL` | `installRuntime({ logLevel })` | `INFO` | `TRACE`, `DEBUG`, `INFO`, `WARN` or `ERROR`. |
+| `TEMPORAL_TLS` | `tls` | `false` | `true` turns TLS on without an API key. |
+| `NORN_WORKFLOW_BUNDLE` | `workflowBundle` | bundle at startup | Path of a [prebuilt workflow bundle](#prebuilt-workflow-bundle). Ignored by an activity-only worker. |
 
-Options passed to `createWorker()` win over environment variables. Setting only one of `NORN_DEPLOYMENT_NAME` and `NORN_BUILD_ID` is a startup error, as are malformed ports and durations: a misconfigured worker fails at boot with a `NornConfigError`, not later. `NORN_DEV_CONDITIONS` (comma-separated export conditions for the workflow bundler) is useful in monorepos that resolve workspace packages to source.
-
-## `createWorker()` options
-
-| Option | Description |
-| --- | --- |
-| `registry` | **Required.** The generated `registry` from `.norn/registry.ts`. |
-| `taskQueues` | Subset of the registry's task queues to poll. |
-| `allowUnknownTaskQueues` | Allow queues no workflow declares, for activity-only workers. |
-| `address`, `namespace`, `apiKey`, `tls` | Connection settings. `tls` is a boolean; for mTLS pass your own `connection`. |
-| `connection` | An existing `NativeConnection`. Norn doesn't close connections it didn't open. |
-| `versioning` | `{ deploymentName, buildId, defaultBehavior? }`, or `false` to ignore the environment. |
-| `health` | `{ port, host? }` or `false`. Host defaults to `0.0.0.0`. |
-| `shutdownGraceTime` | A `Duration`. |
-| `handleSignals` | Shut down gracefully on SIGTERM and SIGINT. Default `true`. |
-| `container` | `{ overrides, errors }` for the dependency container. See [Errors](/norn/guides/errors/#activity-errors). |
-| `workflowBundle` | `{ code }` or `{ codePath }` from `bundleWorkflows()`. |
-| `dataConverter` | Such as `createDataConverter()` from [`@norn-ts/codec`](/norn/guides/encryption/). |
-| `plugins` | Temporal worker plugins, such as the [OpenTelemetry plugin](/norn/guides/observability/#opentelemetry). Also applied when bundling at startup. |
-| `activityOverrides` | Replace registered activities by name, typically in tests. Unknown names are rejected. |
-| `workerOptions` | Passed through to every `Worker.create()`: concurrency limits, sticky cache size, pollers, interceptors (activity interceptors run after Norn's correlation interceptor). Norn sets connection, namespace, task queue, activities, bundle, bundler options, data converter, plugins, `shutdownGraceTime` and `workerDeploymentOptions` itself (use `createWorker()`'s own options for those). |
-
-### mTLS with client certificates
+Options win over environment variables, and empty variables count as unset. For mTLS client certificates, connect yourself and pass the connection:
 
 ```ts
 import { readFile } from 'node:fs/promises';
@@ -72,97 +41,79 @@ const connection = await NativeConnection.connect({
   address: process.env.TEMPORAL_ADDRESS!,
   tls: { clientCertPair: { crt: await readFile('/certs/client.pem'), key: await readFile('/certs/client.key') } },
 });
-const worker = await createWorker({ registry, connection });
-// close `connection` yourself after worker.run() resolves
+const worker = await createWorker({ workflows, activities, connection });
+// Norn doesn't close connections it didn't open.
 ```
+
+## `createWorker()` options
+
+| Option | Description |
+| --- | --- |
+| `workflows` | The module exporting your `@Workflow` classes, as a URL or path. |
+| `activities` | Activity objects by namespace. |
+| `taskQueues` | Queues to poll. Defaults to every queue the workflows declare; required for an activity-only worker. |
+| `address`, `namespace`, `apiKey`, `tls` | Connection settings, as above. |
+| `connection` | An existing `NativeConnection`. |
+| `workflowBundle` | `{ code }` or `{ codePath }` from `bundleWorkflows()`. |
+| `dataConverter` | A custom data converter, such as one that encrypts payloads. |
+| `plugins` | Temporal worker plugins, such as OpenTelemetry. Also applied when bundling. |
+| `shutdownGraceTime` | How long in-flight activities may run after shutdown starts. Default `30s`. |
+| `handleSignals` | Shut down gracefully on SIGTERM and SIGINT. Default `true`. |
+| `workerOptions` | Passed through to every `Worker.create()`: concurrency limits, pollers, interceptors, `workerDeploymentOptions` for worker versioning, and so on. |
 
 ## Lifecycle and graceful shutdown
 
-`createWorker()` resolves once everything is ready: activities and every singleton dependency are created (so a bad provider fails here), the connection is open, the bundle is loaded and the health server listens. The worker's `state` is then `INITIALIZED`.
+`createWorker()` resolves once the connection is open, the bundle is loaded and every Temporal worker is created. Its `state` is then `INITIALIZED`. `run()` starts polling (`RUNNING`) and resolves when the worker has stopped. On **SIGTERM** or **SIGINT**, or when you call `shutdown()`:
 
-`run()` starts polling every task queue (`RUNNING`) and resolves when the worker has stopped. On **SIGTERM** or **SIGINT**, or when you call `shutdown()`:
-
-1. The state becomes `STOPPING` and `/readyz` starts returning 503.
-2. Every Temporal worker stops polling. In-flight workflow tasks finish; in-flight activities get up to `shutdownGraceTime` to complete, after which they are cancelled (activities that heartbeat see the cancellation).
-3. The dependency container disposes every singleton in reverse creation order, the health server closes, and Norn closes the connection it opened.
-4. `run()` resolves and the state is `STOPPED`; your process exits normally.
+1. The state becomes `STOPPING`, and every Temporal worker stops polling.
+2. In-flight workflow tasks finish. In-flight activities get up to `shutdownGraceTime` to complete, after which they're cancelled (activities that heartbeat see the cancellation).
+3. Norn closes the connection it opened. `run()` resolves, the state is `STOPPED`, and your process exits normally.
 
 If one task queue's worker fails, Norn stops the others and `run()` rejects (state `FAILED`), so the process exits and your orchestrator restarts it. `await using worker = await createWorker(...)` shuts down when the scope ends.
 
-Give your platform at least the grace time plus a margin to stop the container: `stopTimeout` on ECS, `terminationGracePeriodSeconds` on Kubernetes. If it kills the process first, in-flight activities are retried elsewhere after their timeouts, which is safe (activities must be idempotent) but slow.
+Give your platform at least the grace time plus a margin to stop the container (`stopTimeout` on ECS, `terminationGracePeriodSeconds` on Kubernetes). If it kills the process first, in-flight activities are retried elsewhere after their timeouts, which is safe because activities must be idempotent, but slow.
 
-Signal caveats: `handleSignals: false` only removes Norn's own listener; the Temporal SDK runtime still stops running workers on SIGINT, SIGTERM, SIGQUIT and SIGUSR2. A second identical signal (two Ctrl-Cs, or a wrapper such as `pnpm run` forwarding one) gets Node's default action and exits at once, without draining. If you set `workerOptions.shutdownForceTime`, `run()` can end while activities that ignore cancellation are still running, and the container then disposes singletons underneath them.
+## Scaling task queues
 
-## Health checks
-
-With `NORN_HEALTH_PORT` (or `health: { port }`), the worker serves:
-
-| Endpoint | Status | Meaning |
-| --- | --- | --- |
-| `GET /healthz` | `200 {"status":"ok"}` | The process is alive. Use for liveness. |
-| `GET /readyz` | `200 {"status":"ready","details":{...}}` or `503 {"status":"not ready",...}` | Every task queue's worker is polling. `details` maps each queue to its SDK worker state. 503 during startup and shutdown. |
-
-`HEAD` works too; anything else is 404 or 405. Workers have no inbound traffic, so readiness is for monitoring and deploy gates rather than load balancing. A typical setup checks `/healthz` for liveness and alerts on `/readyz`.
-
-```yaml
-# Kubernetes
-livenessProbe: { httpGet: { path: /healthz, port: 8080 }, periodSeconds: 10 }
-readinessProbe: { httpGet: { path: /readyz, port: 8080 }, periodSeconds: 5 }
-terminationGracePeriodSeconds: 90 # > NORN_SHUTDOWN_GRACE
-```
-
-## Choosing task queues
-
-By default one process polls every task queue in the registry, which is right for small and medium apps. To scale queues independently, deploy the same image several times with different `NORN_TASK_QUEUES`:
-
-```text
-orders-worker:    NORN_TASK_QUEUES=orders,payments
-shipping-worker:  NORN_TASK_QUEUES=shipping
-```
-
-Every process registers all activities and the full workflow bundle; it simply polls fewer queues. Queues that no workflow declares (for example an activity `taskQueue: 'gpu'`) need `allowUnknownTaskQueues: true`, so a typo in `NORN_TASK_QUEUES` is still caught.
-
-## Production builds: compile, then bundle
-
-In development `createWorker()` bundles the workflows at startup from the `.ts` sources, which takes a few seconds and needs the bundler toolchain at runtime. In production, build the workflow bundle once, at build time, and ship it with the compiled worker:
-
-```sh
-# generated files are committed and current
-norn gen --check
-tsc --noEmit
-# the workflow bundle
-norn bundle --out dist/workflow-bundle.js
-# the worker process; esbuild lowers the decorators and leaves node_modules external
-esbuild src/worker.ts --bundle --platform=node --target=node22 --format=esm --packages=external --outdir=dist
-NORN_WORKFLOW_BUNDLE=dist/workflow-bundle.js node dist/worker.js
-```
-
-Always set `NORN_WORKFLOW_BUNDLE` for a bundled worker. Without it, the worker tries to bundle the workflows at startup from a path next to `dist/worker.js`, and fails.
-
-This is the build `pnpm create @norn-ts` projects use, with `"moduleResolution": "Bundler"` and extensionless imports. If you compile with plain `tsc` instead (`"moduleResolution": "NodeNext"`, relative imports with extensions, see [Manual setup](/norn/guides/manual-setup/#2-typescript)), run `tsc -p tsconfig.build.json` in place of esbuild and start `dist/src/worker.js`.
-
-`norn bundle` bundles the barrel in `outDir`: `.norn/workflows.ts`, or `workflows.js` only when there is no `.ts`, so it reads the sources rather than the `tsc` output. `--out` defaults to `dist/workflow-bundle.js`; add `--codec` if you use `@norn-ts/codec`'s payload converter. See [the CLI page](/norn/reference/cli/#norn-bundle).
-
-If you'd rather script it, `bundleWorkflows()` does the same thing:
+By default one process polls every task queue your workflows declare. To scale queues independently, run the same code with different `taskQueues`, for example from an environment variable:
 
 ```ts
-// scripts/bundle.ts
-import { bundleWorkflows } from '@norn-ts/worker';
-// only if you use @norn-ts/codec
-import { resolvePayloadConverterPath } from '@norn-ts/codec';
-import { registry } from '../.norn/registry';
-
-await bundleWorkflows(registry, {
-  outFile: 'dist/workflow-bundle.js',
-  payloadConverterPath: resolvePayloadConverterPath(),
+const worker = await createWorker({
+  workflows,
+  activities,
+  taskQueues: process.env.TASK_QUEUES?.split(','),
 });
 ```
 
-Bundling uses Norn's webpack settings: TC39 standard decorators, `.js` specifiers resolving to `.ts` sources, and Norn's workflow interceptors (which forward correlation IDs). For custom bundling, `nornWebpackConfigHook()`, `composeWebpackHooks()` and `workflowInterceptorModule` are exported.
+## Production
 
-A prebuilt bundle is also a deploy artifact you can replay-test in CI against recorded histories before it ships; see [Versioning](/norn/guides/versioning/#replay-tests).
+In development, `tsx` runs your TypeScript and the worker bundles the workflows at startup. In production, compile first. The starter's `pnpm build` compiles the worker and the workflows module with esbuild, and `pnpm start` runs it:
 
-## Dockerfile
+```sh
+esbuild src/worker.ts src/workflows/index.ts --bundle --platform=node --target=node22 --format=esm --packages=external --outdir=dist
+node dist/worker.js
+```
+
+`--target=node22` matters: it lowers the decorators, which Node can't run yet. The compiled worker still names `./workflows/index.ts`; when that file doesn't exist, Norn loads the compiled `dist/workflows/index.js` next to it.
+
+### Prebuilt workflow bundle
+
+Bundling at startup takes a few seconds and needs webpack at runtime. To skip it, build the bundle once at build time and point `NORN_WORKFLOW_BUNDLE` at it:
+
+```ts
+// scripts/bundle.ts, run with tsx
+import { bundleWorkflows } from '@norn-ts/norn/worker';
+
+await bundleWorkflows(new URL('../src/workflows/index.ts', import.meta.url), { outFile: 'dist/workflow-bundle.js' });
+```
+
+```sh
+NORN_WORKFLOW_BUNDLE=dist/workflow-bundle.js node dist/worker.js
+```
+
+With a prebuilt bundle the worker writes nothing to disk, so it runs on a read-only filesystem. Bundling at startup writes a small entry file to the OS temp directory.
+
+### Dockerfile
 
 ```dockerfile
 # syntax=docker/dockerfile:1
@@ -172,52 +123,31 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-# norn gen --check, tsc --noEmit, norn bundle and esbuild, as above, in a "build" script
-RUN pnpm run build \
- && pnpm prune --prod
+RUN pnpm run build && pnpm exec tsx scripts/bundle.ts && pnpm prune --prod
 
 FROM node:24-slim
 WORKDIR /app
-ENV NODE_ENV=production \
-    NORN_WORKFLOW_BUNDLE=/app/dist/workflow-bundle.js \
-    NORN_HEALTH_PORT=8080 \
-    NORN_SHUTDOWN_GRACE=60s \
-    NORN_METRICS_ADDRESS=0.0.0.0:9464
+ENV NODE_ENV=production NORN_WORKFLOW_BUNDLE=/app/dist/workflow-bundle.js
 COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 USER node
-EXPOSE 8080 9464
-HEALTHCHECK --interval=15s --timeout=3s --start-period=30s \
-  CMD node -e "fetch('http://127.0.0.1:8080/healthz').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
 # Exec form, so node is PID 1 and receives SIGTERM directly.
 CMD ["node", "dist/worker.js"]
 ```
 
-Use a Debian-based image such as `node:24-slim`: the Temporal SDK includes a native module built for glibc. `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_API_KEY` and, for versioning, `NORN_DEPLOYMENT_NAME` / `NORN_BUILD_ID` come from your deployment.
+Use a Debian-based image such as `node:24-slim`, because the Temporal SDK includes a native module built for glibc. `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE` and `TEMPORAL_API_KEY` come from your deployment.
 
-## Metrics and logs
+## Metrics, logs and health
 
-`installRuntime()` installs the Temporal runtime once per process, **before** any connection or worker is created (calling it later throws). It sets the SDK log level (`NORN_LOG_LEVEL`) and, with `NORN_METRICS_ADDRESS`, serves Prometheus metrics for the SDK and Temporal core at `http://<address>/metrics`:
-
-```ts
-// or from the environment
-installRuntime({ metricsAddress: '0.0.0.0:9464', logLevel: 'INFO' });
-```
-
-The metrics are the standard Temporal SDK metrics. The schedule-to-start latencies for workflow and activity tasks tell you whether you are short of workers; activity and workflow failure counters tell you whether something is broken. See [Observability](/norn/guides/observability/).
-
-## Running workers in tests
-
-`createTestEnv()` from `@norn-ts/testing` runs `createWorker()` for you against a test server, with signals, health and versioning turned off. To run one yourself:
+Norn leaves these to the Temporal SDK. Install the SDK runtime before creating the worker:
 
 ```ts
-const worker = await createWorker({
-  registry,
-  connection: env.temporal.nativeConnection,
-  namespace: env.temporal.namespace ?? 'default',
-  handleSignals: false,
-  workflowBundle: await bundleWorkflows(registry),
-  activityOverrides: { 'payments.charge': async () => ({ id: 'ch_test', cents: 100 }) },
+import { Runtime } from '@temporalio/worker';
+
+Runtime.install({
+  telemetryOptions: { metrics: { prometheus: { bindAddress: '0.0.0.0:9464' } } },
 });
 ```
+
+For a liveness check, watch the process. A failed worker makes `run()` reject and the process exit, and `worker.state` is there if you serve your own health endpoint.

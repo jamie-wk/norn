@@ -25,7 +25,7 @@ a client script and a test. Use "." to create it in the current (empty) director
 
 Options:
   --force        Write into a directory that is not empty (existing files with the same names are replaced)
-  --no-install   Skip installing dependencies and running norn gen
+  --no-install   Skip installing dependencies
   -h, --help     Show this help`;
 
 const templateDir = fileURLToPath(new URL('../template', import.meta.url));
@@ -123,11 +123,9 @@ export async function main(argv: string[], io: CreateIo = {}): Promise<number> {
   stdout(`\nCreated ${name} in ${dir}\n`);
 
   if (values.install) {
-    for (const args of [['install'], ['run', 'gen']]) {
-      if ((await run(pm, args, { cwd: dir })) !== 0) {
-        stderr(`\n${pm} ${args.join(' ')} failed. Fix the problem above, then run it again in ${dir}.\n`);
-        return 1;
-      }
+    if ((await run(pm, ['install'], { cwd: dir })) !== 0) {
+      stderr(`\n${pm} install failed. Fix the problem above, then run it again in ${dir}.\n`);
+      return 1;
     }
   }
 

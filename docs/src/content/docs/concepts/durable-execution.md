@@ -20,8 +20,8 @@ Temporal runs your code **durably**. A workflow is ordinary async TypeScript, bu
 | Web UI | Every workflow and its history, in a browser. | `http://localhost:8233` locally |
 | Workflow | Deterministic code that decides what happens next. | A class with `@Workflow`; its `run()` method is the main line |
 | Workflow ID | The unique name of one execution, such as `order-o-42`. | The `id: 'order-{orderId}'` template |
-| Activity | One step that does I/O, such as an HTTP call. Retried by Temporal. | `@Activity` methods on an `@Activities` class, called through `useActivities()` |
-| Worker | Your process. It polls the server and runs workflows and activities. | `createWorker({ registry })` |
+| Activity | One step that does I/O, such as an HTTP call. Retried by Temporal. | Methods of a plain activity class, called through `useActivities<T>('namespace')` |
+| Worker | Your process. It polls the server and runs workflows and activities. | `createWorker({ workflows, activities })` |
 | Task queue | A named queue linking work to the workers that can do it. | `@Workflow({ taskQueue: 'orders' })` |
 | Signal | A message into a running workflow, with no reply. | `@Signal()` |
 | Query | A read of a workflow's state. It changes nothing. | `@Query()` |
@@ -38,7 +38,7 @@ Temporal runs your code **durably**. A workflow is ordinary async TypeScript, bu
 export class OrderWorkflow {
   private status: OrderStatus = 'pending';
   private canceled = false;
-  private readonly payments = useActivities(PaymentActivities);
+  private readonly payments = useActivities<PaymentActivities>('payments', { timeout: '30s', retries: 3 });
 
   @Signal() cancel(_reason: string) {
     this.canceled = true;
@@ -104,4 +104,4 @@ If the worker dies while `charge` is running, that attempt times out (`timeout: 
 
 Replay only works if `run()` makes the same decisions every time it runs over the same history. If the code read the real clock, or was changed to call a different activity first, the replayed commands would not match the recorded events, and Temporal stops with a non-determinism error rather than guess.
 
-That rule is the subject of the next page, [Determinism & the sandbox](/norn/concepts/determinism/). Changing workflow code that is already running is covered in [Versioning & safe deploys](/norn/guides/versioning/).
+That rule is the subject of the next page, [Determinism & the sandbox](/norn/concepts/determinism/). Changing workflow code that is already running is covered at the end of that page.

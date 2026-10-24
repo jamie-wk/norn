@@ -47,15 +47,15 @@ importers:
       '@astrojs/starlight':
         specifier: 0.42.6
         version: 0.42.6(astro@7.3.8(@types/node@24.19.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(typescript@5.9.3)
-      '@norn-ts/client':
+      '@norn-ts/norn':
         specifier: workspace:^
-        version: link:../packages/client
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../packages/core
-      '@norn-ts/workflow':
-        specifier: workspace:^
-        version: link:../packages/workflow
+        version: link:../packages/norn
+      '@temporalio/client':
+        specifier: 1.24.0
+        version: 1.24.0
+      '@temporalio/common':
+        specifier: 1.24.0
+        version: 1.24.0
       '@temporalio/workflow':
         specifier: 1.24.0
         version: 1.24.0
@@ -75,239 +75,11 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  e2e:
-    dependencies:
-      '@norn-ts/client':
-        specifier: workspace:^
-        version: link:../packages/client
-      '@norn-ts/codec':
-        specifier: workspace:^
-        version: link:../packages/codec
-      '@norn/example-orders-contracts':
-        specifier: workspace:^
-        version: link:../examples/orders/contracts
-      '@norn/example-orders-provider':
-        specifier: workspace:^
-        version: link:../examples/orders/provider
-      '@temporalio/client':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-
-  examples/orders/api:
-    dependencies:
-      '@hono/node-server':
-        specifier: ^2.1.5
-        version: 2.1.5(hono@4.13.13)
-      '@norn-ts/client':
-        specifier: workspace:^
-        version: link:../../../packages/client
-      '@norn-ts/codec':
-        specifier: workspace:^
-        version: link:../../../packages/codec
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../../../packages/core
-      '@norn-ts/hono':
-        specifier: workspace:^
-        version: link:../../../packages/hono
-      '@norn/example-orders-contracts':
-        specifier: workspace:^
-        version: link:../contracts
-      '@temporalio/client':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-      hono:
-        specifier: 4.13.13
-        version: 4.13.13
-    devDependencies:
-      '@norn-ts/testing':
-        specifier: workspace:^
-        version: link:../../../packages/testing
-
-  examples/orders/contracts:
-    dependencies:
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../../../packages/core
-
-  examples/orders/provider: {}
-
-  examples/orders/worker:
-    dependencies:
-      '@norn-ts/activity':
-        specifier: workspace:^
-        version: link:../../../packages/activity
-      '@norn-ts/client':
-        specifier: workspace:^
-        version: link:../../../packages/client
-      '@norn-ts/codec':
-        specifier: workspace:^
-        version: link:../../../packages/codec
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../../../packages/core
-      '@norn-ts/worker':
-        specifier: workspace:^
-        version: link:../../../packages/worker
-      '@norn-ts/workflow':
-        specifier: workspace:^
-        version: link:../../../packages/workflow
-      '@temporalio/activity':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/client':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/worker':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/workflow':
-        specifier: 1.24.0
-        version: 1.24.0
-    devDependencies:
-      '@norn-ts/cli':
-        specifier: workspace:^
-        version: link:../../../packages/cli
-      '@norn-ts/testing':
-        specifier: workspace:^
-        version: link:../../../packages/testing
-      '@temporalio/testing':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-
-  packages/activity:
-    dependencies:
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@temporalio/activity':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/testing':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-
-  packages/cli:
-    dependencies:
-      oxc-parser:
-        specifier: ^0.154.0
-        version: 0.154.0
-      tinyglobby:
-        specifier: ^0.2.17
-        version: 0.2.17
-    devDependencies:
-      '@norn-ts/activity':
-        specifier: workspace:^
-        version: link:../activity
-      '@norn-ts/client':
-        specifier: workspace:^
-        version: link:../client
-      '@norn-ts/codec':
-        specifier: workspace:^
-        version: link:../codec
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../core
-      '@norn-ts/worker':
-        specifier: workspace:^
-        version: link:../worker
-      '@norn-ts/workflow':
-        specifier: workspace:^
-        version: link:../workflow
-      '@temporalio/client':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/testing':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/worker':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/workflow':
-        specifier: 1.24.0
-        version: 1.24.0
-
-  packages/client:
-    dependencies:
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@norn-ts/workflow':
-        specifier: workspace:^
-        version: link:../workflow
-      '@temporalio/client':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/testing':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/workflow':
-        specifier: 1.24.0
-        version: 1.24.0
-
-  packages/codec:
-    devDependencies:
-      '@temporalio/client':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/testing':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/worker':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/workflow':
-        specifier: 1.24.0
-        version: 1.24.0
-
-  packages/core: {}
-
   packages/create:
     devDependencies:
-      '@norn-ts/activity':
+      '@norn-ts/norn':
         specifier: workspace:^
-        version: link:../activity
-      '@norn-ts/cli':
-        specifier: workspace:^
-        version: link:../cli
-      '@norn-ts/client':
-        specifier: workspace:^
-        version: link:../client
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../core
-      '@norn-ts/testing':
-        specifier: workspace:^
-        version: link:../testing
-      '@norn-ts/worker':
-        specifier: workspace:^
-        version: link:../worker
-      '@norn-ts/workflow':
-        specifier: workspace:^
-        version: link:../workflow
+        version: link:../norn
       '@temporalio/activity':
         specifier: 1.24.0
         version: 1.24.0
@@ -326,6 +98,9 @@ importers:
       '@temporalio/workflow':
         specifier: 1.24.0
         version: 1.24.0
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
       tsx:
         specifier: 4.23.15
         version: 4.23.15
@@ -336,67 +111,11 @@ importers:
         specifier: 5.0.5
         version: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
-  packages/eslint-plugin:
+  packages/norn:
     devDependencies:
-      '@typescript-eslint/parser':
-        specifier: 8.71.2
-        version: 8.71.2(@typescript/typescript6@6.0.2)(eslint@10.13.0)
-      eslint:
-        specifier: 10.13.0
-        version: 10.13.0
-      typescript:
-        specifier: npm:@typescript/typescript6@6.0.2
-        version: '@typescript/typescript6@6.0.2'
-
-  packages/hono:
-    dependencies:
-      '@norn-ts/client':
-        specifier: workspace:^
-        version: link:../client
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@norn-ts/codec':
-        specifier: workspace:^
-        version: link:../codec
-      '@norn-ts/workflow':
-        specifier: workspace:^
-        version: link:../workflow
-      '@temporalio/client':
+      '@temporalio/activity':
         specifier: 1.24.0
         version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/testing':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/workflow':
-        specifier: 1.24.0
-        version: 1.24.0
-      hono:
-        specifier: 4.13.13
-        version: 4.13.13
-
-  packages/testing:
-    dependencies:
-      '@norn-ts/activity':
-        specifier: workspace:^
-        version: link:../activity
-      '@norn-ts/client':
-        specifier: workspace:^
-        version: link:../client
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../core
-      '@norn-ts/worker':
-        specifier: workspace:^
-        version: link:../worker
-    devDependencies:
-      '@norn-ts/workflow':
-        specifier: workspace:^
-        version: link:../workflow
       '@temporalio/client':
         specifier: 1.24.0
         version: 1.24.0
@@ -418,59 +137,6 @@ importers:
       vitest:
         specifier: 5.0.5
         version: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-
-  packages/worker:
-    dependencies:
-      '@norn-ts/activity':
-        specifier: workspace:^
-        version: link:../activity
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@norn-ts/client':
-        specifier: workspace:^
-        version: link:../client
-      '@norn-ts/codec':
-        specifier: workspace:^
-        version: link:../codec
-      '@norn-ts/workflow':
-        specifier: workspace:^
-        version: link:../workflow
-      '@temporalio/activity':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/testing':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/worker':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/workflow':
-        specifier: 1.24.0
-        version: 1.24.0
-
-  packages/workflow:
-    dependencies:
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@temporalio/client':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: 1.24.0
-        version: 1.24.0
-      '@temporalio/testing':
-        specifier: 1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/workflow':
-        specifier: 1.24.0
-        version: 1.24.0
 
 packages:
 
@@ -981,12 +647,6 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@hono/node-server@2.1.5':
-    resolution: {integrity: sha512-MgP/I06GdvsilDspMk/qmRzpk8LOUStP6jFAbSRi40W09DhoyUn+Mj7eyKICPqeYKybOjVFLVIAQzvu1bfIa7Q==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      hono: ^4 || ^5.0.0-0
-
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
     engines: {node: '>=18.18.0'}
@@ -1326,120 +986,6 @@ packages:
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
-
-  '@oxc-parser/binding-android-arm-eabi@0.154.0':
-    resolution: {integrity: sha512-sDdEtDl7vKdCvf54j72RJbowE3jCmyRz/+oOB6IAwQxAHZ0eI+Dcj4hvVnm0b9Dy31plUkdmfds9C+/Zt895Tg==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm]
-    os: [android]
-
-  '@oxc-parser/binding-android-arm64@0.154.0':
-    resolution: {integrity: sha512-UHrDPELzvWZoVkIDdSycj4bzcTMCJG3IbN++mSUgVBaUtNtWHjQ98U6Vz5bpF/1Ic3FYJyYhMr74huO5tVvpZw==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm64]
-    os: [android]
-
-  '@oxc-parser/binding-darwin-arm64@0.154.0':
-    resolution: {integrity: sha512-mokYzajOSXxtSRDWCdHARGdntrKH+rZZ24Jzo8AtafyNzz0NARmpMm26Tc5B6qiGrr6UliWibHCOif1qRN2vaA==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@oxc-parser/binding-darwin-x64@0.154.0':
-    resolution: {integrity: sha512-WbtUBrclOVItWfLRSvs+Z/WLtXxJ2Ctv50PyuX894HzDN5/e0qzxVpTNPIVMzOerBhgKtFsSMcfxlYIAbvdVgg==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [x64]
-    os: [darwin]
-
-  '@oxc-parser/binding-freebsd-x64@0.154.0':
-    resolution: {integrity: sha512-YooHZSLawOe2fqm+lDdG8oAaQh2NYV/RMYTYzWRLy72stm2BgE9O/8Al6kFENjkmzyyBccDLLBirGxVtpzQfrw==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [x64]
-    os: [freebsd]
-
-  '@oxc-parser/binding-linux-arm-gnueabihf@0.154.0':
-    resolution: {integrity: sha512-hKOwhZbrXdTwc4bGVfbLCXl9f2swl6zWdISocLQSNX9MgPmwHE3qGzOUkCrkuGpwdCVHPnkfOwsqTuYsrP5uNg==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm]
-    os: [linux]
-
-  '@oxc-parser/binding-linux-arm-musleabihf@0.154.0':
-    resolution: {integrity: sha512-tnjiooXEU013349O/yxKbF5Cusp1CfHWQ8kYR8tGeRzR/P4sOpQGQo21fsS71M0fMD6ESLq+lbvXFWi43PuKeQ==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm]
-    os: [linux]
-
-  '@oxc-parser/binding-linux-arm64-gnu@0.154.0':
-    resolution: {integrity: sha512-Cao2kj+8d7BT6XJU1gV9eVQjV+Cr+e8vQm3tddDRZiM2hHrMDxwy3j6t+ofaSl0idyuPPCZ4AlpmQoj8yOT1QA==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm64]
-    os: [linux]
-
-  '@oxc-parser/binding-linux-arm64-musl@0.154.0':
-    resolution: {integrity: sha512-uiwA0V3q8llWA7/8r+a9BBjk4j5YMDmi6wfOsyQfGOJMQSLHEiZ3HI8ulea766ykUa9wJFWk9XWEl4uJrZLQqw==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm64]
-    os: [linux]
-
-  '@oxc-parser/binding-linux-ppc64-gnu@0.154.0':
-    resolution: {integrity: sha512-LICfN0Xs4Zdko+bJy6eOAEQojDuIR26suF2JtOsMaXjgbCrpRSH7/NCvJhY13YvYBx12V6hnwrL8n0lk0rbNJQ==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [ppc64]
-    os: [linux]
-
-  '@oxc-parser/binding-linux-riscv64-gnu@0.154.0':
-    resolution: {integrity: sha512-gbbSYxLF8ssRbQ2qQPy+2EhGNwNH1bAoRdkk6cnWaKHqmCikpSIPtpXjFbCCtjTi0uojqOM3ghFQwQPbDQsU0Q==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [riscv64]
-    os: [linux]
-
-  '@oxc-parser/binding-linux-riscv64-musl@0.154.0':
-    resolution: {integrity: sha512-nSnRYYDLCcRVjSQzF3g6rKqCNYwo5o+aQgnn8BBXfe+ofCgMGlGqkfRyvXm6ptZvoxNkkWtLlqM8W7Xc3j6ZnQ==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [riscv64]
-    os: [linux]
-
-  '@oxc-parser/binding-linux-s390x-gnu@0.154.0':
-    resolution: {integrity: sha512-BxBQoJKtzRQgZEKQIt6CDUm8RGKC5T8Qo4576yDa5/xgc10X3fBDItMbRabzLtbUBfTqKLl+8AVr/H6CF7W22g==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [s390x]
-    os: [linux]
-
-  '@oxc-parser/binding-linux-x64-gnu@0.154.0':
-    resolution: {integrity: sha512-/whkust2vYy+GjRUVL5cWaJmEu6jkdFfo5mkxgckyeOX61eMwo4iBoiwzeJZeMWAdzb/XOtQyLApHhFht3sOWA==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [x64]
-    os: [linux]
-
-  '@oxc-parser/binding-linux-x64-musl@0.154.0':
-    resolution: {integrity: sha512-EXURTyW9riw4B/kZnnE+58emAtw6+3VEszQfXUZkRqGaKIcmWDYkZtKB+xY/blHvuZ+Qy/fDclc31nmUCgtkSA==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [x64]
-    os: [linux]
-
-  '@oxc-parser/binding-openharmony-arm64@0.154.0':
-    resolution: {integrity: sha512-ZRFooyH3qsR6vuR4jFGlG3XM36490SvvXtNaUahBK4zHpooMdTHNaOMtGGJI0EW38m5hi4rOco9kw7ZwCIp28w==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm64]
-    os: [openharmony]
-
-  '@oxc-parser/binding-win32-arm64-msvc@0.154.0':
-    resolution: {integrity: sha512-U0Vp+4lvwUa/PnOCJTZOjydj1rX2+VLHz4Y2vSFqlN8/7LTiURgD7z4uQ9yNv9O/NlU3mELBnPDlu7aaSYG1zQ==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm64]
-    os: [win32]
-
-  '@oxc-parser/binding-win32-ia32-msvc@0.154.0':
-    resolution: {integrity: sha512-Hc8QgsFY5eUUP25we8TISUruibG2cDt0H4IcPG9RKdabb6odkCzIqjV6Gk9beGWGuOwMVCr81H/Su1q363LCCg==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [ia32]
-    os: [win32]
-
-  '@oxc-parser/binding-win32-x64-msvc@0.154.0':
-    resolution: {integrity: sha512-hD7judkUMA/hZPoamvKADs6+an1smp8UTK0aMYRijkvi00K/1vl7vEtmyn2JyQ9S+vibtnfcNzxqTLGyJUZCRQ==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [x64]
-    os: [win32]
 
   '@oxc-project/types@0.154.0':
     resolution: {integrity: sha512-KYOUGQFlLWR+s4QMV2Q9ko38TZm7EdO87Qm7rvZLqk/webse/cDjtyxKhg/47l0byCbs/k46LT8qc4PKjAikzA==}
@@ -2094,10 +1640,6 @@ packages:
     engines: {node: '>=16.20.0'}
     cpu: [x64]
     os: [win32]
-
-  '@typescript/typescript6@6.0.2':
-    resolution: {integrity: sha512-mbCddXd+jm7hfx7w2YU64/Av4/NqqeG3GoRZgxPcgoTxYjhrcfJRw9ULch71SS4G+Q3bOXFhRvPqjguN0Hyp5w==}
-    hasBin: true
 
   '@ungap/structured-clone@1.4.0':
     resolution: {integrity: sha512-1mEZtMKPM09vDmQt5y7YvmN2+DFTP7Tg0EWXdic8/C6VRnpb33e4ghisCIE3WZjsE2N8mf+QV1Zqh7ZFYLWInQ==}
@@ -2777,10 +2319,6 @@ packages:
     resolution: {integrity: sha512-EQfezRg0NCZGNlhlDR3Evrw1FVL2G3LhU7EgPoxufQKruNBSYA8MiRPHeWbU+36o+Fhel0wMwM+sLEiBAlNLJA==}
     engines: {node: '>=10.0.0'}
 
-  hono@4.13.13:
-    resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
-    engines: {node: '>=16.9.0'}
-
   hookified@1.15.1:
     resolution: {integrity: sha512-MvG/clsADq1GPM2KGo2nyfaWVyn9naPiXrqIe4jYjXNZQt238kWyOGrsyc/DmRAQ+Re6yeo6yX/yoNCG5KAEVg==}
 
@@ -3295,10 +2833,6 @@ packages:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
 
-  oxc-parser@0.154.0:
-    resolution: {integrity: sha512-Gr/6fkjZwi937c4Tsz8y0iO4U0FLPkZI6JSVucLAIvQyqh379px7RS8ORIc0HOORbFjXZ6zyqWLl53qxhSeofw==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-
   oxlint@1.88.0:
     resolution: {integrity: sha512-uIcFgw8BmqvFRGzH5+r7d2zJMEexwNSrEmM6WQNnGh3VkO0XYTEFoyxyNE6tjKMUib9Cue4XJA2DoWruO5D6aw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -3706,11 +3240,6 @@ packages:
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
-  typescript@6.0.3:
-    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -4564,10 +4093,6 @@ snapshots:
       protobufjs: 7.6.6
       yargs: 17.7.3
 
-  '@hono/node-server@2.1.5(hono@4.13.13)':
-    dependencies:
-      hono: 4.13.13
-
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -4881,63 +4406,6 @@ snapshots:
     optional: true
 
   '@oslojs/encoding@1.1.0': {}
-
-  '@oxc-parser/binding-android-arm-eabi@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-android-arm64@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-darwin-arm64@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-darwin-x64@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-freebsd-x64@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-arm-gnueabihf@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-arm-musleabihf@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-arm64-gnu@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-arm64-musl@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-ppc64-gnu@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-riscv64-gnu@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-riscv64-musl@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-s390x-gnu@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-x64-gnu@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-linux-x64-musl@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-openharmony-arm64@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-win32-arm64-msvc@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-win32-ia32-msvc@0.154.0':
-    optional: true
-
-  '@oxc-parser/binding-win32-x64-msvc@0.154.0':
-    optional: true
 
   '@oxc-project/types@0.154.0': {}
 
@@ -5374,18 +4842,6 @@ snapshots:
 
   '@types/unist@3.0.3': {}
 
-  '@typescript-eslint/parser@8.71.2(@typescript/typescript6@6.0.2)(eslint@10.13.0)':
-    dependencies:
-      '@typescript-eslint/scope-manager': 8.71.2
-      '@typescript-eslint/types': 8.71.2
-      '@typescript-eslint/typescript-estree': 8.71.2(@typescript/typescript6@6.0.2)
-      '@typescript-eslint/visitor-keys': 8.71.2
-      debug: 4.4.3
-      eslint: 10.13.0
-      typescript: '@typescript/typescript6@6.0.2'
-    transitivePeerDependencies:
-      - supports-color
-
   '@typescript-eslint/parser@8.71.2(eslint@10.13.0)(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.71.2
@@ -5395,15 +4851,6 @@ snapshots:
       debug: 4.4.3
       eslint: 10.13.0
       typescript: 5.9.3
-    transitivePeerDependencies:
-      - supports-color
-
-  '@typescript-eslint/project-service@8.71.2(@typescript/typescript6@6.0.2)':
-    dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.71.2(@typescript/typescript6@6.0.2)
-      '@typescript-eslint/types': 8.71.2
-      debug: 4.4.3
-      typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - supports-color
 
@@ -5421,30 +4868,11 @@ snapshots:
       '@typescript-eslint/types': 8.71.2
       '@typescript-eslint/visitor-keys': 8.71.2
 
-  '@typescript-eslint/tsconfig-utils@8.71.2(@typescript/typescript6@6.0.2)':
-    dependencies:
-      typescript: '@typescript/typescript6@6.0.2'
-
   '@typescript-eslint/tsconfig-utils@8.71.2(typescript@5.9.3)':
     dependencies:
       typescript: 5.9.3
 
   '@typescript-eslint/types@8.71.2': {}
-
-  '@typescript-eslint/typescript-estree@8.71.2(@typescript/typescript6@6.0.2)':
-    dependencies:
-      '@typescript-eslint/project-service': 8.71.2(@typescript/typescript6@6.0.2)
-      '@typescript-eslint/tsconfig-utils': 8.71.2(@typescript/typescript6@6.0.2)
-      '@typescript-eslint/types': 8.71.2
-      '@typescript-eslint/visitor-keys': 8.71.2
-      debug: 4.4.3
-      minimatch: 10.2.6
-      semver: 7.8.5
-      tinyglobby: 0.2.17
-      ts-api-utils: 2.5.0(@typescript/typescript6@6.0.2)
-      typescript: '@typescript/typescript6@6.0.2'
-    transitivePeerDependencies:
-      - supports-color
 
   '@typescript-eslint/typescript-estree@8.71.2(typescript@5.9.3)':
     dependencies:
@@ -5525,10 +4953,6 @@ snapshots:
 
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
-
-  '@typescript/typescript6@6.0.2':
-    dependencies:
-      '@typescript/old': typescript@6.0.3
 
   '@ungap/structured-clone@1.4.0': {}
 
@@ -6403,8 +5827,6 @@ snapshots:
 
   heap-js@2.7.1: {}
 
-  hono@4.13.13: {}
-
   hookified@1.15.1: {}
 
   hookified@2.2.0: {}
@@ -7036,30 +6458,6 @@ snapshots:
       type-check: 0.4.0
       word-wrap: 1.2.5
 
-  oxc-parser@0.154.0:
-    dependencies:
-      '@oxc-project/types': 0.154.0
-    optionalDependencies:
-      '@oxc-parser/binding-android-arm-eabi': 0.154.0
-      '@oxc-parser/binding-android-arm64': 0.154.0
-      '@oxc-parser/binding-darwin-arm64': 0.154.0
-      '@oxc-parser/binding-darwin-x64': 0.154.0
-      '@oxc-parser/binding-freebsd-x64': 0.154.0
-      '@oxc-parser/binding-linux-arm-gnueabihf': 0.154.0
-      '@oxc-parser/binding-linux-arm-musleabihf': 0.154.0
-      '@oxc-parser/binding-linux-arm64-gnu': 0.154.0
-      '@oxc-parser/binding-linux-arm64-musl': 0.154.0
-      '@oxc-parser/binding-linux-ppc64-gnu': 0.154.0
-      '@oxc-parser/binding-linux-riscv64-gnu': 0.154.0
-      '@oxc-parser/binding-linux-riscv64-musl': 0.154.0
-      '@oxc-parser/binding-linux-s390x-gnu': 0.154.0
-      '@oxc-parser/binding-linux-x64-gnu': 0.154.0
-      '@oxc-parser/binding-linux-x64-musl': 0.154.0
-      '@oxc-parser/binding-openharmony-arm64': 0.154.0
-      '@oxc-parser/binding-win32-arm64-msvc': 0.154.0
-      '@oxc-parser/binding-win32-ia32-msvc': 0.154.0
-      '@oxc-parser/binding-win32-x64-msvc': 0.154.0
-
   oxlint@1.88.0:
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.88.0
@@ -7552,10 +6950,6 @@ snapshots:
 
   trough@2.2.0: {}
 
-  ts-api-utils@2.5.0(@typescript/typescript6@6.0.2):
-    dependencies:
-      typescript: '@typescript/typescript6@6.0.2'
-
   ts-api-utils@2.5.0(typescript@5.9.3):
     dependencies:
       typescript: 5.9.3
@@ -7580,8 +6974,6 @@ snapshots:
       prelude-ls: 1.2.1
 
   typescript@5.9.3: {}
-
-  typescript@6.0.3: {}
 
   typescript@7.0.2:
     optionalDependencies:

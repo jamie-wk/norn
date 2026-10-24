@@ -40,12 +40,11 @@ describe('scaffolding', () => {
 
     const pkg = JSON.parse(read('my-app', 'package.json'));
     expect(pkg.name).toBe('my-app');
-    expect(pkg.dependencies['@norn-ts/workflow']).toBe(`^${ownVersion}`);
-    expect(pkg.devDependencies['@norn-ts/cli']).toBe(`^${ownVersion}`);
+    expect(pkg.dependencies['@norn-ts/norn']).toBe(`^${ownVersion}`);
     for (const deps of [pkg.dependencies, pkg.devDependencies]) {
       for (const range of Object.values(deps)) expect(range).not.toMatch(/\{\{|workspace:/);
     }
-    for (const file of ['src/workflows/order.workflow.ts', 'src/worker.ts', 'test/order.workflow.test.ts', 'norn.config.ts', 'AGENTS.md']) {
+    for (const file of ['src/workflows/order.workflow.ts', 'src/worker.ts', 'test/order.workflow.test.ts', 'src/workflows/index.ts', 'AGENTS.md']) {
       expect(existsSync(join(cwd, 'my-app', file)), file).toBe(true);
     }
     expect(read('my-app', 'README.md')).toContain('# my-app');
@@ -63,12 +62,11 @@ describe('scaffolding', () => {
     expect(read('my-app', '.claude/skills/norn/SKILL.md')).toBe(repoSkill);
   });
 
-  it('installs and generates with the package manager that ran it, then prints the next steps', async () => {
+  it('installs with the package manager that ran it, then prints the next steps', async () => {
     await main(['my-app'], io());
     const dir = join(cwd, 'my-app');
     expect(runs).toEqual([
       { command: 'pnpm', args: ['install'], cwd: dir },
-      { command: 'pnpm', args: ['run', 'gen'], cwd: dir },
     ]);
     expect(out).toContain('cd my-app');
     expect(out).toContain('pnpm dev');

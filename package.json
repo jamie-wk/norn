@@ -11,20 +11,17 @@
   "scripts": {
     "build": "pnpm -r --filter \"./packages/*\" build",
     "typecheck": "pnpm -r --parallel typecheck",
-    "lint": "oxlint --deny-warnings packages examples e2e tooling",
+    "lint": "oxlint --deny-warnings packages tooling",
     "test": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:all": "vitest run",
-    "test:e2e": "vitest run --project e2e",
-    "gen:check": "pnpm -r --if-present gen:check",
     "check:deps": "node tooling/check-deps.mjs",
     "check:pack": "node tooling/check-pack.mjs",
     "docs:dev": "pnpm --filter @norn/docs dev",
     "docs:build": "pnpm --filter @norn/docs build",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "changeset publish",
-    "e2e:build": "pnpm build && pnpm --filter @norn/example-orders-worker build"
+    "release": "changeset publish"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",

@@ -1,56 +1,32 @@
-# Handoff: getting Norn to a publishable 1.0
+# Handoff: Norn 2.0
 
-Written at the point the work moved from a Claude cloud session to Claude Code on the
-maintainer's machine. Goal: every feature complete, all tests passing (unit, integration, e2e),
-docs published, and the repo ready for the maintainer to run the release. Keep the rules in
-[CLAUDE.md](./CLAUDE.md): pnpm, TDD, happy + sad paths, no loss of type safety.
+Norn 2.0 cuts the framework down to its core: write workflows and activities as plain, typed classes.
+Keep the rules in [CLAUDE.md](./CLAUDE.md): pnpm, TDD, happy + sad paths, no loss of type safety.
 
-## Status (2026-10-18, Claude Code on the maintainer's Mac)
+## Status (2026-10-24)
 
 | Area | State |
 | --- | --- |
-| All packages | Implemented. Unit, integration and type tests pass. |
-| Orders example | Passes unit and time-skipping workflow tests. |
-| e2e (`pnpm test:e2e`) | 19/19 against real processes (Temporal CLI 1.9.1 / Server 1.32). |
-| Docker Compose e2e | Builds and passes (16 + 3 skipped by design). Image pinned to `temporalio/temporal:1.9.1`. |
-| Docs | `pnpm docs:build` passes, no dead links, no `VERIFY` markers. `docs.yml` deploys to Pages. |
-| READMEs | Root and every package. `check:pack` passes. |
-| Review | Done for determinism, continue-as-new, codec crypto, hono security, DI container, worker shutdown, client error mapping and packaging; confirmed findings fixed with tests. |
-| Agent skill | `skills/norn/SKILL.md`, trialled by an agent building a new workflow in the example (gen, typecheck and tests green). |
+| `@norn-ts/norn` | One package with subpath exports (`/workflow`, `/worker`, `/client`, `/testing`, `/vitest`, `/vite`). Unit, type and integration tests pass. |
+| `@norn-ts/create` | Starter without codegen. The scaffold test generates it, typechecks it, runs its tests on the time-skipping server and builds it for production. |
+| Verified by hand | `pnpm dev` + `pnpm order` (start, cancel, refund); the compiled worker under plain `node`, both bundling at startup and with `NORN_WORKFLOW_BUNDLE`. |
+| Docs | 14 pages. `pnpm docs:build` passes, with twoslash and the link validator. |
+| Release | `.changeset/norn-2.md` takes `@norn-ts/norn` and `@norn-ts/create` to 2.0.0. |
 
-Fixed in this pass: CLI bin stub (`packages/cli/bin/norn.js`) so the bin links before `dist/` exists,
-`nornErrorHandler` sends `HTTPException`s as the JSON error body, `createTestEnv` waits for the dev server's search
-attributes and registers them on the time-skipping server, `continueAsNew(() => input)` reads the input after handlers
-drain, `codecServer` requires `auth` and `temporalWebhook` requires `verify` (`false` to opt out), both have
-`maxBodyBytes` (16 MiB / 1 MiB), `cors: ['*']` never sends credentials, Dockerfile `pnpm deploy` with
-`auto-install-peers=false`.
+Removed in 2.0: `@norn-ts/cli` (codegen, lock file, `schedules sync`, `histories pull`, `bundle`), `@norn-ts/activity` (decorators, DI container), `@norn-ts/codec`, `@norn-ts/hono`, `@norn-ts/eslint-plugin`, the orders example and the e2e suite, `@Schedule`, correlation IDs, the health server, Prometheus/versioning options, `mockActivities()`, `createFakeClient()`, `assertReplays()`. The docs' Recipes page covers HTTP APIs, schedules, encryption and tracing with the SDK.
 
-## Deliberately left out of 1.0
+## Maintainer steps
 
-- Recipes: ACH payment and self-hosting on AWS ECS/CDK. Links to them were removed; add them back with the pages.
-- Comparison pages (per-package reference pages now live under `docs/reference/`; READMEs link to them).
-- Codec decode passes plaintext through (Temporal convention, documented). An opt-in `rejectPlaintext` could come later.
-- Review nits not done: webhook replay protection (documented: use timestamped schemes), the Temporal API polyfill
-  note for mixed Node fleets, `drainHandlers` evaluating `run()`'s result before the drain, and updates that keep
-  arriving during a drain delaying continue-as-new.
-
-## Remaining: maintainer steps
-
-1. CI is green on GitHub (Node 22/24/26, e2e, compose). `Release` and `Docs` fail until steps 2 and 3 are done.
-   Note: `release.yml` runs `changesets/action` on every push to main, and with no pending changesets it publishes
-   every unpublished version. Once npm trusted publishing (or `NPM_TOKEN`) works, the next push to main publishes
-   1.0.0 — so the release happens on that push, not by running `pnpm release` by hand.
-2. The npm org is `norn-ts` (packages are `@norn-ts/*`; `norn` and `nornjs` were taken). Add `NPM_TOKEN` or set up
-   trusted publishing for `release.yml`; enable GitHub Pages with "GitHub Actions" as the source; confirm `LICENSE`.
-3. Enable GitHub Pages (source: GitHub Actions) so `docs.yml` can deploy. Don't add a changeset for 1.0.0. After publishing, tag `v1.0.0` and write release notes.
+1. Merge PR #3 (PR #2 is closed as superseded), then merge the "chore: version packages" PR to publish
+   `@norn-ts/norn@2.0.0` and `@norn-ts/create@2.0.0`. The `NPM_TOKEN` secret covers the whole `@norn-ts` scope, including the new name.
+2. Deprecate the old packages on npm, pointing at `@norn-ts/norn`:
+   `npm deprecate @norn-ts/core "Replaced by @norn-ts/norn"` (and `workflow`, `activity`, `client`, `worker`, `testing`, `cli`, `codec`, `hono`, `eslint-plugin`).
 
 ## Design decisions worth keeping
 
-- Workflow-safe activity references: `.norn/activities.ts` uses `defineActivities<T>()` with `import type`, so
-  workflow bundles never include activity code, while `useActivities(ref)` stays fully typed.
-- Compile-then-bundle in production (`norn bundle` → `NORN_WORKFLOW_BUNDLE`); type checks happen in `tsc`.
-- Contracts (`contract<typeof Cls>()`) give the API full types through `import type` only.
-- `@Inject` parameter decorators don't exist in TC39 decorators → `inject: [Tokens]` or constructor types read by `norn gen`.
-- `norn.lock.json` blocks renames of workflow types, handlers, activities and task queues unless `--accept-rename`.
+- **No codegen.** Workflows call activities with `useActivities<T>('namespace', options)` and `import type`, so activity code never reaches the sandbox. The worker registers `{ namespace: instance }` as `namespace.<method>`.
+- **The workflow class is the contract.** `contractOf(cls)` reads name, task queue, ID template and handler names from the decorators; importing a workflow class in Node is safe (it only tags metadata). Types can't tell signals from queries, so the client checks the kind at call time and throws `NornConfigError` before any network call.
+- **The bundle entry.** Temporal runs exported *functions*, so `writeEntry()` writes a 3-line CommonJS entry (in the OS temp dir, atomically, and only when bundling) that wraps each exported class with `implement()` under its workflow type name. Webpack resolves its packages from the project's `node_modules` via `resolve.modules`.
+- **Production.** esbuild compiles `src/worker.ts` and `src/workflows/index.ts`; a `.ts` workflows path that's gone after the build falls back to the `.js` next to it. `NORN_WORKFLOW_BUNDLE` skips bundling at startup.
+- **Sandbox rule.** `pnpm check:deps` fails if `src/core` or `src/workflow` import Node built-ins, other folders, or packages other than `@temporalio/workflow` / `common`.
 - Activity `retries` counts retries **after** the first attempt (`maximumAttempts = retries + 1`).
-- Webhooks for closed workflows are acknowledged (200 `{ ignored: 'closed' }`) so providers stop retrying.

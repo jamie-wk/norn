@@ -1,5 +1,0 @@
-{
-  "CartSize": "int",
-  "CustomerId": "keyword",
-  "OrderStatus": "keyword"
-}

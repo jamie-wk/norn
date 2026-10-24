@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Dependency discipline for published packages:
 // - every bare import in src/ is declared (dependencies or peerDependencies; node: builtins aside)
-// - @norn-ts/core has no runtime dependencies; @norn-ts/workflow only depends on core + Temporal's workflow SDK
-// - workflow-sandbox entry points import nothing Node-specific
+// - @norn-ts/norn has no runtime dependencies (Temporal's SDK packages are peers)
+// - code that runs in the workflow sandbox (src/core, src/workflow) imports nothing Node-specific and
+//   nothing outside the sandbox: only those folders and Temporal's workflow and common SDKs
 // - all @norn-ts/* packages share one version, and metadata needed for publishing is present
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { builtinModules } from 'node:module';
@@ -33,12 +34,8 @@ function packageName(specifier) {
 }
 
 /** Packages whose code (or part of it) runs inside the Temporal workflow sandbox. */
-const SANDBOX = {
-  '@norn-ts/core': ['src'],
-  '@norn-ts/workflow': ['src'],
-  '@norn-ts/worker': ['src/workflow-interceptors.ts'],
-  '@norn-ts/codec': ['src/payload-converter.ts'],
-};
+const SANDBOX = { '@norn-ts/norn': ['src/core', 'src/workflow'] };
+const SANDBOX_PACKAGES = new Set(['@temporalio/workflow', '@temporalio/common']);
 
 const versions = new Map();
 for (const dir of readdirSync(packagesDir)) {
@@ -72,25 +69,23 @@ for (const dir of readdirSync(packagesDir)) {
       // Skip strings inside templates and messages, e.g. `import x from '${source}'`.
       if (!specifier || /[\s${}]/.test(specifier)) continue;
       const rel = relative(join(packagesDir, dir), file);
+      const inSandbox = (path) => SANDBOX[name]?.some((p) => path === p || path.startsWith(`${p}/`));
+      const sandboxed = inSandbox(rel);
       if (builtins.has(specifier) || builtins.has(specifier.split('/')[0])) {
-        const sandboxed = SANDBOX[name]?.some((p) => rel === p || rel.startsWith(`${p}/`));
         if (sandboxed) fail(name, `${rel} runs in the workflow sandbox but imports ${specifier}`);
         continue;
       }
+      if (sandboxed && specifier.startsWith('.') && !inSandbox(relative(join(packagesDir, dir), join(file, '..', specifier)))) {
+        fail(name, `${rel} runs in the workflow sandbox but imports ${specifier}, which does not`);
+      }
       const dep = packageName(specifier);
+      if (sandboxed && dep && !SANDBOX_PACKAGES.has(dep)) fail(name, `${rel} runs in the workflow sandbox but imports ${dep}`);
       if (!dep || dep === name) continue;
       if (!declared.has(dep)) fail(name, `${rel} imports ${dep}, which is not in dependencies or peerDependencies`);
     }
   }
 
-  if (name === '@norn-ts/core' && Object.keys(pkg.dependencies ?? {}).length > 0) fail(name, 'must have no runtime dependencies');
-  if (name === '@norn-ts/workflow') {
-    const allowed = new Set(['@norn-ts/core']);
-    for (const dep of Object.keys(pkg.dependencies ?? {})) if (!allowed.has(dep)) fail(name, `may only depend on @norn-ts/core, found ${dep}`);
-    for (const dep of Object.keys(pkg.peerDependencies ?? {})) {
-      if (!['@temporalio/workflow', '@temporalio/common'].includes(dep)) fail(name, `unexpected peer dependency ${dep}`);
-    }
-  }
+  if (name === '@norn-ts/norn' && Object.keys(pkg.dependencies ?? {}).length > 0) fail(name, 'must have no runtime dependencies');
 }
 
 const distinct = new Set(versions.values());
