@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { NornConfigError } from '../../src/core/index.ts';
 import { activityFunctions, loadWorkflows } from '../../src/worker/load.ts';
 
@@ -50,6 +50,11 @@ describe('loadWorkflows', () => {
     const loaded = await loadWorkflows(fixture);
     expect(loaded.taskQueues).toEqual(['w-main', 'w-reports']);
     expect(await readdir(dir)).toEqual([]);
+  });
+
+  it('accepts a file:// URL string, as import.meta.resolve() returns', async () => {
+    const loaded = await loadWorkflows(pathToFileURL(fixture).href);
+    expect(loaded.path).toBe(fixture);
   });
 
   it('falls back to the compiled .js when the .ts path is gone after a build', async () => {
