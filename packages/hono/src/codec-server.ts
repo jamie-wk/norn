@@ -9,8 +9,9 @@
  */
 import { Hono, type Context, type Env } from 'hono';
 import type { Payload, PayloadCodec } from '@temporalio/common';
-import { NornConfigError } from '@norn-ts/core';
-import { decodeBase64, encodeBase64, isPlainObject, isPositiveInteger, readBody } from './internal.js';
+import { NornConfigError, NornError } from '@norn-ts/core';
+import type { NornErrorCode } from './errors.js';
+import { DEFAULT_CORRELATION_HEADER, decodeBase64, encodeBase64, errorBody, isPlainObject, isPositiveInteger, readBody } from './internal.js';
 
 /** A payload in proto3 JSON form, as the codec server protocol sends it: bytes are base64. */
 export interface JsonPayload {
@@ -149,7 +150,11 @@ export function codecServer<E extends Env = any>(options: CodecServerOptions<E>)
       // Logging must not change the response.
     }
   };
-  const fail = (c: Context<E>, status: 400 | 401 | 403 | 413 | 500, code: string, message: string) => c.json({ error: { code, message, details: {} } }, status);
+  const fail = (c: Context<E>, status: 400 | 401 | 403 | 413 | 500, code: NornErrorCode, message: string) => {
+    const id = globalThis.crypto.randomUUID();
+    c.header(DEFAULT_CORRELATION_HEADER, id);
+    return c.json(errorBody(new NornError(code, status, message), id), status);
+  };
 
   const app = new Hono<E>();
 

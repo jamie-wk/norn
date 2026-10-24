@@ -1,33 +1,25 @@
 import type { Context, Env, ErrorHandler } from 'hono';
 import { getCorrelationId, toNornError } from '@norn-ts/client';
-import { NornConfigError, NornError } from '@norn-ts/core';
-import { DEFAULT_CORRELATION_HEADER, isHeaderName, withHeader } from './internal.js';
+import { NornConfigError, NornError, type NornCoreErrorCode } from '@norn-ts/core';
+import { DEFAULT_CORRELATION_HEADER, errorBody, isHeaderName, withHeader, type NornErrorBody } from './internal.js';
+
+export { errorBody, type NornErrorBody };
 
 /** Error codes produced by Norn and this package. Custom `NornError` codes are allowed too. */
 export type NornErrorCode =
-  | 'CONFIG'
-  | 'WORKFLOW_ALREADY_STARTED'
-  | 'WORKFLOW_NOT_FOUND'
-  | 'WORKFLOW_CLOSED'
-  | 'UPDATE_REJECTED'
-  | 'QUERY_FAILED'
-  | 'WORKFLOW_FAILED'
-  | 'TEMPORAL_UNAVAILABLE'
+  | NornCoreErrorCode
   | 'INTERNAL'
   | 'WEBHOOK_UNVERIFIED'
   | 'WEBHOOK_INVALID_BODY'
   | 'WEBHOOK_TOO_LARGE'
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN_ORIGIN'
+  | 'FORBIDDEN_NAMESPACE'
+  | 'PAYLOAD_TOO_LARGE'
+  | 'INVALID_PAYLOADS'
+  | 'CODEC_FAILED'
   | (string & {});
 
-/** The JSON error body: `{ error: { code, message, details, correlationId } }`. */
-export interface NornErrorBody {
-  error: {
-    code: string;
-    message: string;
-    details: Record<string, unknown>;
-    correlationId: string;
-  };
-}
 
 /** What {@link NornErrorHandlerOptions.format} gets besides the error. */
 export interface ErrorFormatInfo {
@@ -67,11 +59,6 @@ const MAX_STATUS = 599;
 const isErrorStatus = (status: unknown): status is number =>
   typeof status === 'number' && Number.isInteger(status) && status >= MIN_STATUS && status <= MAX_STATUS;
 
-/** Builds the standard JSON error body. */
-export function errorBody(err: NornError, correlationId: string): NornErrorBody {
-  const { code, message, details } = err.toJSON();
-  return { error: { code, message, details, correlationId } };
-}
 
 /** The request's correlation ID, from `temporal()` or the current async context; created when missing. */
 export function correlationIdOf(c: Context): { id: string; fromMiddleware: boolean } {
@@ -83,7 +70,7 @@ export function correlationIdOf(c: Context): { id: string; fromMiddleware: boole
 }
 
 /** Responds with the standard JSON error body. @internal */
-export function respondWithError(c: Context, err: NornError, status: number, correlationHeader = DEFAULT_CORRELATION_HEADER): Response {
+export function respondWithError(c: Context, err: NornError, status: number = err.status, correlationHeader = DEFAULT_CORRELATION_HEADER): Response {
   const { id, fromMiddleware } = correlationIdOf(c);
   if (!fromMiddleware) c.header(correlationHeader, id);
   return c.json(errorBody(err, id), status as never);

@@ -1,3 +1,5 @@
+import type { NornError } from '@norn-ts/core';
+
 /**
  * Small runtime-neutral helpers shared by the modules of this package.
  *
@@ -90,4 +92,20 @@ export async function readBody(req: Request, maxBytes: number): Promise<Uint8Arr
     chunks.push(value);
   }
   return new Uint8Array(await new Blob(chunks).arrayBuffer());
+}
+
+/** The JSON error body: `{ error: { code, message, details, correlationId } }`. */
+export interface NornErrorBody {
+  error: {
+    code: string;
+    message: string;
+    details: Record<string, unknown>;
+    correlationId: string;
+  };
+}
+
+/** Builds the standard JSON error body. */
+export function errorBody(err: NornError, correlationId: string): NornErrorBody {
+  const { code, message, details } = err.toJSON();
+  return { error: { code, message, details, correlationId } };
 }

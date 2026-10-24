@@ -132,6 +132,13 @@ describe('codecServer: sad paths', () => {
     expect(await res.json()).toMatchObject({ error: { code: 'INVALID_PAYLOADS' } });
   });
 
+  it('uses the standard error body, with a correlation ID', async () => {
+    const res = await call(server(), 'decode', []);
+    const id = res.headers.get('x-correlation-id');
+    expect(id).toBeTruthy();
+    expect(await res.json()).toEqual({ error: { code: 'INVALID_PAYLOADS', message: expect.any(String), details: {}, correlationId: id } });
+  });
+
   it('reports codec failures without echoing payload contents', async () => {
     const onError = vi.fn();
     const other = createEncryptionCodec({ keys: { k1: generateKey() }, currentKeyId: 'k1' });

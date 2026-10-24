@@ -176,11 +176,11 @@ export function temporalWebhook<E extends Env = any>(options: WebhookOptions<E>)
 
   return async (c) => {
     const bytes = await readBody(c.req.raw, maxBodyBytes);
-    if (!bytes) return respondWithError(c, new NornError('WEBHOOK_TOO_LARGE', 413, `Webhook body is larger than ${maxBodyBytes} bytes`), 413);
+    if (!bytes) return respondWithError(c, new NornError('WEBHOOK_TOO_LARGE', 413, `Webhook body is larger than ${maxBodyBytes} bytes`));
     const raw = textDecoder.decode(bytes);
 
     if (verify && (await verify(c, raw, bytes)) !== true) {
-      return respondWithError(c, new NornError('WEBHOOK_UNVERIFIED', 401, 'Webhook signature verification failed'), 401);
+      return respondWithError(c, new NornError('WEBHOOK_UNVERIFIED', 401, 'Webhook signature verification failed'));
     }
 
     let body: unknown;
@@ -188,7 +188,7 @@ export function temporalWebhook<E extends Env = any>(options: WebhookOptions<E>)
       body = parse ? await parse(raw, c) : JSON.parse(raw);
     } catch {
       const message = parse ? 'Webhook body could not be parsed' : 'Webhook body is not valid JSON';
-      return respondWithError(c, new NornError('WEBHOOK_INVALID_BODY', 400, message), 400);
+      return respondWithError(c, new NornError('WEBHOOK_INVALID_BODY', 400, message));
     }
 
     const mapped = await map(body, c);

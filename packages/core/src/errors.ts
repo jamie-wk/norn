@@ -5,6 +5,20 @@
  * responses without string matching, and keeps the original SDK error as `cause`.
  */
 
+/** The error codes Norn's core errors use, with their HTTP status. */
+export const NORN_ERROR_STATUS = {
+  CONFIG: 500,
+  WORKFLOW_ALREADY_STARTED: 409,
+  WORKFLOW_NOT_FOUND: 404,
+  WORKFLOW_CLOSED: 409,
+  UPDATE_REJECTED: 422,
+  QUERY_FAILED: 500,
+  WORKFLOW_FAILED: 500,
+  TEMPORAL_UNAVAILABLE: 503,
+} as const;
+
+export type NornCoreErrorCode = keyof typeof NORN_ERROR_STATUS;
+
 export interface NornErrorOptions {
   cause?: unknown;
   details?: Record<string, unknown>;
@@ -32,14 +46,14 @@ export class NornError extends Error {
 /** Invalid configuration or decorator options. Thrown at definition time, never at runtime in a workflow. */
 export class NornConfigError extends NornError {
   constructor(message: string, options: NornErrorOptions = {}) {
-    super('CONFIG', 500, message, options);
+    super('CONFIG', NORN_ERROR_STATUS.CONFIG, message, options);
   }
 }
 
 export class WorkflowAlreadyStartedError extends NornError {
   readonly workflowId: string;
   constructor(args: { workflowId: string; workflowType?: string; cause?: unknown }) {
-    super('WORKFLOW_ALREADY_STARTED', 409, `Workflow ${args.workflowId} is already running`, {
+    super('WORKFLOW_ALREADY_STARTED', NORN_ERROR_STATUS.WORKFLOW_ALREADY_STARTED, `Workflow ${args.workflowId} is already running`, {
       cause: args.cause,
       details: { workflowId: args.workflowId, ...(args.workflowType ? { workflowType: args.workflowType } : {}) },
     });
@@ -50,7 +64,7 @@ export class WorkflowAlreadyStartedError extends NornError {
 export class WorkflowNotFoundError extends NornError {
   readonly workflowId: string;
   constructor(args: { workflowId: string; runId?: string; cause?: unknown }) {
-    super('WORKFLOW_NOT_FOUND', 404, `Workflow ${args.workflowId} was not found`, {
+    super('WORKFLOW_NOT_FOUND', NORN_ERROR_STATUS.WORKFLOW_NOT_FOUND, `Workflow ${args.workflowId} was not found`, {
       cause: args.cause,
       details: { workflowId: args.workflowId, ...(args.runId ? { runId: args.runId } : {}) },
     });
@@ -62,7 +76,7 @@ export class WorkflowClosedError extends NornError {
   readonly workflowId: string;
   readonly closeStatus: string;
   constructor(args: { workflowId: string; closeStatus: string; cause?: unknown }) {
-    super('WORKFLOW_CLOSED', 409, `Workflow ${args.workflowId} is already closed (${args.closeStatus})`, {
+    super('WORKFLOW_CLOSED', NORN_ERROR_STATUS.WORKFLOW_CLOSED, `Workflow ${args.workflowId} is already closed (${args.closeStatus})`, {
       cause: args.cause,
       details: { workflowId: args.workflowId, closeStatus: args.closeStatus },
     });
@@ -77,7 +91,7 @@ export class UpdateRejectedError extends NornError {
   readonly update: string;
   readonly failureType: string;
   constructor(args: { workflowId: string; update: string; failureType: string; message: string; cause?: unknown }) {
-    super('UPDATE_REJECTED', 422, args.message, {
+    super('UPDATE_REJECTED', NORN_ERROR_STATUS.UPDATE_REJECTED, args.message, {
       cause: args.cause,
       details: { workflowId: args.workflowId, update: args.update, failureType: args.failureType },
     });
@@ -89,7 +103,7 @@ export class UpdateRejectedError extends NornError {
 
 export class QueryFailedError extends NornError {
   constructor(args: { workflowId: string; query: string; message: string; cause?: unknown }) {
-    super('QUERY_FAILED', 500, args.message, {
+    super('QUERY_FAILED', NORN_ERROR_STATUS.QUERY_FAILED, args.message, {
       cause: args.cause,
       details: { workflowId: args.workflowId, query: args.query },
     });
@@ -100,7 +114,7 @@ export class WorkflowFailedError extends NornError {
   readonly workflowId: string;
   readonly failureType: string;
   constructor(args: { workflowId: string; failureType: string; message: string; cause?: unknown }) {
-    super('WORKFLOW_FAILED', 500, args.message, {
+    super('WORKFLOW_FAILED', NORN_ERROR_STATUS.WORKFLOW_FAILED, args.message, {
       cause: args.cause,
       details: { workflowId: args.workflowId, failureType: args.failureType },
     });
@@ -111,7 +125,7 @@ export class WorkflowFailedError extends NornError {
 
 export class TemporalUnavailableError extends NornError {
   constructor(args: { message: string; cause?: unknown }) {
-    super('TEMPORAL_UNAVAILABLE', 503, args.message, { cause: args.cause });
+    super('TEMPORAL_UNAVAILABLE', NORN_ERROR_STATUS.TEMPORAL_UNAVAILABLE, args.message, { cause: args.cause });
   }
 }
 
