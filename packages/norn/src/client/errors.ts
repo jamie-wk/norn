@@ -44,7 +44,7 @@ function grpcError(error: unknown): { code: number; message?: string } | undefin
 }
 
 /** Names a workflow failure by its cause: the ApplicationFailure type, or Terminated/Cancelled/TimedOut. */
-export function failureTypeOf(cause: unknown): string {
+function failureTypeOf(cause: unknown): string {
   if (cause instanceof ApplicationFailure) return cause.type ?? 'Error';
   if (cause instanceof TerminatedFailure) return 'Terminated';
   if (cause instanceof CancelledFailure) return 'Cancelled';

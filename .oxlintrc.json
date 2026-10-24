@@ -43,8 +43,7 @@
   "overrides": [
     {
       "files": [
-        "**/test/**",
-        "**/test-d/**"
+        "**/test/**"
       ],
       "rules": {
         "typescript/no-extraneous-class": "off",

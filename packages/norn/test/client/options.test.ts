@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { NornConfigError } from '../../src/core/index.ts';
 import { contractOf } from '../../src/workflow/index.ts';
-import { startOptions, toTypedSearchAttributes } from '../../src/client/index.ts';
+import { startOptions, toTypedSearchAttributes } from '../../src/client/options.ts';
 import { EchoWorkflow, OrderWorkflow, TickWorkflow } from './fixtures/workflow-classes.ts';
 
 const Orders = contractOf(OrderWorkflow);

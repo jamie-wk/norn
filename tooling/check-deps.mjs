@@ -22,7 +22,7 @@ function files(dir) {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) out.push(...files(full));
-    else if (/\.[cm]?tsx?$/.test(entry) && !/\.(test|test-d)\.ts$/.test(entry)) out.push(full);
+    else if (/\.[cm]?tsx?$/.test(entry)) out.push(full);
   }
   return out;
 }

@@ -1,5 +1,5 @@
 /**
- * Error types shared by every Norn package.
+ * Norn's error types.
  *
  * Each error has a stable `code` and an HTTP `status`, so API adapters can map failures to
  * responses without string matching, and keeps the original SDK error as `cause`.
@@ -119,13 +119,3 @@ export function isNornError(value: unknown): value is NornError {
   return value instanceof NornError;
 }
 
-/**
- * The failure type Norn records for an error: a custom `name` when set, otherwise the class name.
- * Activities and workflows use the same rule, so `isFailure(e, MyError)` matches what was thrown.
- */
-export function errorTypeOf(error: unknown): string {
-  if (!(error instanceof Error)) return 'Error';
-  if (error.name && error.name !== 'Error') return error.name;
-  const ctor = (error as { constructor?: { name?: string } }).constructor;
-  return ctor?.name && ctor.name !== 'Object' ? ctor.name : 'Error';
-}

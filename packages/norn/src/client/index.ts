@@ -10,8 +10,8 @@ export {
   type WorkflowStatus,
   type WorkflowSummary,
 } from './client.js';
-export { startOptions, toTypedSearchAttributes, resolveWorkflowId, type IfClosed, type IfRunning, type StartOptions } from './options.js';
-export { toNornError, failureTypeOf, type ErrorContext } from './errors.js';
+export { type IfClosed, type IfRunning, type StartOptions } from './options.js';
+export { toNornError, type ErrorContext } from './errors.js';
 export {
   NornError,
   QueryFailedError,

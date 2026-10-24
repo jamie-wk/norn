@@ -58,13 +58,9 @@ export function methodTags<T>(cls: Function, key: symbol): MethodTag<T>[] {
   return out;
 }
 
-/** Registered symbols shared across Norn packages, so copies of different versions agree. */
+/** Registered symbols, so two copies of Norn (say, in the bundle and in Node) agree. */
 export const NORN = Object.freeze({
   workflow: Symbol.for('norn.workflow'),
   handler: Symbol.for('norn.workflow.handler'),
   validator: Symbol.for('norn.workflow.validator'),
-  activities: Symbol.for('norn.activities'),
-  activity: Symbol.for('norn.activity'),
-  nonRetryable: Symbol.for('norn.nonRetryable'),
-  service: Symbol.for('norn.service'),
 });

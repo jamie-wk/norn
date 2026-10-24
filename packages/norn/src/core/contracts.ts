@@ -31,6 +31,21 @@ export const TEMPORAL_SEARCH_ATTRIBUTE_TYPES = Object.freeze({
 
 export const SEARCH_ATTRIBUTE_TYPES = Object.freeze(Object.keys(TEMPORAL_SEARCH_ATTRIBUTE_TYPES)) as readonly SearchAttributeType[];
 
+const VALID: Record<SearchAttributeType, (value: unknown) => boolean> = {
+  text: (v) => typeof v === 'string',
+  keyword: (v) => typeof v === 'string',
+  int: Number.isInteger,
+  double: Number.isFinite,
+  bool: (v) => typeof v === 'boolean',
+  datetime: (v) => v instanceof Date && !Number.isNaN(v.getTime()),
+  keywordList: (v) => Array.isArray(v) && v.every((s) => typeof s === 'string'),
+};
+
+/** Whether `value` can be stored in a search attribute of `type`. */
+export function isSearchAttributeValue(type: SearchAttributeType, value: unknown): boolean {
+  return VALID[type](value);
+}
+
 // ---------------------------------------------------------------------------------------------
 // Handler references
 // ---------------------------------------------------------------------------------------------

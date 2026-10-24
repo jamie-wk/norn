@@ -3,12 +3,12 @@
  *
  * Vite 8 transforms TypeScript with Oxc, which keeps standard decorators as-is, and Node cannot
  * run them yet. This plugin lowers decorators with esbuild before Vite's own transform runs, so
- * Norn workflow, activity and service classes work in Vitest without a separate build step.
+ * `@Workflow` classes work in Vitest without a separate build step.
  *
  * ```ts
  * // vitest.config.ts
  * import { defineConfig } from 'vitest/config';
- * import { standardDecorators } from '../testing/vite.js';
+ * import { standardDecorators } from '@norn-ts/norn/vite';
  *
  * export default defineConfig({ plugins: [standardDecorators()] });
  * ```

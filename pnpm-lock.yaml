@@ -26,9 +26,6 @@ importers:
       '@types/node':
         specifier: ^22.18.0
         version: 22.20.5
-      esbuild:
-        specifier: 0.28.2
-        version: 0.28.2
       oxlint:
         specifier: 1.88.0
         version: 1.88.0
@@ -80,9 +77,6 @@ importers:
       '@norn-ts/norn':
         specifier: workspace:^
         version: link:../norn
-      '@temporalio/activity':
-        specifier: 1.24.0
-        version: 1.24.0
       '@temporalio/client':
         specifier: 1.24.0
         version: 1.24.0

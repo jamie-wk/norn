@@ -218,7 +218,7 @@ export function contractOf<C extends WorkflowClass>(cls: C): ClassContract<C> {
       updates: refs(def.updates),
       searchAttributes: def.searchAttributes,
       workflowId(params: unknown): string {
-        if (id === undefined) throw new NornConfigError(`Workflow ${def.name} has no ID template; pass an explicit workflowId`);
+        if (id === undefined) throw new NornConfigError(`Workflow ${def.name} has no ID template; pass { workflowId }`);
         return formatWorkflowId(id, params);
       },
     });
