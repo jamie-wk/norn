@@ -6,13 +6,19 @@
   "description": "The Norn documentation site (Astro Starlight).",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node build.mjs",
     "preview": "astro preview"
   },
   "devDependencies": {
     "@astrojs/starlight": "0.42.6",
+    "@norn-ts/client": "workspace:^",
+    "@norn-ts/core": "workspace:^",
+    "@norn-ts/workflow": "workspace:^",
+    "@temporalio/workflow": "1.24.0",
     "astro": "7.3.8",
+    "expressive-code-twoslash": "0.6.1",
     "starlight-links-validator": "0.27.0",
-    "starlight-llms-txt": "0.12.0"
+    "starlight-llms-txt": "0.12.0",
+    "typescript": "5.9.3"
   }
 }
