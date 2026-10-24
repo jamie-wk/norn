@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { fileURLToPath } from 'node:url';
@@ -45,4 +45,10 @@ it("passes its own tests on Temporal's time-skipping server", () => {
   const result = run('vitest run');
   expect(result.output).toMatch(/Tests\s+3 passed \(3\)/);
   expect(result.status).toBe(0);
+});
+
+it('builds for production: the worker and the workflows module it loads', () => {
+  const result = run('esbuild src/worker.ts src/workflows/index.ts --bundle --platform=node --target=node22 --format=esm --packages=external --outdir=dist');
+  expect(result.status).toBe(0);
+  expect(existsSync(join(dir, 'dist/worker.js')) && existsSync(join(dir, 'dist/workflows/index.js'))).toBe(true);
 });

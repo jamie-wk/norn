@@ -38,17 +38,13 @@
   "ignorePatterns": [
     "**/dist/**",
     "**/node_modules/**",
-    "**/.norn/**",
-    "docs/.vitepress/cache/**",
-    "**/fixtures/**/expected/**"
+    "packages/create/.tmp/**"
   ],
   "overrides": [
     {
       "files": [
         "**/test/**",
-        "**/test-d/**",
-        "e2e/**",
-        "examples/**/test/**"
+        "**/test-d/**"
       ],
       "rules": {
         "typescript/no-extraneous-class": "off",

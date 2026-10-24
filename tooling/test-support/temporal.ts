@@ -1,13 +1,13 @@
 /**
  * Repo-internal helpers for integration tests that need a real Temporal server.
  *
- * Reuses @norn-ts/testing's runtime setup, bundle cache and search-attribute wait. Uses an existing
+ * Reuses the testing module's runtime setup, bundle cache and search-attribute wait. Uses an existing
  * `temporal` binary when NORN_TEMPORAL_CLI_PATH is set, and otherwise lets the SDK download one.
  */
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { Worker, type WorkerOptions } from '@temporalio/worker';
 import { defineSearchAttributeKey, type SearchAttributeType } from '@temporalio/common';
-import { cachedBundle, quietRuntime, waitForSearchAttributes } from '../../packages/testing/src/env.ts';
+import { cachedBundle, quietRuntime, waitForSearchAttributes } from '../../packages/norn/src/testing/env.ts';
 
 export interface LocalEnvOptions {
   searchAttributes?: Record<string, SearchAttributeType>;

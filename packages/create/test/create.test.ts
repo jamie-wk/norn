@@ -40,8 +40,7 @@ describe('scaffolding', () => {
 
     const pkg = JSON.parse(read('my-app', 'package.json'));
     expect(pkg.name).toBe('my-app');
-    expect(pkg.dependencies['@norn-ts/workflow']).toBe(`^${ownVersion}`);
-    expect(pkg.devDependencies['@norn-ts/testing']).toBe(`^${ownVersion}`);
+    expect(pkg.dependencies['@norn-ts/norn']).toBe(`^${ownVersion}`);
     for (const deps of [pkg.dependencies, pkg.devDependencies]) {
       for (const range of Object.values(deps)) expect(range).not.toMatch(/\{\{|workspace:/);
     }

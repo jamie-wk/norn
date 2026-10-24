@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config';
-import { standardDecorators } from '@norn-ts/testing/vite';
+import { standardDecorators } from '@norn-ts/norn/vite';
 
 export default defineConfig({
   // Vite leaves standard decorators in place and Node can't run them yet, so lower them first.

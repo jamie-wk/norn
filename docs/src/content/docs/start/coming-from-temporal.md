@@ -1,56 +1,51 @@
 ---
 title: Coming from the Temporal SDK
-description: How each part of the Temporal TypeScript SDK maps to Norn, what Norn adds, and what stays exactly the same.
+description: How each part of the Temporal TypeScript SDK maps to Norn, and what stays exactly the same.
 ---
 
-If you already write Temporal workflows in TypeScript, you know most of Norn. It runs on the official SDK (1.24), so the execution model, the workflow sandbox, determinism, history, replay, task queues, retries and versioning are all unchanged. Norn changes how you **declare** things: classes and decorators instead of `defineSignal()` and string names, and generated code instead of hand-kept glue.
+If you already write Temporal workflows in TypeScript, you know most of Norn. It runs on the official SDK (1.24), so the execution model, the workflow sandbox, determinism, history, replay, task queues, retries and versioning are all unchanged. Norn changes how you **declare** things: classes and decorators instead of `defineSignal()` and string names, and a client typed from the workflow class.
 
 ## What stays the same
 
-- Inside workflows you still import `sleep`, `condition`, `patched`, `deprecatePatch`, `workflowInfo`, `CancellationScope` and the rest from `@temporalio/workflow`.
-- The workflow sandbox and its rules. Norn adds earlier checks, but it doesn't relax anything.
-- Payload converters, interceptors, plugins, worker versioning and the Web UI.
-- Every Norn wrapper exposes the SDK object underneath: `client.temporal` and `handle.temporal` are the SDK client and handle, and `createWorker()` passes `workerOptions` and `plugins` through to the SDK worker. If Norn doesn't cover something, use the SDK.
+- Inside workflows you still import `sleep`, `condition`, `patched`, `workflowInfo`, `CancellationScope` and the rest from `@temporalio/workflow`.
+- Inside activities you still import `heartbeat`, `Context` and `ApplicationFailure` from `@temporalio/activity` and `@temporalio/common`.
+- The workflow sandbox and its rules.
+- Data converters, interceptors, plugins, schedules, worker versioning and the Web UI.
+- Every Norn wrapper exposes the SDK object underneath: `norn.temporal` and `handle.temporal` are the SDK client and handle, and `createWorker()` passes `workerOptions` and `plugins` through to `Worker.create()`. If Norn doesn't cover something, use the SDK.
 
 ## The mapping
 
 | Temporal SDK | Norn | Guide |
 | --- | --- | --- |
-| `export async function orderWorkflow(input)`, registered by export name | `@Workflow({ taskQueue, id })` on a class; `run(input)` is the body; the type name is the class name | [Workflows](/norn/guides/workflows/) |
-| `defineSignal()` + `setHandler()` | `@Signal()` on a method | [Messages](/norn/guides/messages/) |
-| `defineQuery()` + `setHandler()` | `@Query()` on a method | [Messages](/norn/guides/messages/#queries) |
-| `defineUpdate()` + `setHandler(..., { validator })` | `@Update()` and `@Validate('method')` | [Messages](/norn/guides/messages/#updates) |
-| `proxyActivities<typeof acts>({ startToCloseTimeout, retry })` | `@Activity({ timeout, retries })` on the activity method; `useActivities(Ref)` in the workflow | [Activities](/norn/guides/activities/) |
-| `retry.nonRetryableErrorTypes: ['CardDeclinedError']` | `@NonRetryable([CardDeclinedError])` | [Activities](/norn/guides/activities/#nonretryable) |
-| An `activities` object built by hand, with module-level clients | `@Activities` classes with constructor-injected `@Service`s, wired by `norn gen` | [Dependency injection](/norn/guides/dependency-injection/) |
-| `Worker.create({ workflowsPath, activities, taskQueue })` | `createWorker({ registry })`: one worker per task queue in the registry, with health checks and graceful shutdown | [Worker](/norn/guides/worker/) |
-| `client.workflow.start('orderWorkflow', { taskQueue, workflowId, args })` | `norn.workflow(OrderWorkflow).start(input)`: name, task queue and ID come from the contract | [Client](/norn/guides/client/) |
+| `export async function orderWorkflow(input)` | `@Workflow({ taskQueue, id })` on a class; `run(input)` is the body; the type name is the class name | [Workflows](/norn/guides/workflows/) |
+| `defineSignal()` + `setHandler()` | `@Signal()` on a method | [Workflows](/norn/guides/workflows/#signals) |
+| `defineQuery()` + `setHandler()` | `@Query()` on a method | [Workflows](/norn/guides/workflows/#queries) |
+| `defineUpdate()` + `setHandler(..., { validator })` | `@Update()` and `@Validate('method')` | [Workflows](/norn/guides/workflows/#updates) |
+| `proxyActivities<typeof acts>({ startToCloseTimeout, retry })` | `useActivities<PaymentActivities>('payments', { timeout, retries })` | [Activities](/norn/guides/activities/) |
+| `retry.nonRetryableErrorTypes` | `nonRetryable: ['CardDeclinedError']` | [Activities](/norn/guides/activities/#errors-and-retries) |
+| An `activities` object of functions | A plain class, registered as `activities: { payments: new PaymentActivities(gateway) }` | [Activities](/norn/guides/activities/) |
+| `Worker.create({ workflowsPath, activities, taskQueue })` | `createWorker({ workflows, activities })`: one worker per task queue your workflows declare, with graceful shutdown | [Worker](/norn/guides/worker/) |
+| `client.workflow.start('orderWorkflow', { taskQueue, workflowId, args })` | `norn.workflow(OrderWorkflow).start(input)`: name, task queue and ID come from the class | [Client](/norn/guides/client/) |
 | `client.workflow.getHandle(\`order-${id}\`)` | `norn.workflow(OrderWorkflow).get({ orderId })` | [Client](/norn/guides/client/#handles) |
-| `executeChild()` / `startChild()` | `useChild(ChildWorkflow)` | [Child workflows](/norn/guides/child-workflows/) |
-| `getExternalWorkflowHandle()` | `useExternal(OtherWorkflow)` | [Child workflows](/norn/guides/child-workflows/#external-workflows-useexternal) |
-| `continueAsNew<typeof wf>(...)` | `continueAsNew(...)` from `@norn-ts/workflow`, typed against `run()` | [Long-running workflows](/norn/guides/long-running/) |
+| `executeChild()` / `startChild()` | `useChild(ChildWorkflow)` | [Workflows](/norn/guides/workflows/#child-workflows) |
+| `getExternalWorkflowHandle()` | `useExternal(OtherWorkflow, { id fields })` | [Workflows](/norn/guides/workflows/#child-workflows) |
+| `continueAsNew<typeof wf>(...)` | `continueAsNew(...)`, typed against `run()` | [Workflows](/norn/guides/workflows/#long-running-workflows) |
 | `upsertSearchAttributes()` with `defineSearchAttributeKey()` | `searchAttributes` in `@Workflow`, then `setSearchAttributes()` | [Workflows](/norn/guides/workflows/#search-attributes) |
-| `client.schedule.create(...)` in a deploy script | `@Schedule(cron)` on the workflow, then `norn schedules sync` | [Schedules](/norn/guides/schedules/) |
-| Catching `ActivityFailure` and checking `cause.type` | `asFailure(error, CardDeclinedError)` | [Errors](/norn/guides/errors/#handling-activity-failures-in-workflows) |
-| `WorkflowExecutionAlreadyStartedError`, `WorkflowNotFoundError`, ... on the client | `NornError` subclasses with a `code` and an HTTP status | [Errors](/norn/guides/errors/#client-errors) |
-| `TestWorkflowEnvironment` + a hand-written activities object | `createTestEnv()` / `useTestEnv()` + typed `mockActivities()` | [Testing](/norn/guides/testing/) |
-| `Worker.runReplayHistories()` | `assertReplays()` and `norn histories pull` | [Versioning](/norn/guides/versioning/#replay-tests) |
-| `bundleWorkflowCode()` | `norn bundle` / `bundleWorkflows()` | [Worker](/norn/guides/worker/#production-builds-compile-then-bundle) |
+| Catching `ActivityFailure` and checking `cause.type` | `asFailure(error, 'CardDeclinedError')` | [Workflows](/norn/guides/workflows/#failures) |
+| `WorkflowExecutionAlreadyStartedError`, `WorkflowNotFoundError`, … on the client | `NornError` subclasses with a `code` and an HTTP status | [Client](/norn/guides/client/#errors) |
+| `TestWorkflowEnvironment` + a hand-written activities object | `useTestEnv({ workflows, activities })` with fake activity objects | [Testing](/norn/guides/testing/) |
+| `bundleWorkflowCode()` | `bundleWorkflows(workflows, { outFile })` | [Worker](/norn/guides/worker/#production) |
 
 ## What Norn adds
 
-- **Contracts.** `norn gen` writes a contract for each workflow into `.norn/contracts.ts`. It imports the workflow class with `import type` only, so API code is fully typed without bundling any workflow code. [Contracts & the client/worker split](/norn/concepts/contracts/) explains how.
-- **ID templates.** `id: 'order-{orderId}'` is checked against `run()`'s input at compile time and used everywhere the workflow is started or looked up.
-- **Earlier sandbox checks.** Workflows reference activities through generated, type-only references. `norn gen` and the [ESLint rules](/norn/guides/eslint/) flag imports that would break the bundle or replay before you run anything.
-- **Rename protection.** `norn.lock.json` records every workflow type, handler, activity and task queue name. Renaming one is an error until you confirm it, because running executions still use the old names.
-- **Production plumbing.** Health endpoints, SIGTERM draining, correlation IDs from HTTP request to activity log line, Prometheus metrics, [payload encryption](/norn/guides/encryption/), and a [Hono integration](/norn/guides/hono/) that maps errors to HTTP statuses.
+- **A client typed from the workflow.** Pass the class to `norn.workflow()`. Its input, result, and the arguments and results of its signals, queries and updates are all checked at compile time.
+- **ID templates.** `id: 'order-{orderId}'` is checked against `run()`'s input and used everywhere the workflow is started or looked up.
+- **Errors with codes.** Client failures become `NornError`s with a stable `code` and an HTTP status, so an API can map them without string matching.
 
-## Adopting Norn in an existing codebase
+## Things to know
 
-You don't have to convert everything at once:
+- Decorators don't change types, so TypeScript can't tell a signal method from a query method. `handle.signal('getStatus')` compiles, and fails when it runs. Argument and result types are always checked.
+- Activities are registered as `<namespace>.<method>`, such as `payments.charge`. Keep the namespace and method names stable while workflows that call them are running, and keep workflow and handler names stable too: running executions depend on them.
+- To move an existing SDK workflow to Norn, keep its workflow type name (the class name, or `@Workflow({ name })`) and every handler name the same, and in-flight executions keep working. Test with the SDK's `Worker.runReplayHistories()` before switching over.
 
-- **Call existing workflows with typed handles.** Write a [manual contract](/norn/guides/client/#manual-contracts) with `defineWorkflow()` for a workflow that isn't written with Norn, and use it with `createClient()`, `useChild()` and `useExternal()`. This also works for workflows written in other languages.
-- **Keep the SDK client.** `createClient({ connection })` reuses an existing `Connection`, and `norn.temporal` is the SDK `Client`.
-- **Move one workflow at a time.** Keep the workflow type name (the class name, or `@Workflow({ name })`) and every signal, query and update name the same, and in-flight executions keep working. Run [replay tests](/norn/guides/versioning/#replay-tests) against histories recorded from the old version before switching over.
-
-Ready to try it? Start with the [quickstart](/norn/start/quickstart/), or follow [Manual setup](/norn/guides/manual-setup/) to add Norn to an existing project.
+Ready to try it? Start with the [quickstart](/norn/start/quickstart/).

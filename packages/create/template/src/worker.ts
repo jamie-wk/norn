@@ -1,4 +1,4 @@
-import { createWorker } from '@norn-ts/worker';
+import { createWorker } from '@norn-ts/norn/worker';
 import { PaymentActivities } from './activities/payment.activities';
 import { FakePaymentGateway } from './services/payment-gateway';
 

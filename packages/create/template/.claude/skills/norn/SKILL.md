@@ -1,30 +1,30 @@
 ---
 name: norn
-description: How to build durable workflows with Norn, the decorator-driven TypeScript framework on the Temporal TypeScript SDK (@norn-ts/* packages). Use this whenever the code imports @norn-ts/core, @norn-ts/workflow, @norn-ts/activity, @norn-ts/worker, @norn-ts/client, @norn-ts/testing, @norn-ts/hono, @norn-ts/codec or @norn-ts/cli, has a norn.config.ts or a .norn/ directory, or the user wants to add or change a workflow, activity, signal, query, update, schedule, child workflow, worker, Temporal client call, webhook or workflow test in a Norn project, even if they only say "Temporal" or "workflow".
+description: How to build durable workflows with Norn, a thin layer of typed decorators on the Temporal TypeScript SDK (the @norn-ts/norn package). Use this whenever the code imports @norn-ts/norn or one of its subpaths (/workflow, /worker, /client, /testing, /vitest, /vite), or the user wants to add or change a workflow, activity, signal, query, update, child workflow, worker, Temporal client call or workflow test in a Norn project, even if they only say "Temporal" or "workflow".
 ---
 
 # Building with Norn
 
-Norn puts typed decorators and code generation on top of Temporal's TypeScript SDK. You write classes; `norn gen` writes the wiring into `.norn/`; Temporal runs it durably. Docs: https://jamie-wk.github.io/norn/ (each package README on GitHub, `jamie-wk/norn`, lists its full API).
+Norn puts typed decorators on top of Temporal's TypeScript SDK. Workflows are decorated classes, activities are plain classes, and the client is typed from the workflow class. There is no code generation. Docs: https://jamie-wk.github.io/norn/ (all of it: https://jamie-wk.github.io/norn/llms-full.txt).
 
 ## The mental model: three places code runs
 
 | Code | Runs in | May import |
 | --- | --- | --- |
-| `@Workflow` classes (`src/workflows/*.workflow.ts`) | Temporal's deterministic sandbox, replayed from history | `@norn-ts/workflow`, `@norn-ts/core`, `@temporalio/workflow`, `.norn/activities`, other workflow files, pure helpers. **No** Node APIs, I/O, `Date.now()`, `Math.random()`, activity or service classes. |
-| `@Activities` classes and `@Service`s (`src/activities`, `src/services`) | The worker process, normal Node | Anything. This is where all I/O lives. |
-| API / other services | Anywhere | `@norn-ts/client` or `@norn-ts/hono` plus `.norn/contracts` (type-only references to workflows) |
+| `@Workflow` classes (`src/workflows/`) | Temporal's deterministic sandbox, replayed from history | `@norn-ts/norn/workflow`, `@norn-ts/norn`, `@temporalio/workflow`, `@temporalio/common`, other workflow files, pure helpers, and `import type` of anything. **No** Node APIs, I/O, `process.env`, `setTimeout`, or value imports of activity or service code. |
+| Activity classes (`src/activities/`) and what they use (`src/services/`) | The worker process, normal Node | Anything. This is where all I/O lives. |
+| The worker (`src/worker.ts`), API code, scripts | Normal Node | `@norn-ts/norn/worker`, `@norn-ts/norn/client`, and workflow classes (importing a workflow class is fine: it carries only decorators and types) |
 
 Most mistakes come from crossing these lines, so check imports first when something breaks.
 
-## The generated `.norn/` directory
+## How the pieces connect
 
-Run `norn gen` after adding or changing any decorated class, its handlers, an activity signature or an injected constructor. Commit everything it writes: `.norn/`, `norn.lock.json`, and the `contracts.outFile` if `norn.config.ts` sets one. CI runs `norn gen --check`. Generated imports use `importExtension` from `norn.config.ts` (`'.js'` default, or `'.ts'`); import `.norn/*` files with the same extension the project already uses (the snippets below use `.js`).
+- `src/workflows/index.ts` exports every `@Workflow` class. The worker gets it as `workflows: new URL('./workflows/index.ts', import.meta.url)`.
+- The worker gets activities by namespace: `activities: { payments: new PaymentActivities(gateway) }` registers every method as `payments.<method>`.
+- A workflow calls them with `useActivities<PaymentActivities>('payments', options)`, importing the class with `import type`. The namespace string must match the worker's key.
+- Clients pass the workflow class: `norn.workflow(OrderWorkflow)`.
 
-- `.norn/activities.ts`: workflow-safe activity references. **Workflows import activities from here**, never from `src/activities` (that would pull Node code into the bundle).
-- `.norn/contracts.ts`: typed contracts for clients, `import type` only, so API code never bundles worker code.
-- `.norn/registry.ts`: what `createWorker({ registry })` runs. `.norn/container.ts`: DI wiring. `.norn/workflows.ts`: the bundle entry; export names must equal workflow type names, so don't hand-edit it.
-- `norn.lock.json` blocks renaming workflow types, handlers, activities and task queues (in-flight executions still use the old names). Rename deliberately with `norn gen --accept-rename`.
+When you add a workflow, export it from `src/workflows/index.ts`. When you add an activity class, register it in `src/worker.ts` and in the test environment.
 
 ## Recipes
 
@@ -32,14 +32,19 @@ Run `norn gen` after adding or changing any decorated class, its handlers, an ac
 
 ```ts
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Update, Validate, Workflow, useActivities } from '@norn-ts/workflow';
-import { PaymentActivities } from '../../.norn/activities.js';
+import { Query, Signal, Update, Validate, Workflow, useActivities } from '@norn-ts/norn/workflow';
+import type { PaymentActivities } from '../activities/payment.activities';
 
 // id fields are checked against run()'s input
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
 export class OrderWorkflow {
   private status: 'open' | 'paid' | 'canceled' = 'open';
-  private readonly pay = useActivities(PaymentActivities);
+  private readonly pay = useActivities<PaymentActivities>('payments', {
+    timeout: '30s',
+    retries: 3, // retries AFTER the first attempt
+    nonRetryable: ['CardDeclinedError'], // error names
+    methods: { refund: { retries: 10 } },
+  });
 
   // providers redeliver
   @Signal({ dedupeBy: (e: { eventId: string }) => e.eventId })
@@ -59,31 +64,17 @@ export class OrderWorkflow {
 }
 ```
 
-Handlers are registered before `run()` starts, and signals that arrived before the first workflow task are applied then, so read baselines from the input, not from fields at the top of `run()`. By default the workflow waits for in-flight async handlers before completing (`drainHandlers`).
+Handlers are registered before `run()` starts, and signals that arrived before the first workflow task are applied then, so set up state in the constructor (it gets the same input as `run()`). By default the workflow waits for in-flight async handlers before completing (`drainHandlers`).
 
-**Activities and services** (dependency injection by constructor type):
+**Activities** are plain classes; build their dependencies with constructors in `src/worker.ts`:
 
 ```ts
-import { Activities, Activity, NonRetryable, Service, token } from '@norn-ts/activity';
-
-export interface PaymentGateway { charge(r: { orderId: string; cents: number; idempotencyKey: string }): Promise<{ id: string }> }
-// same name as the interface
-export const PaymentGateway = token<PaymentGateway>('PaymentGateway');
-
-@Service({ provides: PaymentGateway })
-export class StripeGateway implements PaymentGateway { /* ... */ }
-
-// explicit name survives minification
+// explicit name survives minification; nonRetryable matches on it
 export class CardDeclinedError extends Error { override name = 'CardDeclinedError'; }
 
-@Activities({ prefix: 'payments.' })
 export class PaymentActivities {
-  // norn gen resolves the token by type name
   constructor(private readonly gateway: PaymentGateway) {}
 
-  // retries AFTER the first attempt
-  @Activity({ timeout: '30s', retries: 3 })
-  @NonRetryable([CardDeclinedError])
   async charge(orderId: string, cents: number) {
     // activities can retry: make them idempotent
     return this.gateway.charge({ orderId, cents, idempotencyKey: `charge-${orderId}` });
@@ -91,15 +82,15 @@ export class PaymentActivities {
 }
 ```
 
-Match a typed failure in a workflow with `asFailure(error, CardDeclinedError)`. Configuration and SDK clients go in a providers module (`providers: 'src/providers.ts'` in `norn.config.ts`).
+Heartbeats, cancellation and `ApplicationFailure` come from `@temporalio/activity` and `@temporalio/common`, as in the plain SDK. Match a failure in a workflow with `asFailure(error, 'CardDeclinedError')`.
 
-**Children, external workflows, long-running entities:** `useChild(ChildWorkflow)` then `.execute(input)` / `.start(input)`; `useExternal(Workflow)` to signal another workflow. For entities that live forever, roll over with `return continueAsNew(() => ({ ...nextInput }))`; pass a **function** so the input is read after in-flight handlers finish (a plain object is captured before, losing their effects). Check `continueAsNewSuggested()` alongside your own event counter.
+**Children, external workflows, long-running entities:** `useChild(ChildWorkflow)` then `.execute(input)` / `.start(input)`; `useExternal(Workflow, { idFields })` to signal another workflow. For entities that live forever, roll over with `return continueAsNew(() => ({ ...nextInput }))`; pass a **function** so the input is read after in-flight handlers finish. Check `continueAsNewSuggested()` alongside your own event counter.
 
-**Calling workflows** from an API or another service:
+**Calling workflows** from an API or a script:
 
 ```ts
-import { createClient } from '@norn-ts/client';
-import { OrderWorkflow } from '../.norn/contracts.js';
+import { createClient } from '@norn-ts/norn/client';
+import { OrderWorkflow } from './workflows/order.workflow';
 
 // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
 const norn = createClient();
@@ -108,40 +99,36 @@ const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-1', cents: 
 await norn.workflow(OrderWorkflow).get({ orderId: 'o-1' }).update('cancel');
 ```
 
-Errors are typed `NornError`s from `@norn-ts/core` with HTTP statuses: `WorkflowAlreadyStartedError` 409, `WorkflowNotFoundError` 404, `WorkflowClosedError` 409, `UpdateRejectedError` 422 (a validator or the update threw), `TemporalUnavailableError` 503. With Hono, `app.use(temporal({}))` puts the client on `c.var.norn` and `app.onError(nornErrorHandler())` turns those into JSON responses. `temporalWebhook({ verify, map })` maps provider webhooks to signals (`verify` is required; use `hmacSha256Verifier`). `codecServer({ codec, auth })` requires `auth`.
+Handler names are method names. Types can't tell a signal method from a query method, so using one as the wrong kind compiles and throws `NornConfigError` when called. Errors are `NornError`s with HTTP statuses: `WorkflowAlreadyStartedError` 409, `WorkflowNotFoundError` 404, `WorkflowClosedError` 409, `UpdateRejectedError` 422 (a validator or the update threw; `failureType` is the error name), `TemporalUnavailableError` 503.
 
-**The worker:** `const worker = await createWorker({ registry }); await worker.run();` It drains on SIGTERM; health endpoints on `NORN_HEALTH_PORT`; production uses a prebuilt bundle (`norn bundle` → `NORN_WORKFLOW_BUNDLE`).
-
-**Schedules:** `@Schedule(...)` on a workflow, then `norn schedules sync` (`--dry-run` first; deleting needs `--prune`).
+**The worker:** `const worker = await createWorker({ workflows, activities }); await worker.run();` It drains on SIGTERM. For production, `pnpm build` (esbuild) then `pnpm start`; optionally prebuild the workflow bundle with `bundleWorkflows()` and set `NORN_WORKFLOW_BUNDLE`.
 
 ## Testing
 
 ```ts
-// vitest.config.ts needs: plugins: [standardDecorators()] from '@norn-ts/testing/vite'
-import { mockActivities, useTestEnv } from '@norn-ts/testing/vitest';
-import { PaymentActivities } from '../.norn/activities.js';
-import { OrderWorkflow } from '../.norn/contracts.js';
-import { registry } from '../.norn/registry.js';
+// vitest.config.ts needs: plugins: [standardDecorators()] from '@norn-ts/norn/vite'
+import { expect, it, vi } from 'vitest';
+import { useTestEnv } from '@norn-ts/norn/vitest';
+import { OrderWorkflow } from '../src/workflows/order.workflow';
 
-const pay = mockActivities(PaymentActivities, { charge: async (orderId) => ({ id: `ch_${orderId}` }) });
+const payments = { charge: vi.fn(async (orderId: string) => ({ id: `ch_${orderId}` })) };
 // timers skip instantly
-const env = useTestEnv({ registry, mode: 'time-skipping', activities: pay });
+const env = useTestEnv({ workflows: new URL('../src/workflows/index.ts', import.meta.url), activities: { payments }, mode: 'time-skipping' });
 
 it('charges after the window', async () => {
   const order = await env.workflow(OrderWorkflow).start({ orderId: 'o-1', cents: 500 });
   expect(await order.result()).toBe('paid');
-  expect(pay.charge).toHaveBeenCalledWith('o-1', 500);
+  expect(payments.charge).toHaveBeenCalledWith('o-1', 500);
 });
 ```
 
-`useTestEnv` starts one server, worker and set of mocks per test file (`beforeAll`/`afterAll`), so mock calls accumulate across tests: assert on calls for each test's own IDs. A handler called after the workflow has finished fails with `WorkflowClosedError`, not `UpdateRejectedError`; to test "rejected once X happened" when X also ends the workflow, hold the final activity mock on a promise until the assertion is done. Use `mode: 'local'` (a real dev server) for search attributes and `list()` queries. `createFakeClient()` unit-tests API code without a server; `assertReplays()` catches non-deterministic changes against recorded histories (`norn histories pull`). Write the failing test first and cover the sad paths (declines, cancels, timeouts, rejected updates).
+`useTestEnv` starts one server and worker per test file (`beforeAll`/`afterAll`), so fake calls accumulate across tests: assert on calls for each test's own IDs. A handler called after the workflow has finished fails with `WorkflowClosedError`, not `UpdateRejectedError`. Use `mode: 'local'` (a real dev server) for search attributes and `list()` queries. Unit-test activity classes directly with fake dependencies. Write the failing test first and cover the sad paths (declines, cancels, timeouts, rejected updates).
 
 ## Gotchas
 
-- TC39 **standard** decorators only: `target` ES2022+, never `experimentalDecorators`. Node's type stripping can't run decorators: compile with `tsc`, and use `standardDecorators()` in Vitest.
+- TC39 **standard** decorators only: `target` ES2022+, never `experimentalDecorators`. Node's type stripping can't run decorators: use `tsx` in development, esbuild with `--target=node22` for builds, and `standardDecorators()` in Vitest.
+- Running executions depend on names: workflow types, task queues, handler names and activity names (`<namespace>.<method>`). Renaming one breaks them.
 - Changing workflow logic that in-flight executions have already passed through breaks replay. Gate changes with `patched()` from `@temporalio/workflow`, or use worker versioning; run replay tests before deploying.
 - Pass inputs as one serializable object; keep payloads small (store large data elsewhere and pass IDs).
-- Search attributes are declared on `@Workflow({ searchAttributes })` and set with `setSearchAttributes()`; register them on the server (`norn gen` writes `.norn/search-attributes.json`).
-- Don't loosen types to make something compile: IDs, handler args/results and activity signatures are checked end to end on purpose.
-
-The ESLint plugin (`@norn-ts/eslint-plugin`, `configs.recommended`) flags non-determinism and activity imports in workflow files while you type.
+- Search attributes are declared on `@Workflow({ searchAttributes })` and set with `setSearchAttributes()`; create them on the server first (`temporal operator search-attribute create`).
+- Don't loosen types to make something compile: IDs, handler args/results and activity signatures are checked on purpose.

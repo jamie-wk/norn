@@ -9,17 +9,8 @@
   "commit": false,
   "fixed": [
     [
-      "@norn-ts/activity",
-      "@norn-ts/cli",
-      "@norn-ts/client",
-      "@norn-ts/codec",
-      "@norn-ts/core",
       "@norn-ts/create",
-      "@norn-ts/eslint-plugin",
-      "@norn-ts/hono",
-      "@norn-ts/testing",
-      "@norn-ts/worker",
-      "@norn-ts/workflow"
+      "@norn-ts/norn"
     ]
   ],
   "linked": [],
@@ -27,11 +18,6 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@norn/example-orders-worker",
-    "@norn/example-orders-api",
-    "@norn/example-orders-contracts",
-    "@norn/example-orders-provider",
-    "@norn/e2e",
     "@norn/docs"
   ]
 }

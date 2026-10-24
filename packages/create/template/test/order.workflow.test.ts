@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { useTestEnv } from '@norn-ts/testing/vitest';
+import { useTestEnv } from '@norn-ts/norn/vitest';
 import { OrderWorkflow } from '../src/workflows/order.workflow';
 
 const payments = {

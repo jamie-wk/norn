@@ -1,5 +1,5 @@
 import { condition } from '@temporalio/workflow';
-import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
+import { Query, Signal, Workflow, useActivities } from '@norn-ts/norn/workflow';
 // A type-only import: workflows never load activity code, they schedule it by name.
 import type { PaymentActivities } from '../activities/payment.activities';
 

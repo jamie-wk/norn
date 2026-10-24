@@ -27,8 +27,6 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm check:deps
       - run: pnpm check:pack
-      - name: Generated code is up to date
-        run: pnpm gen:check
       - run: pnpm docs:build
 
   test:
@@ -45,43 +43,7 @@ jobs:
         with: { node-version: '${{ matrix.node }}', cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
-      # The CLI integration tests compile and run the built packages.
+      # The scaffold integration test typechecks and runs the starter against the built package.
       - run: pnpm build
       # Downloads the Temporal dev server and time-skipping test server on first use.
       - run: pnpm test:integration
-
-  e2e:
-    name: End-to-end (processes)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 24, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - name: Install the Temporal CLI
-        run: |
-          curl -sSf https://temporal.download/cli.sh | sh
-          echo "NORN_TEMPORAL_CLI_PATH=$HOME/.temporalio/bin/temporal" >> "$GITHUB_ENV"
-      - run: pnpm e2e:build
-      - run: pnpm test:e2e
-
-  e2e-compose:
-    name: End-to-end (Docker Compose)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 24, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      # E18 runs the host's built `norn` CLI against the stack.
-      - run: pnpm build
-      - run: docker compose -f e2e/docker-compose.yml up -d --build --wait
-      - run: pnpm test:e2e
-        env:
-          E2E_TARGET: compose
-      - if: failure()
-        run: docker compose -f e2e/docker-compose.yml logs --no-color
-      - if: always()
-        run: docker compose -f e2e/docker-compose.yml down -v

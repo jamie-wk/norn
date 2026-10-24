@@ -1,7 +1,7 @@
 // pnpm order               starts an order
 // pnpm order cancel <id>   cancels it (and refunds it) within the cancellation window
 // pnpm order status <id>   asks a running order for its status
-import { createClient } from '@norn-ts/client';
+import { createClient } from '@norn-ts/norn/client';
 import { OrderWorkflow } from './workflows/order.workflow';
 
 const [command = 'start', id] = process.argv.slice(2);

@@ -6,23 +6,22 @@
   "scripts": {
     "dev": "node scripts/dev.ts",
     "order": "tsx src/order.ts",
+    "build": "esbuild src/worker.ts src/workflows/index.ts --bundle --platform=node --target=node22 --format=esm --packages=external --outdir=dist",
+    "start": "node dist/worker.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@norn-ts/client": "^{{version}}",
-    "@norn-ts/worker": "^{{version}}",
-    "@norn-ts/workflow": "^{{version}}",
-    "@temporalio/activity": "^1.24.0",
+    "@norn-ts/norn": "^{{version}}",
     "@temporalio/client": "^1.24.0",
     "@temporalio/common": "^1.24.0",
     "@temporalio/worker": "^1.24.0",
     "@temporalio/workflow": "^1.24.0"
   },
   "devDependencies": {
-    "@norn-ts/testing": "^{{version}}",
     "@temporalio/testing": "^1.24.0",
     "@types/node": "^22.18.0",
+    "esbuild": "^0.28.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.5"
