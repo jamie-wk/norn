@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import {
   Client,
   Connection,
@@ -15,6 +16,7 @@ import {
   NornConfigError,
   WorkflowClosedError,
   WorkflowNotFoundError,
+  connectionSettings,
   formatDuration,
   type AnyWorkflowContract,
   type ContractInput,
@@ -176,16 +178,20 @@ function isExplicitTarget(target: unknown): target is { workflowId: string; runI
 
 /** Creates a typed Temporal client. Pass contracts from `.norn/contracts.ts` to `workflow()`. */
 export function createClient(options: ClientOptions = {}): NornClient {
-  const env = process.env;
-  // Empty variables count as unset, as in the CLI and the worker.
-  const apiKey = options.apiKey ?? (env.TEMPORAL_API_KEY || undefined);
+  const settings = connectionSettings(process.env, { ...options, tls: typeof options.tls === 'boolean' ? options.tls : undefined });
   const ownsConnection = options.connection === undefined && options.client === undefined;
   const connection =
     options.client?.connection ??
     options.connection ??
     Connection.lazy({
-      address: options.address ?? (env.TEMPORAL_ADDRESS || 'localhost:7233'),
-      ...(apiKey ? { apiKey, tls: options.tls ?? true } : { tls: options.tls ?? env.TEMPORAL_TLS === 'true' }),
+      address: settings.address,
+      ...(settings.apiKey ? { apiKey: settings.apiKey } : {}),
+      tls:
+        typeof options.tls === 'object'
+          ? options.tls
+          : settings.clientCert
+            ? { clientCertPair: { crt: readFileSync(settings.clientCert.certPath), key: readFileSync(settings.clientCert.keyPath) } }
+            : settings.tls,
       ...(options.connectTimeout !== undefined ? { connectTimeout: formatDuration(options.connectTimeout) } : {}),
     });
   const interceptors = [...(options.correlation === false ? [] : [correlationInterceptor()]), ...(options.interceptors ?? [])];
@@ -193,7 +199,7 @@ export function createClient(options: ClientOptions = {}): NornClient {
     options.client ??
     new Client({
     connection,
-    namespace: options.namespace ?? (env.TEMPORAL_NAMESPACE || 'default'),
+    namespace: settings.namespace,
     dataConverter: options.dataConverter,
     interceptors: { workflow: interceptors },
   });

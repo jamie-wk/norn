@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import type { Client } from '@temporalio/client';
+import { connectionSettings as resolveConnection } from '@norn-ts/core';
 
 export type Env = Record<string, string | undefined>;
 
@@ -10,23 +11,14 @@ export interface TemporalConnectionSettings {
   tls: boolean | { clientCertPair: { crt: Buffer; key: Buffer } };
 }
 
-/**
- * Connection settings from the environment: TEMPORAL_ADDRESS (default localhost:7233),
- * TEMPORAL_NAMESPACE (default "default"), TEMPORAL_API_KEY (enables TLS), and optional
- * TEMPORAL_TLS_CERT / TEMPORAL_TLS_KEY file paths for mTLS.
- */
+/** Connection settings from the environment (see `connectionSettings()` in @norn-ts/core), with mTLS files read. */
 export function connectionSettings(env: Env): TemporalConnectionSettings {
-  const cert = env.TEMPORAL_TLS_CERT;
-  const key = env.TEMPORAL_TLS_KEY;
-  if ((cert === undefined) !== (key === undefined)) {
-    throw new Error('Set both TEMPORAL_TLS_CERT and TEMPORAL_TLS_KEY for mTLS, or neither');
-  }
-  const apiKey = env.TEMPORAL_API_KEY || undefined;
+  const { address, namespace, apiKey, tls, clientCert } = resolveConnection(env);
   return {
-    address: env.TEMPORAL_ADDRESS || 'localhost:7233',
-    namespace: env.TEMPORAL_NAMESPACE || 'default',
+    address,
+    namespace,
     apiKey,
-    tls: cert && key ? { clientCertPair: { crt: readFileSync(cert), key: readFileSync(key) } } : apiKey !== undefined || env.TEMPORAL_TLS === 'true',
+    tls: clientCert ? { clientCertPair: { crt: readFileSync(clientCert.certPath), key: readFileSync(clientCert.keyPath) } } : tls,
   };
 }
 

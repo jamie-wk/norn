@@ -9,3 +9,4 @@ export * from './activity-options.js';
 
 /** Header that carries a request's correlation ID from API calls into workflows and activities. */
 export const CORRELATION_HEADER = 'norn-correlation-id';
+export * from './connection.js';

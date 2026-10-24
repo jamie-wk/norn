@@ -27,6 +27,8 @@ describe('connection settings', () => {
       const { tls } = connectionSettings({ TEMPORAL_TLS_CERT: `${dir}/c.pem`, TEMPORAL_TLS_KEY: `${dir}/k.pem` });
       expect(tls).toEqual({ clientCertPair: { crt: Buffer.from('CERT'), key: Buffer.from('KEY') } });
       expect(() => connectionSettings({ TEMPORAL_TLS_CERT: `${dir}/c.pem` })).toThrow(/both/);
+      // Empty means unset, as for every other variable.
+      expect(connectionSettings({ TEMPORAL_TLS_CERT: '' }).tls).toBe(false);
     } finally {
       removeDir(dir);
     }

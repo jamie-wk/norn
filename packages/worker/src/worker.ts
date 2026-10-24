@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import {
   NativeConnection,
   Runtime,
@@ -106,7 +107,11 @@ export async function createWorker(options: CreateWorkerOptions): Promise<NornWo
         connection = await NativeConnection.connect({
           address: config.address,
           ...(config.apiKey ? { apiKey: config.apiKey } : {}),
-          ...(config.tls ? { tls: true } : {}),
+          ...(config.clientCert
+            ? { tls: { clientCertPair: { crt: readFileSync(config.clientCert.certPath), key: readFileSync(config.clientCert.keyPath) } } }
+            : config.tls
+              ? { tls: true }
+              : {}),
         });
       } catch (error) {
         throw unavailable(config.address, error);

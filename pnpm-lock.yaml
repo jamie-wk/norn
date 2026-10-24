@@ -202,6 +202,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@norn-ts/core':
+        specifier: workspace:^
+        version: link:../core
       oxc-parser:
         specifier: ^0.154.0
         version: 0.154.0
@@ -218,9 +221,6 @@ importers:
       '@norn-ts/codec':
         specifier: workspace:^
         version: link:../codec
-      '@norn-ts/core':
-        specifier: workspace:^
-        version: link:../core
       '@norn-ts/worker':
         specifier: workspace:^
         version: link:../worker

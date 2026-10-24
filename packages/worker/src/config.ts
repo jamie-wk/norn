@@ -1,4 +1,4 @@
-import { NornConfigError, formatDuration, type Duration } from '@norn-ts/core';
+import { NornConfigError, connectionSettings, formatDuration, type Duration } from '@norn-ts/core';
 import type { WorkerDeploymentOptions } from '@temporalio/worker';
 import type { NornRegistry } from './registry.js';
 
@@ -40,6 +40,8 @@ export interface ResolvedWorkerConfig {
   namespace: string;
   apiKey: string | undefined;
   tls: boolean;
+  /** mTLS certificate and key paths from TEMPORAL_TLS_CERT / TEMPORAL_TLS_KEY. */
+  clientCert: { certPath: string; keyPath: string } | undefined;
   deployment: WorkerDeploymentOptions | undefined;
   healthPort: number | undefined;
   healthHost: string;
@@ -116,14 +118,9 @@ export function resolveWorkerConfig(options: WorkerConfigOptions, env: Env = pro
         ? port(env.NORN_HEALTH_PORT, 'NORN_HEALTH_PORT')
         : undefined;
 
-  const apiKey = options.apiKey ?? (env.TEMPORAL_API_KEY || undefined);
   return {
     taskQueues,
-    // Empty variables count as unset (as in the CLI), e.g. from `${VAR:-}` in compose files.
-    address: options.address ?? (env.TEMPORAL_ADDRESS || 'localhost:7233'),
-    namespace: options.namespace ?? (env.TEMPORAL_NAMESPACE || 'default'),
-    apiKey,
-    tls: options.tls ?? (apiKey !== undefined || env.TEMPORAL_TLS === 'true'),
+    ...connectionSettings(env, options),
     deployment,
     healthPort,
     healthHost: (health && health.host) ?? '0.0.0.0',
