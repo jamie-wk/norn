@@ -4,8 +4,8 @@ export type Node = Rule.Node;
 export type NodeOf<T extends Node['type']> = Extract<Node, { type: T }>;
 export type MemberExpression = NodeOf<'MemberExpression'>;
 
-/** Rule documentation: the README section headed `norn/<rule>` (GitHub drops the `/` from the anchor). */
-export const docsUrl = (rule: string) => `https://github.com/jamie-wk/norn/tree/main/packages/eslint-plugin#norn${rule}`;
+/** Rule documentation: the reference section headed `norn/<rule>` (the slug drops the `/`). */
+export const docsUrl = (rule: string) => `https://jamie-wk.github.io/norn/reference/eslint-plugin/#norn${rule}`;
 
 /** The static value of a string literal or an expression-free template literal. */
 export function staticString(node: unknown): string | undefined {

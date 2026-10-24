@@ -37,7 +37,8 @@ try {
     for (const required of ['package.json', 'README.md', 'LICENSE']) if (!has(required)) errors.push(`${pkg.name}: tarball is missing ${required}`);
     for (const target of exportTargets(pkg.exports)) if (!has(target)) errors.push(`${pkg.name}: export target ${target} is not in the tarball (did you build?)`);
     for (const bin of Object.values(pkg.bin ?? {})) if (!has(bin)) errors.push(`${pkg.name}: bin ${bin} is not in the tarball`);
-    const leaked = listing.filter((f) => /(^|\/)(test|test-d|fixtures|__snapshots__)\//.test(f) || /\.(test|test-d)\.[cm]?[jt]s$/.test(f));
+    // A scaffolder's template/ ships its tests on purpose.
+    const leaked = listing.filter((f) => !f.startsWith('template/')).filter((f) => /(^|\/)(test|test-d|fixtures|__snapshots__)\//.test(f) || /\.(test|test-d)\.[cm]?[jt]s$/.test(f));
     if (leaked.length) errors.push(`${pkg.name}: tarball includes test files: ${leaked.slice(0, 5).join(', ')}`);
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
       for (const [dep, range] of Object.entries(manifest[field] ?? {})) {

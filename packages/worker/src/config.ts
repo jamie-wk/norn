@@ -43,13 +43,13 @@ export interface ResolvedWorkerConfig {
   deployment: WorkerDeploymentOptions | undefined;
   healthPort: number | undefined;
   healthHost: string;
-  shutdownGraceTime: string;
+  shutdownGraceTime: `${number}ms`;
   handleSignals: boolean;
 }
 
 type Env = Record<string, string | undefined>;
 
-function grace(value: Duration | string, source: string): string {
+function grace(value: Duration | string, source: string): `${number}ms` {
   try {
     return formatDuration(value as Duration);
   } catch (error) {

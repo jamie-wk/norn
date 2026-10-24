@@ -1,0 +1,40 @@
+{
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.ts",
+    "order": "tsx src/order.ts",
+    "gen": "norn gen",
+    "typecheck": "norn gen && tsc --noEmit",
+    "test": "norn gen && vitest run"
+  },
+  "dependencies": {
+    "@norn-ts/activity": "^{{version}}",
+    "@norn-ts/client": "^{{version}}",
+    "@norn-ts/core": "^{{version}}",
+    "@norn-ts/worker": "^{{version}}",
+    "@norn-ts/workflow": "^{{version}}",
+    "@temporalio/activity": "^1.24.0",
+    "@temporalio/client": "^1.24.0",
+    "@temporalio/common": "^1.24.0",
+    "@temporalio/worker": "^1.24.0",
+    "@temporalio/workflow": "^1.24.0"
+  },
+  "devDependencies": {
+    "@norn-ts/cli": "^{{version}}",
+    "@norn-ts/testing": "^{{version}}",
+    "@temporalio/testing": "^1.24.0",
+    "@types/node": "^22.18.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@swc/core", "@temporalio/core-bridge", "esbuild", "protobufjs"]
+  }
+}

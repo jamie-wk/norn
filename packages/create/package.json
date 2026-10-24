@@ -1,0 +1,73 @@
+{
+  "name": "@norn-ts/create",
+  "version": "1.0.0",
+  "description": "Scaffolds a new Norn project: pnpm create @norn-ts my-app.",
+  "license": "MIT",
+  "type": "module",
+  "author": "Jamie King",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamie-wk/norn.git",
+    "directory": "packages/create"
+  },
+  "homepage": "https://jamie-wk.github.io/norn/",
+  "bugs": "https://github.com/jamie-wk/norn/issues",
+  "keywords": [
+    "temporal",
+    "workflow",
+    "durable-execution",
+    "typescript",
+    "scaffold",
+    "norn"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@norn/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "bin",
+    "src",
+    "template",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "bin": {
+    "create-norn-ts": "./bin/create.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@norn-ts/activity": "workspace:^",
+    "@norn-ts/cli": "workspace:^",
+    "@norn-ts/client": "workspace:^",
+    "@norn-ts/core": "workspace:^",
+    "@norn-ts/testing": "workspace:^",
+    "@norn-ts/worker": "workspace:^",
+    "@norn-ts/workflow": "workspace:^",
+    "@temporalio/activity": "1.24.0",
+    "@temporalio/client": "1.24.0",
+    "@temporalio/common": "1.24.0",
+    "@temporalio/testing": "1.24.0",
+    "@temporalio/worker": "1.24.0",
+    "@temporalio/workflow": "1.24.0",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}
