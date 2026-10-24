@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { main } from '../src/index.ts';
@@ -19,7 +20,8 @@ function run(script: string) {
     encoding: 'utf8',
     env: { ...process.env, PATH: `${bin}${delimiter}${process.env.PATH}` },
   });
-  return { status: result.status, output: `${result.stdout}${result.stderr}` };
+  // CI forces colored output; match on plain text.
+  return { status: result.status, output: stripVTControlCharacters(`${result.stdout}${result.stderr}`) };
 }
 
 beforeAll(async () => {
