@@ -14,8 +14,8 @@ Requires Node 22.18+ and TC39 standard decorators. `@temporalio/activity` and `@
 
 ```ts
 import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
-import { PaymentDeclinedError } from '../domain.js';
-import { PaymentGateway } from '../services/payment-gateway.js';
+import { PaymentDeclinedError } from '../domain';
+import { PaymentGateway } from '../services/payment-gateway';
 
 @Activities({ prefix: 'payments.' })
 export class PaymentActivities {

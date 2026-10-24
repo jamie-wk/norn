@@ -13,7 +13,7 @@ A service is a class decorated with `@Service`. Its constructor parameters are i
 ```ts
 // src/services/http.ts
 import { Service, cancellationSignal, getCorrelationId } from '@norn-ts/activity';
-import { AppConfig } from './config.js';
+import { AppConfig } from './config';
 
 @Service()
 export class HttpClient {
@@ -81,7 +81,7 @@ Some dependencies are not classes you own: configuration objects, a `pg.Pool`, a
 import { provide } from '@norn-ts/activity';
 import { createClient } from '@norn-ts/client';
 import pg from 'pg';
-import { AppConfig, Db, TemporalClient } from './services/tokens.js';
+import { AppConfig, Db, TemporalClient } from './services/tokens';
 
 export const providers = [
   provide(AppConfig, () => loadConfig(process.env)),

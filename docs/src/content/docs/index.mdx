@@ -42,7 +42,7 @@ A workflow charges a card, then waits five minutes for a cancellation. If the wo
 // src/workflows/order.workflow.ts
 import { condition } from '@temporalio/workflow';
 import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
-import { PaymentActivities } from '../../.norn/activities.js';
+import { PaymentActivities } from '../../.norn/activities';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
 export class OrderWorkflow {
@@ -89,7 +89,7 @@ export class OrderWorkflow {
 }
 // @filename: contracts.ts
 import { contract } from '@norn-ts/core';
-import type { OrderWorkflow as OrderWorkflow$ } from './order.workflow.js';
+import type { OrderWorkflow as OrderWorkflow$ } from './order.workflow';
 export const OrderWorkflow = contract<typeof OrderWorkflow$>()({
   name: 'OrderWorkflow',
   taskQueue: 'orders',
@@ -100,7 +100,7 @@ export const OrderWorkflow = contract<typeof OrderWorkflow$>()({
 // @filename: api.ts
 import { createClient } from '@norn-ts/client';
 // ---cut---
-import { OrderWorkflow } from './contracts.js';
+import { OrderWorkflow } from './contracts';
 
 const norn = createClient();
 // The workflow ID, order-o-42, comes from the template.
@@ -124,7 +124,7 @@ Norn doesn't hide Temporal. It removes the repetition around it. Here is the sam
 ```ts
 // workflows.ts
 import { condition, defineQuery, defineSignal, proxyActivities, setHandler } from '@temporalio/workflow';
-import type * as activities from './activities.js';
+import type * as activities from './activities';
 
 export const cancelSignal = defineSignal<[reason: string]>('cancel');
 export const statusQuery = defineQuery<string>('getStatus');

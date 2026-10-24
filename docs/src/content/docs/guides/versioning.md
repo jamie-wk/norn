@@ -112,7 +112,7 @@ You can also download a history from the Temporal UI or with `temporal workflow 
 import { fileURLToPath } from 'node:url';
 import { it } from 'vitest';
 import { assertReplays, loadHistories } from '@norn-ts/testing';
-import { registry } from '../.norn/registry.js';
+import { registry } from '../.norn/registry';
 
 it('replays recorded production histories', async () => {
   const histories = await loadHistories(fileURLToPath(new URL('./histories', import.meta.url)));

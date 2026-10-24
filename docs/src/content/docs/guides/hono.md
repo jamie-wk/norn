@@ -11,7 +11,7 @@ pnpm add @norn-ts/hono @norn-ts/client hono @temporalio/client @temporalio/commo
 ```ts
 import { Hono } from 'hono';
 import { hmacSha256Verifier, nornErrorHandler, signalAction, temporal, temporalWebhook, type NornEnv } from '@norn-ts/hono';
-import { PaymentWorkflow } from '../.norn/contracts.js';
+import { PaymentWorkflow } from '../.norn/contracts';
 
 const app = new Hono<NornEnv>();
 // client from TEMPORAL_ADDRESS / TEMPORAL_NAMESPACE / TEMPORAL_API_KEY

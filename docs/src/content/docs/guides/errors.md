@@ -97,7 +97,7 @@ When an activity finally fails (non-retryable, or out of retries), the workflow 
 
 ```ts
 import { asFailure, isFailure } from '@norn-ts/workflow';
-import { PaymentDeclinedError } from '../domain.js';
+import { PaymentDeclinedError } from '../domain';
 
 try {
   const charge = await this.payments.charge(this.orderId, total, input.card);

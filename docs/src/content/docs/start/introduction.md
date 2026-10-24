@@ -13,7 +13,7 @@ With Norn you write **workflows as decorated classes**, **activities as decorate
 // src/workflows/order.workflow.ts
 import { condition } from '@temporalio/workflow';
 import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
-import { PaymentActivities } from '../../.norn/activities.js';
+import { PaymentActivities } from '../../.norn/activities';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
 export class OrderWorkflow {
@@ -44,8 +44,8 @@ export class OrderWorkflow {
 ```ts
 // src/activities/payment.activities.ts
 import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
-import { CardDeclinedError } from '../errors.js';
-import { PaymentGateway } from '../services/payment-gateway.js';
+import { CardDeclinedError } from '../errors';
+import { PaymentGateway } from '../services/payment-gateway';
 
 @Activities({ prefix: 'payments.' })
 export class PaymentActivities {
@@ -67,7 +67,7 @@ export class PaymentActivities {
 ```ts
 // api: anywhere, e.g. a Hono route
 import { createClient } from '@norn-ts/client';
-import { OrderWorkflow } from '../.norn/contracts.js';
+import { OrderWorkflow } from '../.norn/contracts';
 
 const norn = createClient();
 // ID: order-o-42

@@ -1,8 +1,8 @@
 import { expect, it } from 'vitest';
 import { mockActivities, useTestEnv } from '@norn-ts/testing/vitest';
-import { PaymentActivities } from '../.norn/activities.js';
-import { OrderWorkflow } from '../.norn/contracts.js';
-import { registry } from '../.norn/registry.js';
+import { PaymentActivities } from '../.norn/activities';
+import { OrderWorkflow } from '../.norn/contracts';
+import { registry } from '../.norn/registry';
 
 const payments = mockActivities(PaymentActivities, {
   charge: async (orderId, cents) => ({ id: `ch_${orderId}`, cents }),

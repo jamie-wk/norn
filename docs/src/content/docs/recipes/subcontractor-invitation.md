@@ -84,8 +84,8 @@ The activities need a mailer and somewhere to store subcontracts. Both are inter
 ```ts
 // src/services/mailer.ts
 import { Service, token } from '@norn-ts/activity';
-import { InvalidRecipientError } from '../invitations/domain.js';
-import { AppConfig } from './config.js';
+import { InvalidRecipientError } from '../invitations/domain';
+import { AppConfig } from './config';
 
 export interface Mailer {
   send(message: { to: string; template: string; data: Record<string, unknown>; idempotencyKey: string }): Promise<{ messageId: string }>;
@@ -112,8 +112,8 @@ export class HttpMailer implements Mailer {
 ```ts
 // src/services/subcontracts.ts
 import { Service, token } from '@norn-ts/activity';
-import type { InvitationTerms } from '../invitations/domain.js';
-import { Db } from './db.js';
+import type { InvitationTerms } from '../invitations/domain';
+import { Db } from './db';
 
 export interface SubcontractRecord {
   invitationId: string;
@@ -155,10 +155,10 @@ export class PgSubcontractRepository implements SubcontractRepository {
 ```ts
 // src/activities/invitation.activities.ts
 import { Activities, Activity, NonRetryable, idempotencyKey } from '@norn-ts/activity';
-import { InvalidRecipientError, type InvitationTerms } from '../invitations/domain.js';
-import { AppConfig } from '../services/config.js';
-import { Mailer } from '../services/mailer.js';
-import { SubcontractRepository, type SubcontractRecord } from '../services/subcontracts.js';
+import { InvalidRecipientError, type InvitationTerms } from '../invitations/domain';
+import { AppConfig } from '../services/config';
+import { Mailer } from '../services/mailer';
+import { SubcontractRepository, type SubcontractRecord } from '../services/subcontracts';
 
 export interface InvitationEmail {
   invitationId: string;
@@ -221,7 +221,7 @@ export class InvitationActivities {
 import { condition } from '@temporalio/workflow';
 import { toMs } from '@norn-ts/core';
 import { Query, Signal, Update, Validate, Workflow, setSearchAttributes, transitions, useActivities } from '@norn-ts/workflow';
-import { InvitationActivities } from '../../.norn/activities.js';
+import { InvitationActivities } from '../../.norn/activities';
 import {
   InvalidTermsError,
   InvitationClosedError,
@@ -230,7 +230,7 @@ import {
   type InvitationTerms,
   type InvitationView,
   type TermsChange,
-} from '../invitations/domain.js';
+} from '../invitations/domain';
 
 @Workflow({
   taskQueue: 'invitations',
@@ -395,9 +395,9 @@ Things worth noticing:
 // src/api/invitations.ts
 import { Hono } from 'hono';
 import type { NornEnv } from '@norn-ts/hono';
-import { SubcontractorInvitationWorkflow } from '../../.norn/contracts.js';
-import type { InvitationTerms, TermsChange } from '../invitations/domain.js';
-import { currentCompany, currentUser } from './auth.js';
+import { SubcontractorInvitationWorkflow } from '../../.norn/contracts';
+import type { InvitationTerms, TermsChange } from '../invitations/domain';
+import { currentCompany, currentUser } from './auth';
 
 export const invitations = new Hono<NornEnv>();
 const flow = (c: { var: NornEnv['Variables'] }) => c.var.norn.workflow(SubcontractorInvitationWorkflow);
@@ -455,10 +455,10 @@ Time-skipping makes a 14-day workflow a sub-second test:
 // test/subcontractor-invitation.test.ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockActivities, useTestEnv } from '@norn-ts/testing/vitest';
-import { InvitationActivities } from '../.norn/activities.js';
-import { SubcontractorInvitationWorkflow } from '../.norn/contracts.js';
-import { registry } from '../.norn/registry.js';
-import type { InvitationInput } from '../src/invitations/domain.js';
+import { InvitationActivities } from '../.norn/activities';
+import { SubcontractorInvitationWorkflow } from '../.norn/contracts';
+import { registry } from '../.norn/registry';
+import type { InvitationInput } from '../src/invitations/domain';
 
 const notify = mockActivities(InvitationActivities, {
   sendInvitation: async () => ({ messageId: 'm-invite' }),

@@ -30,9 +30,9 @@ Requires Node 22.18+ and TypeScript with **TC39 standard decorators** (`target` 
 import { condition } from '@temporalio/workflow';
 import { Query, Signal, Update, Validate, Workflow, asFailure, setSearchAttributes, transitions, useActivities, useChild } from '@norn-ts/workflow';
 // generated, workflow-safe
-import { InventoryActivities, PaymentActivities } from '../../.norn/activities.js';
-import { InvalidItemError, PaymentDeclinedError, type LineItem, type OrderInput } from '../domain.js';
-import { ShipmentWorkflow } from './shipment.workflow.js';
+import { InventoryActivities, PaymentActivities } from '../../.norn/activities';
+import { InvalidItemError, PaymentDeclinedError, type LineItem, type OrderInput } from '../domain';
+import { ShipmentWorkflow } from './shipment.workflow';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}', searchAttributes: { CustomerId: 'keyword', OrderStatus: 'keyword' } })
 export class OrderWorkflow {

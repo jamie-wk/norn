@@ -13,7 +13,7 @@ pnpm add @norn-ts/hono @norn-ts/client hono @temporalio/client @temporalio/commo
 ```ts
 import { Hono } from 'hono';
 import { nornErrorHandler, temporal, type NornEnv } from '@norn-ts/hono';
-import { Orders } from './.norn/contracts.js';
+import { Orders } from './.norn/contracts';
 
 const app = new Hono<NornEnv>();
 app.use(temporal({ address: process.env.TEMPORAL_ADDRESS }));

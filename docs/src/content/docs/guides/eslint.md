@@ -96,12 +96,12 @@ Matching is done on the specifier string, loosely normalised (`.` and `..` segme
 // Reported
 import { readFileSync } from 'node:fs';
 // use .norn/activities.js
-import { PaymentActivities } from '../activities/payment.activities.js';
+import { PaymentActivities } from '../activities/payment.activities';
 import { Connection } from '@temporalio/client';
 
 // Fine
-import type { PaymentActivities as PaymentActivitiesClass } from '../activities/payment.activities.js';
-import { PaymentActivities } from '../../.norn/activities.js';
+import type { PaymentActivities as PaymentActivitiesClass } from '../activities/payment.activities';
+import { PaymentActivities } from '../../.norn/activities';
 import { Workflow, useActivities } from '@norn-ts/workflow';
 import { sleep } from '@temporalio/workflow';
 ```

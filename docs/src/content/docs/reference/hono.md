@@ -32,7 +32,7 @@ Requires Node 22.18+ for the client parts. The package itself uses only Web-stan
 ```ts
 import { Hono } from 'hono';
 import { nornErrorHandler, temporal, type NornEnv } from '@norn-ts/hono';
-import { Orders } from './.norn/contracts.js';
+import { Orders } from './.norn/contracts';
 
 const app = new Hono<NornEnv>();
 

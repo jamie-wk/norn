@@ -6,7 +6,7 @@ Temporal [schedules](https://docs.temporal.io/schedule) start a workflow on a ca
 
 ```ts
 import { Schedule, Workflow, useActivities } from '@norn-ts/workflow';
-import { NotificationActivities } from '../../.norn/activities.js';
+import { NotificationActivities } from '../../.norn/activities';
 
 /** Emails the ops team every morning. */
 @Workflow({ taskQueue: 'reports' })

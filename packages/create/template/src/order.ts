@@ -2,7 +2,7 @@
 // pnpm order cancel <id>   cancels it (and refunds it) within the cancellation window
 // pnpm order status <id>   asks a running order for its status
 import { createClient } from '@norn-ts/client';
-import { OrderWorkflow } from '../.norn/contracts.js';
+import { OrderWorkflow } from '../.norn/contracts';
 
 const [command = 'start', id] = process.argv.slice(2);
 // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE and TEMPORAL_API_KEY configure the connection.

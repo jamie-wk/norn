@@ -7,7 +7,7 @@ title: "Worker & deployment"
 ```ts
 // src/worker.ts
 import { createWorker, installRuntime } from '@norn-ts/worker';
-import { registry } from '../.norn/registry.js';
+import { registry } from '../.norn/registry';
 
 // log level and Prometheus metrics from the environment; optional
 installRuntime();
@@ -124,14 +124,22 @@ Every process registers all activities and the full workflow bundle; it simply p
 
 ## Production builds: compile, then bundle
 
-In development `createWorker()` bundles the workflows at startup from the `.ts` sources, which takes a few seconds and needs the bundler toolchain at runtime. In production, build the bundle once, at build time, and ship it:
+In development `createWorker()` bundles the workflows at startup from the `.ts` sources, which takes a few seconds and needs the bundler toolchain at runtime. In production, build the workflow bundle once, at build time, and ship it with the compiled worker:
 
 ```sh
-norn gen --check                               # generated files are committed and current
-tsc -p tsconfig.build.json                     # dist/src/**, dist/.norn/** (registry now points at workflows.js)
-norn bundle --out dist/workflow-bundle.js      # the workflow bundle
-NORN_WORKFLOW_BUNDLE=dist/workflow-bundle.js node dist/src/worker.js
+# generated files are committed and current
+norn gen --check
+tsc --noEmit
+# the workflow bundle
+norn bundle --out dist/workflow-bundle.js
+# the worker process; esbuild lowers the decorators and leaves node_modules external
+esbuild src/worker.ts --bundle --platform=node --target=node22 --format=esm --packages=external --outdir=dist
+NORN_WORKFLOW_BUNDLE=dist/workflow-bundle.js node dist/worker.js
 ```
+
+Always set `NORN_WORKFLOW_BUNDLE` for a bundled worker. Without it, the worker tries to bundle the workflows at startup from a path next to `dist/worker.js`, and fails.
+
+This is the build `pnpm create @norn-ts` projects use, with `"moduleResolution": "Bundler"` and extensionless imports. If you compile with plain `tsc` instead (`"moduleResolution": "NodeNext"`, relative imports with extensions, see [Manual setup](/norn/guides/manual-setup/#2-typescript)), run `tsc -p tsconfig.build.json` in place of esbuild and start `dist/src/worker.js`.
 
 `norn bundle` bundles the barrel in `outDir`: `.norn/workflows.ts`, or `workflows.js` only when there is no `.ts`, so it reads the sources rather than the `tsc` output. `--out` defaults to `dist/workflow-bundle.js`; add `--codec` if you use `@norn-ts/codec`'s payload converter. See [the CLI page](/norn/reference/cli/#norn-bundle).
 
@@ -142,7 +150,7 @@ If you'd rather script it, `bundleWorkflows()` does the same thing:
 import { bundleWorkflows } from '@norn-ts/worker';
 // only if you use @norn-ts/codec
 import { resolvePayloadConverterPath } from '@norn-ts/codec';
-import { registry } from '../dist/.norn/registry.js';
+import { registry } from '../.norn/registry';
 
 await bundleWorkflows(registry, {
   outFile: 'dist/workflow-bundle.js',
@@ -164,9 +172,8 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm norn gen --check \
- && pnpm tsc -p tsconfig.build.json \
- && pnpm norn bundle --out dist/workflow-bundle.js \
+# norn gen --check, tsc --noEmit, norn bundle and esbuild, as above, in a "build" script
+RUN pnpm run build \
  && pnpm prune --prod
 
 FROM node:24-slim
@@ -184,7 +191,7 @@ EXPOSE 8080 9464
 HEALTHCHECK --interval=15s --timeout=3s --start-period=30s \
   CMD node -e "fetch('http://127.0.0.1:8080/healthz').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
 # Exec form, so node is PID 1 and receives SIGTERM directly.
-CMD ["node", "dist/src/worker.js"]
+CMD ["node", "dist/worker.js"]
 ```
 
 Use a Debian-based image such as `node:24-slim`: the Temporal SDK includes a native module built for glibc. `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_API_KEY` and, for versioning, `NORN_DEPLOYMENT_NAME` / `NORN_BUILD_ID` come from your deployment.

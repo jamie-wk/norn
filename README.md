@@ -13,7 +13,7 @@ The same order workflow, with the raw SDK:
 ```ts
 // workflows.ts
 import { condition, defineQuery, defineSignal, proxyActivities, setHandler } from '@temporalio/workflow';
-import type * as activities from './activities.js';
+import type * as activities from './activities';
 
 export const cancelSignal = defineSignal<[reason: string]>('cancel');
 export const statusQuery = defineQuery<string>('getStatus');
@@ -55,7 +55,7 @@ With Norn:
 import { condition } from '@temporalio/workflow';
 import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
 // generated, workflow-safe
-import { PaymentActivities } from '../../.norn/activities.js';
+import { PaymentActivities } from '../../.norn/activities';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
 export class OrderWorkflow {
@@ -86,7 +86,7 @@ export class OrderWorkflow {
 ```ts
 // src/activities/payment.activities.ts
 import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
-import { CardDeclinedError, PaymentGateway } from '../services/payment-gateway.js';
+import { CardDeclinedError, PaymentGateway } from '../services/payment-gateway';
 
 @Activities({ prefix: 'payments.' })
 export class PaymentActivities {
@@ -140,56 +140,21 @@ The Temporal SDK packages are peer dependencies, so your app controls the SDK ve
 
 ## Quick start
 
-1. **TypeScript**: set `target` to ES2022 or later and do **not** set `experimentalDecorators` or `emitDecoratorMetadata`. `verbatimModuleSyntax` is recommended, since Norn relies on `import type` to keep activity code out of workflows and worker code out of your API.
+You need Node.js 22.18 or later. The starter downloads and runs a local Temporal server for you.
 
-2. **Configure `norn gen`**:
+```sh
+pnpm create @norn-ts my-app
+cd my-app
+pnpm dev
+```
 
-   ```ts
-   // norn.config.ts
-   import { defineConfig } from '@norn-ts/cli';
-
-   export default defineConfig({ include: ['src/**/*.ts'] });
-   ```
-
-   Add `providers: 'src/providers.ts'` once you register configuration or SDK clients with `provide()`.
-
-3. **Write** a workflow, an activity class and its services (as above), then **generate**:
-
-   ```sh
-   pnpm norn gen   # writes .norn/ and norn.lock.json; commit both, run `norn gen --check` in CI
-   ```
-
-4. **Run a worker** (with a local server from `temporal server start-dev`):
-
-   ```ts
-   // src/worker.ts
-   import { createWorker } from '@norn-ts/worker';
-   import { registry } from '../.norn/registry.js';
-
-   // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
-   const worker = await createWorker({ registry });
-   // until SIGTERM, then drains gracefully
-   await worker.run();
-   ```
-
-5. **Start workflows** from any API:
-
-   ```ts
-   import { createClient } from '@norn-ts/client';
-   import { OrderWorkflow } from '../.norn/contracts.js';
-
-   const norn = createClient();
-   const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-1', cents: 1999 });
-   ```
-
-6. **Test it** with `createTestEnv()` from `@norn-ts/testing` and the `standardDecorators()` Vite plugin from `@norn-ts/testing/vite`.
-
-The [Getting started guide](https://jamie-wk.github.io/norn/guide/getting-started) walks through all of this from an empty directory, and [`examples/orders`](./examples/orders) is a complete app: worker, generated contracts, a Hono API and tests.
+Then run `pnpm order` in another terminal and open the link it prints. The [quickstart](https://jamie-wk.github.io/norn/start/quickstart/) explains what you just ran, the [tutorial](https://jamie-wk.github.io/norn/tutorial/) grows it into an order service, and [Manual setup](https://jamie-wk.github.io/norn/guides/manual-setup/) adds Norn to an existing project. [`examples/orders`](./examples/orders) is a complete app: worker, generated contracts, a Hono API and tests.
 
 ## Packages
 
 | Package | Description |
 | --- | --- |
+| [`@norn-ts/create`](./packages/create) | `pnpm create @norn-ts my-app`: a runnable starter project with a workflow, activities, a worker, tests and `pnpm dev`. |
 | [`@norn-ts/core`](./packages/core) | Workflow-safe building blocks: contracts, durations, ID templates, errors with codes and HTTP statuses, `transitions()`, business-day calendars. Zero runtime dependencies. |
 | [`@norn-ts/workflow`](./packages/workflow) | `@Workflow`, `@Signal`, `@Query`, `@Update`, `@Validate`, `@Schedule`, `useActivities()`, `useChild()`, `useExternal()`, `continueAsNew()`, `asFailure()`, `setSearchAttributes()`. |
 | [`@norn-ts/activity`](./packages/activity) | `@Activities`, `@Activity`, `@NonRetryable`, `@Service`, tokens, `provide()`, the dependency container, error mapping and activity context helpers. |

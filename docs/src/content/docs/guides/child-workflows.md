@@ -22,7 +22,7 @@ export class ShipmentWorkflow {
 ```ts
 // src/workflows/order.workflow.ts
 import { Workflow, useChild } from '@norn-ts/workflow';
-import { ShipmentWorkflow } from './shipment.workflow.js';
+import { ShipmentWorkflow } from './shipment.workflow';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}' })
 export class OrderWorkflow {
@@ -100,7 +100,7 @@ Use a child workflow when the sub-process is long-running, has its own timers or
 
 ```ts
 import { useExternal } from '@norn-ts/workflow';
-import { LoyaltyWorkflow } from './loyalty.workflow.js';
+import { LoyaltyWorkflow } from './loyalty.workflow';
 
 // from inside a workflow
 await useExternal(LoyaltyWorkflow, { customerId: input.customerId }).signal('orderCompleted', { orderId, cents });

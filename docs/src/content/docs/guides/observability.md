@@ -103,7 +103,7 @@ import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { createWorker } from '@norn-ts/worker';
-import { registry } from '../.norn/registry.js';
+import { registry } from '../.norn/registry';
 
 const otel = new OpenTelemetryPlugin({
   resource: resourceFromAttributes({ 'service.name': 'orders-worker' }),

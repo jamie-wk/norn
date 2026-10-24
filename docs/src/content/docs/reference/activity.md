@@ -27,7 +27,7 @@ pnpm add @norn-ts/activity @temporalio/activity @temporalio/common
 ```ts
 // src/services/payment-gateway.ts
 import { Service, token } from '@norn-ts/activity';
-import { HttpClient } from './http.js';
+import { HttpClient } from './http';
 
 export interface PaymentGateway {
   charge(request: { orderId: string; amountCents: number; card: string; idempotencyKey: string }): Promise<Charge>;
@@ -46,8 +46,8 @@ export class HttpPaymentGateway implements PaymentGateway {
 ```ts
 // src/activities/payment.activities.ts
 import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
-import { PaymentDeclinedError } from '../domain.js';
-import { PaymentGateway } from '../services/payment-gateway.js';
+import { PaymentDeclinedError } from '../domain';
+import { PaymentGateway } from '../services/payment-gateway';
 
 @Activities({ prefix: 'payments.' })
 export class PaymentActivities {

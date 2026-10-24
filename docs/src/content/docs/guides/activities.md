@@ -7,7 +7,7 @@ Activities are where side effects happen: HTTP calls, database writes, emails, p
 ```ts
 // src/activities/notification.activities.ts
 import { Activities, Activity, NonRetryable, idempotencyKey } from '@norn-ts/activity';
-import { Mailer, InvalidAddressError } from '../services/mailer.js';
+import { Mailer, InvalidAddressError } from '../services/mailer';
 
 @Activities({ prefix: 'notify.' })
 export class NotificationActivities {
@@ -23,7 +23,7 @@ export class NotificationActivities {
 
 ```ts
 // in a workflow
-import { NotificationActivities } from '../../.norn/activities.js';
+import { NotificationActivities } from '../../.norn/activities';
 
 export class OrderWorkflow {
   private readonly notify = useActivities(NotificationActivities);

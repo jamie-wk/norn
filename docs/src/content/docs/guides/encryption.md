@@ -32,8 +32,8 @@ export const currentKeyId = process.env.NORN_ENCRYPTION_KEY_ID ?? '2026-10';
 ```ts
 import { createDataConverter } from '@norn-ts/codec';
 import { createWorker } from '@norn-ts/worker';
-import { registry } from '../.norn/registry.js';
-import { currentKeyId, keys } from './codec.js';
+import { registry } from '../.norn/registry';
+import { currentKeyId, keys } from './codec';
 
 const worker = await createWorker({ registry, dataConverter: createDataConverter({ keys, currentKeyId }) });
 await worker.run();
@@ -95,7 +95,7 @@ With encryption on, the Temporal UI and `temporal` CLI show ciphertext. A **code
 import { Hono } from 'hono';
 import { createEncryptionCodec } from '@norn-ts/codec';
 import { codecServer } from '@norn-ts/hono/codec-server';
-import { currentKeyId, keys } from './codec.js';
+import { currentKeyId, keys } from './codec';
 
 const app = new Hono();
 app.route(

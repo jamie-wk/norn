@@ -55,7 +55,7 @@ API code imports the contract and hands it to the client:
 
 ```ts
 import { createClient } from '@norn-ts/client';
-import { OrderWorkflow } from '../.norn/contracts.js';
+import { OrderWorkflow } from '../.norn/contracts';
 
 const norn = createClient();
 const order = await norn.workflow(OrderWorkflow).start({ orderId: 'o-42', cents: 1999 });

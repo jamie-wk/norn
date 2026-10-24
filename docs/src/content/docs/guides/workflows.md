@@ -7,7 +7,7 @@ A Norn workflow is a class decorated with `@Workflow`. Its `run()` method is the
 ```ts
 import { sleep } from '@temporalio/workflow';
 import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
-import { ReminderActivities } from '../../.norn/activities.js';
+import { ReminderActivities } from '../../.norn/activities';
 
 export interface ReminderInput {
   userId: string;

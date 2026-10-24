@@ -110,7 +110,7 @@ Given this workflow and activity class:
 ```ts
 // src/workflows/order.ts
 import { Query, Signal, Update, Validate, Workflow, useActivities } from '@norn-ts/workflow';
-import { PaymentActivities } from '../../.norn/activities.js';
+import { PaymentActivities } from '../../.norn/activities';
 
 @Workflow({ taskQueue: 'orders', id: 'order-{orderId}', searchAttributes: { CustomerId: 'keyword' } })
 export class OrderWorkflow {
@@ -471,7 +471,7 @@ import { readFile } from 'node:fs/promises';
 import { Worker } from '@temporalio/worker';
 import { historyFromJSON } from '@temporalio/common/lib/proto-utils.js';
 import { bundleWorkflows } from '@norn-ts/worker';
-import { registry } from '../.norn/registry.js';
+import { registry } from '../.norn/registry';
 
 const history = historyFromJSON(JSON.parse(await readFile('test/histories/order-123.json', 'utf8')));
 await Worker.runReplayHistory({ workflowBundle: await bundleWorkflows(registry) }, history);

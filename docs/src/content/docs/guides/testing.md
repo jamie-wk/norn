@@ -42,9 +42,9 @@ Workflow code itself is bundled by the worker with its own compiler settings, so
 ```ts
 import { expect, it } from 'vitest';
 import { createTestEnv, mockActivities } from '@norn-ts/testing';
-import { NotificationActivities, PaymentActivities } from '../.norn/activities.js';
-import { OrderWorkflow } from '../.norn/contracts.js';
-import { registry } from '../.norn/registry.js';
+import { NotificationActivities, PaymentActivities } from '../.norn/activities';
+import { OrderWorkflow } from '../.norn/contracts';
+import { registry } from '../.norn/registry';
 
 it('refunds when the customer cancels inside the window', async () => {
   const payments = mockActivities(PaymentActivities, {
@@ -149,8 +149,8 @@ If the activity uses context helpers (`heartbeat()`, `idempotencyKey()`, `cancel
 ```ts
 import { MockActivityEnvironment } from '@temporalio/testing';
 import { ApplicationFailure } from '@temporalio/common';
-import { registry } from '../.norn/registry.js';
-import { PaymentGateway } from '../src/services/payment-gateway.js';
+import { registry } from '../.norn/registry';
+import { PaymentGateway } from '../src/services/payment-gateway';
 
 it('makes declined cards non-retryable', async () => {
   await using container = registry.createContainer({ overrides: [[PaymentGateway, decliningGateway]] });
@@ -174,8 +174,8 @@ API routes shouldn't need a Temporal server to test. `createFakeClient()` is an 
 import { expect, it } from 'vitest';
 import { createFakeClient } from '@norn-ts/testing';
 import { UpdateRejectedError } from '@norn-ts/client';
-import { buildApp } from '../src/api.js';
-import { PaymentWorkflow } from '../.norn/contracts.js';
+import { buildApp } from '../src/api';
+import { PaymentWorkflow } from '../.norn/contracts';
 
 it('starts a payment and rejects a duplicate', async () => {
   const fake = createFakeClient();

@@ -67,9 +67,9 @@ Starts a Temporal server, a Norn client and, with a registry, a worker for your 
 ```ts
 import { expect, it } from 'vitest';
 import { createTestEnv, mockActivities } from '@norn-ts/testing';
-import { InventoryActivities, NotificationActivities, PaymentActivities } from '../.norn/activities.js';
-import { OrderWorkflow } from '../.norn/contracts.js';
-import { registry } from '../.norn/registry.js';
+import { InventoryActivities, NotificationActivities, PaymentActivities } from '../.norn/activities';
+import { OrderWorkflow } from '../.norn/contracts';
+import { registry } from '../.norn/registry';
 
 it('refunds when canceled during the window', async () => {
   const payments = mockActivities(PaymentActivities, {

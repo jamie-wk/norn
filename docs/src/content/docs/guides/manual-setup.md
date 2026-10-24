@@ -55,8 +55,8 @@ Norn uses **TC39 standard decorators**, which TypeScript supports since 5.0 with
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "lib": ["ES2023", "ESNext.Disposable"],
     "types": ["node"],
     "strict": true,
@@ -69,19 +69,16 @@ Norn uses **TC39 standard decorators**, which TypeScript supports since 5.0 with
 }
 ```
 
-```json
-// tsconfig.build.json: compiles the app to dist/
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": { "noEmit": false, "rootDir": ".", "outDir": "dist" },
-  "include": ["src", ".norn"]
-}
-```
+`"moduleResolution": "Bundler"` lets you write relative imports without a file extension (`'../.norn/registry'`), because the code is always run by a tool that resolves them: `tsx` or Vitest in development, and esbuild for production builds (step 7). `tsc` only type-checks.
 
 `verbatimModuleSyntax` is recommended: Norn relies on `import type` to keep activity code out of the workflow sandbox and worker code out of your API, and this flag makes TypeScript keep your imports exactly as written. `ESNext.Disposable` gives you the types for `await using`, which Norn's workers, clients and test environments support.
 
 :::tip[Running TypeScript directly]
-Node's built-in type stripping does not support decorators, because they are not erasable syntax. Compile with `tsc` (as below), or use a runner that lowers standard decorators, such as one based on esbuild. Workflow code is different: the worker bundles it with its own compiler settings, so it can stay TypeScript in development.
+Node's built-in type stripping does not support decorators, because they are not erasable syntax. Run TypeScript with a tool that lowers standard decorators, such as `tsx`, and build with esbuild (as below). Workflow code is different: the worker bundles it with its own compiler settings.
+:::
+
+:::note[Prefer plain `tsc` and `node`?]
+Then Node's ESM loader runs your compiled files directly, and it needs a file extension on every relative import. Use `"module": "NodeNext"`, write imports with `.js` extensions (or `.ts` ones with `allowImportingTsExtensions` and `rewriteRelativeImportExtensions`, plus `importExtension: '.ts'` in `norn.config.ts`), and build with `tsc` instead of esbuild.
 :::
 
 ## 3. Configure `norn gen`
@@ -142,7 +139,7 @@ Error classes set `name` explicitly (to the class name). Norn records an error's
 ```ts
 // src/activities/payment.activities.ts
 import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
-import { CardDeclinedError, PaymentGateway } from '../services/payment-gateway.js';
+import { CardDeclinedError, PaymentGateway } from '../services/payment-gateway';
 
 @Activities({ prefix: 'payments.' })
 export class PaymentActivities {
@@ -170,7 +167,7 @@ There is no `inject: [...]` here: `norn gen` reads the constructor's parameter t
 // src/workflows/order.workflow.ts
 import { condition } from '@temporalio/workflow';
 import { Query, Signal, Workflow, useActivities } from '@norn-ts/workflow';
-import { PaymentActivities } from '../../.norn/activities.js';
+import { PaymentActivities } from '../../.norn/activities';
 
 export interface OrderInput {
   orderId: string;
@@ -229,9 +226,9 @@ Commit `.norn/` and `norn.lock.json`; CI runs `norn gen --check` to make sure th
 {
   "scripts": {
     "gen": "norn gen",
-    "build": "norn gen && tsc -p tsconfig.build.json",
-    "worker": "node dist/src/worker.js",
-    "api": "node dist/src/api.js",
+    "build": "norn gen && tsc --noEmit && norn bundle --out dist/workflow-bundle.js && esbuild src/worker.ts src/api.ts --bundle --platform=node --target=node22 --format=esm --packages=external --outdir=dist",
+    "worker": "NORN_WORKFLOW_BUNDLE=dist/workflow-bundle.js node dist/worker.js",
+    "api": "node dist/api.js",
     "test": "norn gen && vitest run",
     "typecheck": "tsc --noEmit"
   }
@@ -243,14 +240,14 @@ Commit `.norn/` and `norn.lock.json`; CI runs `norn gen --check` to make sure th
 ```ts
 // src/worker.ts
 import { createWorker } from '@norn-ts/worker';
-import { registry } from '../.norn/registry.js';
+import { registry } from '../.norn/registry';
 
 const worker = await createWorker({ registry });
 // until SIGTERM / SIGINT, then drains gracefully
 await worker.run();
 ```
 
-`createWorker()` connects to `TEMPORAL_ADDRESS` (default `localhost:7233`), builds the activities through the container, bundles the workflows, and polls every task queue in the registry. Build and run it:
+`createWorker()` connects to `TEMPORAL_ADDRESS` (default `localhost:7233`), builds the activities through the container, and polls every task queue in the registry. The `build` script type-checks, bundles the workflows once with `norn bundle`, and bundles the worker and API with esbuild, which lowers the decorators. `--packages=external` leaves your dependencies in `node_modules`. Build and run it:
 
 ```sh
 pnpm build
@@ -266,7 +263,7 @@ With Hono:
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { nornErrorHandler, temporal, type NornEnv } from '@norn-ts/hono';
-import { OrderWorkflow } from '../.norn/contracts.js';
+import { OrderWorkflow } from '../.norn/contracts';
 
 const app = new Hono<NornEnv>();
 // a Norn client on c.var.norn, plus correlation IDs
@@ -299,7 +296,7 @@ Without Hono, use the client directly in any framework:
 
 ```ts
 import { createClient } from '@norn-ts/client';
-import { OrderWorkflow } from '../.norn/contracts.js';
+import { OrderWorkflow } from '../.norn/contracts';
 
 // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
 const norn = createClient();
@@ -327,9 +324,9 @@ export default defineConfig({
 // test/order.workflow.test.ts
 import { expect, it } from 'vitest';
 import { mockActivities, useTestEnv } from '@norn-ts/testing/vitest';
-import { PaymentActivities } from '../.norn/activities.js';
-import { OrderWorkflow } from '../.norn/contracts.js';
-import { registry } from '../.norn/registry.js';
+import { PaymentActivities } from '../.norn/activities';
+import { OrderWorkflow } from '../.norn/contracts';
+import { registry } from '../.norn/registry';
 
 const pay = mockActivities(PaymentActivities, {
   charge: async (orderId, cents) => ({ id: `ch_${orderId}`, cents }),
@@ -378,7 +375,6 @@ acme-orders/
 ├── norn.config.ts
 ├── norn.lock.json             # rename protection; committed
 ├── tsconfig.json
-├── tsconfig.build.json
 └── vitest.config.ts
 ```
 

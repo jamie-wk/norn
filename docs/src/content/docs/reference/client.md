@@ -21,7 +21,7 @@ Requires Node 22.18+ (the Temporal client uses gRPC; Bun and Deno work with Node
 
 ```ts
 import { createClient } from '@norn-ts/client';
-import { OrderWorkflow } from './.norn/contracts.js';
+import { OrderWorkflow } from './.norn/contracts';
 
 // TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
 await using norn = createClient();

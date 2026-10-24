@@ -28,7 +28,7 @@ Requires Node 22.18+ on a glibc-based system. The Temporal SDK's core is a nativ
 import { createWorker, installRuntime } from '@norn-ts/worker';
 // optional: payload encryption
 import { createDataConverter } from '@norn-ts/codec';
-import { registry } from '../.norn/registry.js';
+import { registry } from '../.norn/registry';
 
 // NORN_LOG_LEVEL, NORN_METRICS_ADDRESS; before any connection or worker
 installRuntime();
@@ -185,7 +185,7 @@ In development `createWorker()` bundles the registry's workflows at startup. In 
 import { bundleWorkflows } from '@norn-ts/worker';
 // only with @norn-ts/codec's data converter
 import { resolvePayloadConverterPath } from '@norn-ts/codec';
-import { registry } from '../dist/.norn/registry.js';
+import { registry } from '../dist/.norn/registry';
 
 await bundleWorkflows(registry, { outFile: 'dist/workflow-bundle.js', payloadConverterPath: resolvePayloadConverterPath() });
 // then run workers with NORN_WORKFLOW_BUNDLE=dist/workflow-bundle.js

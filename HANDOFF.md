@@ -28,8 +28,7 @@ drain, `codecServer` requires `auth` and `temporalWebhook` requires `verify` (`f
 ## Deliberately left out of 1.0
 
 - Recipes: ACH payment and self-hosting on AWS ECS/CDK. Links to them were removed; add them back with the pages.
-- Per-package reference pages and comparison pages (the READMEs are the API reference; docs link to them).
-- `llms-full.txt` (`llms.txt` exists).
+- Comparison pages (per-package reference pages now live under `docs/reference/`; READMEs link to them).
 - Codec decode passes plaintext through (Temporal convention, documented). An opt-in `rejectPlaintext` could come later.
 - Review nits not done: webhook replay protection (documented: use timestamped schemes), the Temporal API polyfill
   note for mixed Node fleets, `drainHandlers` evaluating `run()`'s result before the drain, and updates that keep

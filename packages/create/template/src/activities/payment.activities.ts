@@ -1,5 +1,5 @@
 import { Activities, Activity, NonRetryable } from '@norn-ts/activity';
-import { CardDeclinedError, PaymentGateway } from '../services/payment-gateway.js';
+import { CardDeclinedError, PaymentGateway } from '../services/payment-gateway';
 
 // Activities are where I/O happens. Temporal retries them; workflows call them through .norn/activities.
 @Activities({ prefix: 'payments.' })

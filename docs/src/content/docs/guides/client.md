@@ -6,7 +6,7 @@ title: "Client"
 
 ```ts
 import { createClient } from '@norn-ts/client';
-import { OrderWorkflow } from '../.norn/contracts.js';
+import { OrderWorkflow } from '../.norn/contracts';
 
 const norn = createClient();
 

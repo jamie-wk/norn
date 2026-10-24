@@ -23,7 +23,7 @@ Commit it, so everyone working on the project, human or agent, gets the same gui
 The starter also has an `AGENTS.md`, which many coding agents read automatically. It points to the skill and the docs, and lists the three rules that matter most:
 
 - Run `pnpm gen` after changing any decorated class, and commit `.norn/` and `norn.lock.json`.
-- Workflows import activities from `.norn/activities.js`, never from `src/activities`.
+- Workflows import activities from `.norn/activities`, never from `src/activities`.
 - Check your work with `pnpm typecheck` and `pnpm test`.
 
 Add your project's own conventions to it as they come up.

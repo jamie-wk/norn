@@ -13,9 +13,9 @@ pnpm add -D @norn-ts/testing @temporalio/testing @temporalio/worker @temporalio/
 ```ts
 import { expect, it } from 'vitest';
 import { createTestEnv, mockActivities } from '@norn-ts/testing';
-import { NotificationActivities } from '../.norn/activities.js';
-import { DailyReportWorkflow } from '../.norn/contracts.js';
-import { registry } from '../.norn/registry.js';
+import { NotificationActivities } from '../.norn/activities';
+import { DailyReportWorkflow } from '../.norn/contracts';
+import { registry } from '../.norn/registry';
 
 it('emails the report', async () => {
   const notify = mockActivities(NotificationActivities, { email: async () => ({ messageId: 'm' }) });

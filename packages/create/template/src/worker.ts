@@ -1,5 +1,5 @@
 import { createWorker } from '@norn-ts/worker';
-import { registry } from '../.norn/registry.js';
+import { registry } from '../.norn/registry';
 
 // Connects to TEMPORAL_ADDRESS (default localhost:7233) and runs every workflow and activity in the registry.
 const worker = await createWorker({ registry });

@@ -12,7 +12,7 @@ pnpm add @norn-ts/client @temporalio/client @temporalio/common
 
 ```ts
 import { createClient } from '@norn-ts/client';
-import { OrderWorkflow } from './.norn/contracts.js';
+import { OrderWorkflow } from './.norn/contracts';
 
 // reads TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY
 await using norn = createClient();

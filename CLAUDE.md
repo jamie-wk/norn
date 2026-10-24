@@ -35,7 +35,8 @@ TypeScript framework on top of the Temporal TypeScript SDK 1.24, published as `@
 | `packages/eslint-plugin` | `norn/workflow-determinism`, `norn/no-activity-imports`. |
 | `examples/orders/*` | Full example: worker, generated contracts, Hono API, scriptable provider stub. |
 | `e2e/` | The example as real processes (or Docker Compose) — scenario suite. |
-| `docs/` | VitePress site (in progress). |
+| `packages/create` | `pnpm create @norn-ts`: scaffolds the starter in `template/` (`_gitignore` is renamed on copy; `.claude/skills/norn/SKILL.md` must equal `skills/norn/SKILL.md`, a test checks). |
+| `docs/` | Astro Starlight site. `ts twoslash` blocks are type-checked against workspace sources; broken links and render errors fail `pnpm docs:build`. |
 | `tooling/` | `check-deps.mjs`, `check-pack.mjs`, `test-support/temporal.ts` (test helpers). |
 
 ## Commands

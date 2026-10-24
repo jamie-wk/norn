@@ -13,7 +13,7 @@ Requires Node 22.18+ on a glibc-based system (not Alpine).
 ```ts
 // src/worker.ts
 import { createWorker, installRuntime } from '@norn-ts/worker';
-import { registry } from '../.norn/registry.js';
+import { registry } from '../.norn/registry';
 
 installRuntime();
 const worker = await createWorker({ registry });
