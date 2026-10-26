@@ -1,0 +1,140 @@
+---
+// Starlight's search, plus a command list of the sidebar's pages shown while the query is empty.
+import Default from '@astrojs/starlight/components/Search.astro';
+import { Icon } from '@astrojs/starlight/components';
+import type { ComponentProps } from 'astro/types';
+
+type Props = ComponentProps<typeof Default>;
+type IconName = ComponentProps<typeof Icon>['name'];
+
+// ⌘/Ctrl + key while the palette is open. Skips keys the browser reserves (N, T, W, Q, H, M) and the input's editing keys (A, C, V, X, Z).
+const commands: Record<string, [icon: IconName, key: string]> = {
+  'start/quickstart': ['rocket', 'S'],
+  'start/coming-from-temporal': ['random', 'F'],
+  'concepts/durable-execution': ['clock', 'E'],
+  'concepts/determinism': ['padlock', 'D'],
+  'guides/workflows': ['code-branch', 'O'],
+  'guides/activities': ['puzzle', 'I'],
+  'guides/worker': ['server', 'Y'],
+  'guides/client': ['laptop', 'L'],
+  'guides/testing': ['approve-check', 'G'],
+  reference: ['open-book', 'R'],
+  recipes: ['list-format', 'P'],
+  'project/changelog': ['document', 'U'],
+  'project/contributing': ['heart', 'B'],
+};
+const command = (href: string) =>
+  Object.entries(commands).find(([slug]) => href.endsWith(`/${slug}/`))?.[1] ?? ['document', undefined];
+
+const groups = Astro.locals.starlightRoute.sidebar.flatMap((group) =>
+  group.type === 'group'
+    ? [{ label: group.label, links: group.entries.filter((entry) => entry.type === 'link') }]
+    : [],
+);
+---
+
+<Default {...Astro.props} />
+
+<template id="norn-commands">
+  <nav class="norn-commands" aria-label="Pages">
+    {
+      groups.map((group) => (
+        <section>
+          <h2>{group.label}</h2>
+          {group.links.map((link) => {
+            const [icon, key] = command(link.href);
+            return (
+              <a href={link.href} data-key={key} aria-keyshortcuts={key && `Control+${key}`}>
+                <Icon name={icon} />
+                <span>{link.label}</span>
+                {key && (
+                  <kbd>
+                    <kbd data-mod>Ctrl</kbd>
+                    <kbd>{key}</kbd>
+                  </kbd>
+                )}
+              </a>
+            );
+          })}
+        </section>
+      ))
+    }
+  </nav>
+</template>
+
+<script>
+  const template = document.querySelector<HTMLTemplateElement>('#norn-commands')!;
+  const dialog = document.querySelector<HTMLDialogElement>('site-search dialog')!;
+  dialog.querySelector('.dialog-frame')!.append(template.content);
+  const nav = dialog.querySelector<HTMLElement>('.norn-commands')!;
+  const links = [...nav.querySelectorAll('a')];
+
+  if (/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+    for (const mod of nav.querySelectorAll('[data-mod]')) mod.textContent = '⌘';
+    for (const link of links) link.ariaKeyShortcuts &&= link.ariaKeyShortcuts.replace('Control', 'Meta');
+  }
+
+  // Pagefind renders its input after load, and its clear button doesn't fire `input`.
+  const sync = () => (nav.hidden = !!dialog.querySelector('input')?.value);
+  dialog.addEventListener('input', sync);
+  dialog.addEventListener('click', sync);
+
+  dialog.addEventListener('keydown', (e) => {
+    if (nav.hidden || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+    const i = links.indexOf(document.activeElement as HTMLAnchorElement);
+    const next = e.key === 'ArrowDown' ? Math.min(i + 1, links.length - 1) : i - 1;
+    (next < 0 ? dialog.querySelector('input') : links[next])?.focus();
+    e.preventDefault();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (!dialog.open || !(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return;
+    const link = links.find((link) => link.dataset.key === e.key.toUpperCase());
+    if (!link) return;
+    e.preventDefault();
+    link.click();
+  });
+</script>
+
+<style>
+  .norn-commands {
+    display: flex;
+    flex-direction: column;
+  }
+  section + section {
+    border-top: 1px solid var(--sl-color-gray-5);
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+  h2 {
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+  }
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    color: var(--sl-color-white);
+    text-decoration: none;
+  }
+  a:hover,
+  a:focus-visible {
+    background-color: var(--sl-color-gray-5);
+    outline: none;
+  }
+  a > kbd {
+    display: flex;
+    gap: 0.25em;
+    margin-inline-start: auto;
+    color: var(--sl-color-gray-3);
+    font-family: var(--__sl-font);
+    font-size: var(--sl-text-xs);
+  }
+  a kbd kbd {
+    font-family: inherit;
+  }
+</style>
