@@ -1,5 +1,15 @@
 # @norn-ts/norn
 
+## 2.0.1
+
+### Patch Changes
+
+- [#8](https://github.com/jamie-wk/norn/pull/8) [`4321a3e`](https://github.com/jamie-wk/norn/commit/4321a3e10ee655e90c688ebf9a8c062063709845) Thanks [@jamie-wk](https://github.com/jamie-wk)! - `@norn-ts/norn/client` no longer exports the undocumented internals `startOptions`, `toTypedSearchAttributes`, `resolveWorkflowId` and `failureTypeOf`. Use `workflow(WorkflowClass).start()` and friends instead; the underlying Temporal client is still available as `client.temporal`.
+
+- [#5](https://github.com/jamie-wk/norn/pull/5) [`8bc49e6`](https://github.com/jamie-wk/norn/commit/8bc49e6261c44d1a29de49011b5a91dd60de78a5) Thanks [@jamie-wk](https://github.com/jamie-wk)! - `createWorker({ workflows })`, `createTestEnv({ workflows })` and `bundleWorkflows()` accept a `file://` URL string, such as `import.meta.resolve('@acme/workflows')` returns. Before, it was read as a relative path and failed. The docs' Recipes page now covers monorepos.
+
+- [#8](https://github.com/jamie-wk/norn/pull/8) [`0d66e6e`](https://github.com/jamie-wk/norn/commit/0d66e6e4ae93bdb7e50b1019051f2d839690078f) Thanks [@jamie-wk](https://github.com/jamie-wk)! - The client rejects `NaN` and `Infinity` for a `double` search attribute, as `setSearchAttributes()` in workflow code already did. Both now share one check.
+
 ## 2.0.0
 
 ### Major Changes
